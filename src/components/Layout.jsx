@@ -9,12 +9,13 @@ import {
   Image as ImageIcon,
   FileText,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  LogOut
 } from 'lucide-react'
 import './Layout.css'
 import adminAvatar from '../assets/admin_avatar.png'
 
-const Layout = ({ children, currentView, onViewChange }) => {
+const Layout = ({ children, currentView, onViewChange, onLogout }) => {
   const [isCollapsed, setIsCollapsed] = useState(() => {
     return localStorage.getItem('sidebar-collapsed') === 'true'
   })
@@ -134,6 +135,15 @@ const Layout = ({ children, currentView, onViewChange }) => {
               <span className="admin-role">Admin</span>
               <img src={adminAvatar} alt="Admin avatar" className="avatar-img" />
             </div>
+            <button 
+              className="icon-btn" 
+              aria-label="Cerrar sesión" 
+              onClick={onLogout}
+              title="Cerrar sesión"
+              style={{ color: '#bf360c', borderColor: 'rgba(191, 54, 12, 0.15)', backgroundColor: 'var(--orange-bg-light)' }}
+            >
+              <LogOut size={18} />
+            </button>
           </div>
         </header>
 

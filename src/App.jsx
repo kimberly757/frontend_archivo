@@ -7,9 +7,13 @@ import PreRegistration from './components/pages/PreRegistration'
 import InventarioPatrimonial from './components/pages/InventarioPatrimonial'
 import DifusionGaleria from './components/pages/DifusionGaleria'
 import ReportesCatalogo from './components/pages/ReportesCatalogo'
+import Login from './components/pages/Login'
 import './App.css'
 
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return localStorage.getItem('user-authenticated') === 'true'
+  })
   const [currentView, setCurrentView] = useState('dashboard')
 
   // Lifted state of cultores
@@ -60,8 +64,22 @@ function App() {
     }
   ])
 
+  const handleLogin = () => {
+    localStorage.setItem('user-authenticated', 'true')
+    setIsAuthenticated(true)
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem('user-authenticated')
+    setIsAuthenticated(false)
+  }
+
+  if (!isAuthenticated) {
+    return <Login onLoginSuccess={handleLogin} />
+  }
+
   return (
-    <Layout currentView={currentView} onViewChange={setCurrentView}>
+    <Layout currentView={currentView} onViewChange={setCurrentView} onLogout={handleLogout}>
       {currentView === 'dashboard' && <Dashboard />}
       {currentView === 'usuarios' && <UsersManagement />}
       {currentView === 'cultores' && (
