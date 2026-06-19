@@ -13,7 +13,10 @@ import {
   Laptop,
   UploadCloud,
   FileText,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Mail,
+  Send,
+  Layers
 } from 'lucide-react'
 import partituraImg from '../../assets/featured_partitura.png'
 import './DifusionGaleria.css'
@@ -26,32 +29,31 @@ const DifusionGaleria = () => {
       title: 'Talla y Madera del Táchira',
       dates: '15 Jun - 30 Jun',
       published: true,
-      image: partituraImg
+      image: partituraImg,
+      pieces: [
+        { id: 101, name: 'Talla de San Isidro', author: 'Familia Roa', enabled: true, image: null },
+        { id: 102, name: 'Silla artesanal de pino', author: 'José Ramírez', enabled: true, image: null }
+      ]
     },
     {
       id: 2,
       title: 'Instrumentos de Viento y Cuerdas tradicionales',
       dates: '01 Jul - 15 Jul',
       published: false,
-      image: null
+      image: null,
+      pieces: [
+        { id: 103, name: 'Cuatro de Cedro', author: 'Eleazar Rojas', enabled: true, image: null }
+      ]
     },
     {
       id: 3,
       title: 'Vestimentas Típicas de Capacho',
       dates: '20 Jul - 05 Ago',
       published: true,
-      image: null
+      image: null,
+      pieces: []
     }
   ])
-
-  // Mock pieces for QR mass action
-  const qrPiecesList = [
-    { id: 10, name: 'Partitura Original: Tonada de San Sebastián', code: 'IP-001' },
-    { id: 11, name: 'Cuatro de Cedro Tallado', code: 'IP-002' },
-    { id: 12, name: 'Traje de Danza de Sanjuanero', code: 'IP-003' },
-    { id: 13, name: 'Vasija de Barro Cocido', code: 'IP-004' },
-    { id: 14, name: 'Maracas de Capacho Tradicionales', code: 'IP-005' }
-  ]
 
   // States
   const [searchQuery, setSearchQuery] = useState('')
@@ -63,12 +65,6 @@ const DifusionGaleria = () => {
   )
   const [efemerideBg, setEfemerideBg] = useState(null)
 
-  // QR Selection State
-  const [qrSearchQuery, setQrSearchQuery] = useState('')
-  const [selectedQrPieces, setSelectedQrPieces] = useState([])
-  const [isPdfGenerating, setIsPdfGenerating] = useState(false)
-  const [pdfNotification, setPdfNotification] = useState('')
-
   // Exhibition Form Modal State
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalMode, setModalMode] = useState('create') // 'create' | 'edit'
@@ -79,12 +75,28 @@ const DifusionGaleria = () => {
   const [newImage, setNewImage] = useState(null)
   const [formError, setFormError] = useState('')
 
+  // Pieces Management State
+  const [selectedExhibitionForPieces, setSelectedExhibitionForPieces] = useState(null)
+  const [isPiecesModalOpen, setIsPiecesModalOpen] = useState(false)
+  const [isPieceFormOpen, setIsPieceFormOpen] = useState(false)
+  const [pieceModalMode, setPieceModalMode] = useState('create')
+  const [editingPieceId, setEditingPieceId] = useState(null)
+  const [newPieceName, setNewPieceName] = useState('')
+  const [newPieceAuthor, setNewPieceAuthor] = useState('')
+  const [newPieceImage, setNewPieceImage] = useState(null)
+
   // Public Simulator State
   const [isSimulatorOpen, setIsSimulatorOpen] = useState(false)
 
   // Single QR Popup State
   const [isQrPopupOpen, setIsQrPopupOpen] = useState(false)
   const [selectedQrForView, setSelectedQrForView] = useState(null)
+
+  // Email Campaign Modal State
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
+  const [selectedExhibitionForEmail, setSelectedExhibitionForEmail] = useState(null)
+  const [isSendingEmail, setIsSendingEmail] = useState(false)
+  const [emailNotification, setEmailNotification] = useState('')
 
   // Toggle switch handler
   const handleTogglePublished = (id) => {
@@ -117,6 +129,93 @@ const DifusionGaleria = () => {
     setIsModalOpen(true)
   }
 
+  // Handle Email Modal
+  const handleOpenEmailModal = (ex) => {
+    setSelectedExhibitionForEmail(ex)
+    setIsEmailModalOpen(true)
+    setEmailNotification('')
+  }
+
+  const handleConfirmSendEmail = () => {
+    setIsSendingEmail(true)
+    setTimeout(() => {
+      setIsSendingEmail(false)
+      setEmailNotification(`¡Invitaciones enviadas con éxito a los autores de las obras en la exposición "${selectedExhibitionForEmail.title}"!`)
+      setTimeout(() => {
+        setIsEmailModalOpen(false)
+        setSelectedExhibitionForEmail(null)
+      }, 3000)
+    }, 1500)
+  }
+
+  // Handle Pieces Modal & CRUD
+  const handleOpenPieces = (ex) => {
+    setSelectedExhibitionForPieces(ex)
+    setIsPiecesModalOpen(true)
+    setIsPieceFormOpen(false)
+    setNewPieceImage(null)
+  }
+
+  const handleTogglePieceStatus = (pieceId) => {
+    const updatedPieces = selectedExhibitionForPieces.pieces.map(p => 
+      p.id === pieceId ? { ...p, enabled: !p.enabled } : p
+    )
+    updateExhibitionPieces(updatedPieces)
+  }
+
+  const handleDeletePiece = (pieceId) => {
+    if (window.confirm('¿Está seguro de que desea eliminar esta obra?')) {
+      const updatedPieces = selectedExhibitionForPieces.pieces.filter(p => p.id !== pieceId)
+      updateExhibitionPieces(updatedPieces)
+    }
+  }
+
+  const handleOpenPieceForm = (mode, piece = null) => {
+    setPieceModalMode(mode)
+    if (mode === 'edit' && piece) {
+      setEditingPieceId(piece.id)
+      setNewPieceName(piece.name)
+      setNewPieceAuthor(piece.author || '')
+      setNewPieceImage(piece.image || null)
+    } else {
+      setEditingPieceId(null)
+      setNewPieceName('')
+      setNewPieceAuthor('')
+      setNewPieceImage(null)
+    }
+    setIsPieceFormOpen(true)
+  }
+
+  const handleSavePiece = (e) => {
+    e.preventDefault()
+    if (!newPieceName.trim()) return
+
+    let updatedPieces = [...(selectedExhibitionForPieces.pieces || [])]
+    if (pieceModalMode === 'create') {
+      updatedPieces.push({
+        id: Date.now(),
+        name: newPieceName.trim(),
+        author: newPieceAuthor.trim(),
+        image: newPieceImage,
+        enabled: true
+      })
+    } else {
+      updatedPieces = updatedPieces.map(p => 
+        p.id === editingPieceId 
+          ? { ...p, name: newPieceName.trim(), author: newPieceAuthor.trim(), image: newPieceImage } 
+          : p
+      )
+    }
+    updateExhibitionPieces(updatedPieces)
+    setIsPieceFormOpen(false)
+  }
+
+  const updateExhibitionPieces = (updatedPieces) => {
+    const updatedExhibition = { ...selectedExhibitionForPieces, pieces: updatedPieces }
+    setSelectedExhibitionForPieces(updatedExhibition)
+    setExhibitions(prev => prev.map(ex => ex.id === updatedExhibition.id ? updatedExhibition : ex))
+  }
+
   // Handle Base64 Image upload for exhibitions and efemérides
   const handleImageChange = (e, target) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -125,6 +224,7 @@ const DifusionGaleria = () => {
       reader.onloadend = () => {
         if (target === 'exhibition') setNewImage(reader.result)
         else if (target === 'efemeride') setEfemerideBg(reader.result)
+        else if (target === 'piece') setNewPieceImage(reader.result)
       }
       reader.readAsDataURL(file)
     }
@@ -145,7 +245,8 @@ const DifusionGaleria = () => {
         title: newTitle.trim(),
         dates: newDates.trim(),
         published: newPublished,
-        image: newImage
+        image: newImage,
+        pieces: []
       }
       setExhibitions([...exhibitions, newEx])
     } else {
@@ -156,7 +257,7 @@ const DifusionGaleria = () => {
               title: newTitle.trim(), 
               dates: newDates.trim(), 
               published: newPublished, 
-              image: newImage 
+              image: newImage
             } 
           : ex
       ))
@@ -176,35 +277,6 @@ const DifusionGaleria = () => {
     if (window.confirm('¿Está seguro de que desea eliminar esta exposición?')) {
       setExhibitions(exhibitions.filter(ex => ex.id !== id))
     }
-  }
-
-  // Toggle QR checklist items
-  const handleToggleQrSelect = (id) => {
-    if (selectedQrPieces.includes(id)) {
-      setSelectedQrPieces(selectedQrPieces.filter(i => i !== id))
-    } else {
-      setSelectedQrPieces([...selectedQrPieces, id])
-    }
-  }
-
-  // QR Checklist search filter
-  const filteredQrPieces = qrPiecesList.filter(piece => 
-    piece.name.toLowerCase().includes(qrSearchQuery.toLowerCase()) ||
-    piece.code.toLowerCase().includes(qrSearchQuery.toLowerCase())
-  )
-
-  // Simulate QR PDF download
-  const handleDownloadQrPdf = () => {
-    if (selectedQrPieces.length === 0) return
-    setIsPdfGenerating(true)
-    setPdfNotification('')
-
-    setTimeout(() => {
-      setIsPdfGenerating(false)
-      setPdfNotification(
-        `¡Paquete PDF generado con éxito! Se han descargado ${selectedQrPieces.length} códigos QR del inventario seleccionado.`
-      )
-    }, 1500)
   }
 
   return (
@@ -298,19 +370,22 @@ const DifusionGaleria = () => {
           {exhibitions.map(ex => (
             <div className="exhibition-card" key={ex.id}>
               {ex.image ? (
-                <img src={ex.image} alt={ex.title} className="exhibition-card-img" />
+                <img src={ex.image} alt={ex.title} className="exhibition-card-img" style={{ cursor: 'pointer' }} onClick={() => handleOpenPieces(ex)} />
               ) : (
-                <div className="exhibition-card-no-img">
+                <div className="exhibition-card-no-img" style={{ cursor: 'pointer' }} onClick={() => handleOpenPieces(ex)}>
                   <ImageIcon size={32} />
                   <span style={{ fontSize: '12px', fontWeight: '600' }}>Sin imagen de fondo</span>
                 </div>
               )}
 
               <div className="exhibition-card-body">
-                <h3>{ex.title}</h3>
+                <h3 style={{ cursor: 'pointer' }} onClick={() => handleOpenPieces(ex)}>{ex.title}</h3>
                 <div className="exhibition-date-row">
                   <Calendar size={14} />
                   <span>{ex.dates}</span>
+                  <span style={{ margin: '0 8px', color: '#d8d7d3' }}>|</span>
+                  <FileText size={14} />
+                  <span>{ex.pieces ? ex.pieces.length : 0} Obras</span>
                 </div>
 
                 <div className="exhibition-status-row">
@@ -334,6 +409,13 @@ const DifusionGaleria = () => {
               <div className="exhibition-card-footer">
                 <button 
                   className="exhibition-action-btn" 
+                  title="Gestionar Obras"
+                  onClick={() => handleOpenPieces(ex)}
+                >
+                  <Layers size={14} />
+                </button>
+                <button 
+                  className="exhibition-action-btn" 
                   title="Mostrar Código QR"
                   onClick={() => {
                     setSelectedQrForView(ex)
@@ -341,6 +423,13 @@ const DifusionGaleria = () => {
                   }}
                 >
                   <QrCode size={15} />
+                </button>
+                <button 
+                  className="exhibition-action-btn" 
+                  title="Enviar Invitaciones por Correo"
+                  onClick={() => handleOpenEmailModal(ex)}
+                >
+                  <Mail size={14} />
                 </button>
                 <button 
                   className="exhibition-action-btn" 
@@ -362,79 +451,7 @@ const DifusionGaleria = () => {
         </div>
       </section>
 
-      {/* 4. Sección de Control de QR (Acción masiva) */}
-      <section className="mass-qr-selector-box">
-        <h2 className="section-card-title" style={{ margin: '0' }}>
-          <QrCode size={18} style={{ color: '#C05640' }} />
-          <span>Generación y Descarga Masiva de Códigos QR</span>
-        </h2>
-
-        {/* Toolbar selectors */}
-        <div className="qr-selector-toolbar">
-          <div className="search-input-wrapper" style={{ width: '280px' }}>
-            <Search className="search-input-icon" size={16} />
-            <input 
-              type="text" 
-              placeholder="Buscar piezas para QR..." 
-              value={qrSearchQuery}
-              onChange={(e) => setQrSearchQuery(e.target.value)}
-            />
-            {qrSearchQuery && (
-              <button 
-                onClick={() => setQrSearchQuery('')}
-                className="clear-search-icon-btn"
-                aria-label="Limpiar búsqueda"
-              >
-                <X size={14} />
-              </button>
-            )}
-          </div>
-
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-            <span style={{ fontSize: '12.5px', fontWeight: '600', color: 'var(--text-secondary)' }}>
-              {selectedQrPieces.length} seleccionados
-            </span>
-            <button 
-              className="qr-download-btn"
-              disabled={selectedQrPieces.length === 0 || isPdfGenerating}
-              onClick={handleDownloadQrPdf}
-            >
-              {isPdfGenerating ? 'Generando PDF...' : 'Descargar paquete de QR (PDF)'}
-            </button>
-          </div>
-        </div>
-
-        {/* Checkbox Grid */}
-        <div className="qr-checklist-scroll">
-          {filteredQrPieces.length > 0 ? (
-            filteredQrPieces.map(piece => (
-              <label className="qr-checkbox-item" key={piece.id}>
-                <input 
-                  type="checkbox" 
-                  checked={selectedQrPieces.includes(piece.id)}
-                  onChange={() => handleToggleQrSelect(piece.id)}
-                />
-                <span>{piece.name}</span>
-                <span className="piece-code-lbl">{piece.code}</span>
-              </label>
-            ))
-          ) : (
-            <p style={{ gridColumn: '1/-1', margin: '12px', fontSize: '13px', color: 'var(--text-secondary)', textAlign: 'center' }}>
-              No se encontraron piezas en el inventario.
-            </p>
-          )}
-        </div>
-
-        {/* Notification Banner */}
-        {pdfNotification && (
-          <div className="success-banner-alert">
-            <span>{pdfNotification}</span>
-            <button onClick={() => setPdfNotification('')}>Cerrar</button>
-          </div>
-        )}
-      </section>
-
-      {/* 5. Registrar / Editar Exposición Modal Overlay */}
+      {/* 4. Registrar / Editar Exposición Modal Overlay */}
       {isModalOpen && (
         <div className="modal-overlay-backdrop">
           <div className="modal-box-card">
@@ -477,7 +494,7 @@ const DifusionGaleria = () => {
 
                 {/* Dates */}
                 <div className="input-box-field">
-                  <label htmlFor="modal-exhibition-dates">Rango de Fechas (Exposición) <span className="req-star">*</span></label>
+                  <label htmlFor="modal-exhibition-dates">Rango de Fechas <span className="req-star">*</span></label>
                   <div className="icon-input-container">
                     <Calendar size={15} className="field-icon-left" />
                     <input 
@@ -666,6 +683,236 @@ const DifusionGaleria = () => {
               >
                 Aceptar
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 8. Modal de Envío de Correos (Campaña) */}
+      {isEmailModalOpen && selectedExhibitionForEmail && (
+        <div className="modal-overlay-backdrop">
+          <div className="modal-box-card">
+            <div className="modal-box-header">
+              <h2>Campaña de Invitaciones</h2>
+              <button 
+                onClick={() => {
+                  if (!isSendingEmail) {
+                    setIsEmailModalOpen(false)
+                    setSelectedExhibitionForEmail(null)
+                  }
+                }}
+                className="close-x-btn"
+                aria-label="Cerrar modal"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            
+            <div className="modal-box-body">
+              {emailNotification ? (
+                <div className="success-banner-alert" style={{ marginBottom: '16px', flexDirection: 'column', alignItems: 'flex-start', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Send size={16} />
+                    <span>{emailNotification}</span>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <p style={{ fontSize: '13.5px', color: 'var(--text-main)', marginBottom: '16px', lineHeight: '1.5' }}>
+                    Se enviará una invitación por correo electrónico a todos los autores y personas vinculadas a las piezas de la exposición <strong>{selectedExhibitionForEmail.title}</strong>.
+                  </p>
+                  
+                  <div style={{ backgroundColor: '#f5f4f0', padding: '16px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                    <p style={{ margin: '0 0 8px 0', fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '700' }}>VISTA PREVIA DEL CORREO:</p>
+                    <div style={{ backgroundColor: '#ffffff', padding: '16px', borderRadius: '6px', border: '1px solid #ebeae6' }}>
+                      <p style={{ margin: '0 0 12px 0', fontSize: '13px', fontWeight: '600' }}>
+                        Asunto: Invitación Especial - {selectedExhibitionForEmail.title}
+                      </p>
+                      <hr style={{ border: 'none', borderTop: '1px solid #ebeae6', margin: '0 0 12px 0' }} />
+                      <p style={{ margin: '0 0 12px 0', fontSize: '13px', color: 'var(--text-main)', lineHeight: '1.6' }}>
+                        Estimado cultor/autor,
+                      </p>
+                      <p style={{ margin: '0 0 12px 0', fontSize: '13px', color: 'var(--text-main)', lineHeight: '1.6' }}>
+                        Le invitamos cordialmente a pasar por el archivo para que pueda experimentar en persona la exposición <strong>"{selectedExhibitionForEmail.title}"</strong>.
+                      </p>
+                      <p style={{ margin: '0 0 12px 0', fontSize: '13px', color: 'var(--text-main)', lineHeight: '1.6' }}>
+                        Este evento estará disponible durante el periodo: <strong>{selectedExhibitionForEmail.dates}</strong>. Será un honor contar con su presencia para compartir juntos la riqueza de nuestro patrimonio cultural.
+                      </p>
+                      <p style={{ margin: '0', fontSize: '13px', color: 'var(--text-secondary)' }}>
+                        Atentamente,<br/>
+                        El Equipo del Archivo de Folklore
+                      </p>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="modal-box-footer">
+              {!emailNotification && (
+                <>
+                  <button 
+                    type="button" 
+                    className="btn-secondary" 
+                    onClick={() => setIsEmailModalOpen(false)}
+                    disabled={isSendingEmail}
+                  >
+                    Cancelar
+                  </button>
+                  <button 
+                    type="button" 
+                    className="btn-terracota" 
+                    onClick={handleConfirmSendEmail}
+                    disabled={isSendingEmail}
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                  >
+                    {isSendingEmail ? (
+                      'Enviando...'
+                    ) : (
+                      <>
+                        <Send size={15} />
+                        Enviar Invitaciones
+                      </>
+                    )}
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 9. Modal de Gestión de Obras por Evento */}
+      {isPiecesModalOpen && selectedExhibitionForPieces && (
+        <div className="modal-overlay-backdrop" style={{ zIndex: 1100 }}>
+          <div className="modal-box-card" style={{ maxWidth: '800px' }}>
+            <div className="modal-box-header">
+              <h2>Obras de: {selectedExhibitionForPieces.title}</h2>
+              <button 
+                onClick={() => setIsPiecesModalOpen(false)}
+                className="close-x-btn"
+                aria-label="Cerrar modal"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            
+            <div className="modal-box-body">
+              {!isPieceFormOpen ? (
+                <>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '24px' }}>
+                    <button className="btn-terracota" onClick={() => handleOpenPieceForm('create')}>
+                      <Plus size={16} />
+                      Añadir Obra
+                    </button>
+                  </div>
+
+                  {selectedExhibitionForPieces.pieces && selectedExhibitionForPieces.pieces.length > 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      {selectedExhibitionForPieces.pieces.map(piece => (
+                        <div key={piece.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px', border: '1px solid rgba(0,0,0,0.06)', borderRadius: '16px', backgroundColor: '#faf9f6', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+                          <div style={{ display: 'flex', gap: '20px', alignItems: 'center', flex: 1, opacity: piece.enabled ? 1 : 0.5, transition: 'opacity 0.2s' }}>
+                            {piece.image ? (
+                              <img src={piece.image} alt={piece.name} style={{ width: '72px', height: '72px', objectFit: 'cover', borderRadius: '12px', border: '1px solid #ebeae6' }} />
+                            ) : (
+                              <div style={{ width: '72px', height: '72px', backgroundColor: '#ebeae6', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#a39996' }}>
+                                <ImageIcon size={24} />
+                              </div>
+                            )}
+                            <div>
+                              <p style={{ margin: '0 0 6px 0', fontSize: '16px', fontWeight: '800', color: 'var(--text-main)' }}>{piece.name}</p>
+                              <p style={{ margin: '0', fontSize: '13.5px', color: 'var(--text-secondary)' }}>Autor / Cultor: {piece.author || 'Desconocido'}</p>
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                            <label className="toggle-switch-wrapper" title={piece.enabled ? 'Deshabilitar Obra' : 'Habilitar Obra'}>
+                              <input 
+                                type="checkbox" 
+                                checked={piece.enabled}
+                                onChange={() => handleTogglePieceStatus(piece.id)}
+                              />
+                              <span className="toggle-slider"></span>
+                            </label>
+                            <div style={{ width: '1px', height: '16px', backgroundColor: '#d8d7d3' }}></div>
+                            <button className="exhibition-action-btn" title="Editar Obra" onClick={() => handleOpenPieceForm('edit', piece)}>
+                              <Edit2 size={14} />
+                            </button>
+                            <button className="exhibition-action-btn delete-btn" title="Eliminar Obra" onClick={() => handleDeletePiece(piece.id)}>
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p style={{ textAlign: 'center', color: 'var(--text-secondary)', fontStyle: 'italic', padding: '24px 0' }}>
+                      No hay obras registradas en este evento.
+                    </p>
+                  )}
+                </>
+              ) : (
+                <form onSubmit={handleSavePiece}>
+                  <h3 style={{ fontSize: '15px', fontWeight: '600', marginBottom: '16px' }}>
+                    {pieceModalMode === 'create' ? 'Añadir Nueva Obra' : 'Editar Obra'}
+                  </h3>
+                  <div className="input-box-field">
+                    <label>Nombre de la Obra <span className="req-star">*</span></label>
+                    <input 
+                      type="text" 
+                      value={newPieceName}
+                      onChange={(e) => setNewPieceName(e.target.value)}
+                      placeholder="Ej. Vasija de Barro Cocido"
+                      required
+                    />
+                  </div>
+                  <div className="input-box-field">
+                    <label>Autor / Cultor</label>
+                    <input 
+                      type="text" 
+                      value={newPieceAuthor}
+                      onChange={(e) => setNewPieceAuthor(e.target.value)}
+                      placeholder="Ej. Familia Roa"
+                    />
+                  </div>
+                  <div className="input-box-field">
+                    <label>Fotografía de la Obra</label>
+                    <div className="image-upload-row">
+                      {newPieceImage ? (
+                        <div className="image-form-preview">
+                          <img src={newPieceImage} alt="Preview" style={{ width: '74px', height: '74px', objectFit: 'cover', borderRadius: '6px' }} />
+                          <button 
+                            type="button" 
+                            className="remove-img-form-btn"
+                            onClick={() => setNewPieceImage(null)}
+                          >
+                            Quitar Foto
+                          </button>
+                        </div>
+                      ) : (
+                        <button 
+                          type="button" 
+                          className="btn-terracota-outline"
+                          onClick={() => document.getElementById('piece-image-file').click()}
+                        >
+                          <UploadCloud size={16} />
+                          <span>Subir Imagen</span>
+                          <input 
+                            type="file" 
+                            id="piece-image-file" 
+                            accept="image/*" 
+                            style={{ display: 'none' }}
+                            onChange={(e) => handleImageChange(e, 'piece')}
+                          />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '16px' }}>
+                    <button type="button" className="btn-secondary" onClick={() => setIsPieceFormOpen(false)}>Cancelar</button>
+                    <button type="submit" className="btn-terracota">Guardar Obra</button>
+                  </div>
+                </form>
+              )}
             </div>
           </div>
         </div>

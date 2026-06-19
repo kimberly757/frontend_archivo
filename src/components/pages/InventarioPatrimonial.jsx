@@ -74,6 +74,24 @@ const InventarioPatrimonial = () => {
     }
   ])
 
+  // Dynamic Options State
+  const [categoriesList, setCategoriesList] = useState([
+    'Artesanía',
+    'Instrumentos',
+    'Vestimenta'
+  ])
+  const [isAddingCategory, setIsAddingCategory] = useState(false)
+  const [customCategory, setCustomCategory] = useState('')
+
+  const handleAddCategory = () => {
+    if (customCategory.trim() && !categoriesList.includes(customCategory.trim())) {
+      setCategoriesList([...categoriesList, customCategory.trim()])
+      setNewPieceCategory(customCategory.trim())
+    }
+    setCustomCategory('')
+    setIsAddingCategory(false)
+  }
+
   // Filters State
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
@@ -414,9 +432,7 @@ const InventarioPatrimonial = () => {
             className="filter-dropdown-select"
           >
             <option value="all">Categoría de Manifestación</option>
-            <option value="Artesanía">Artesanía</option>
-            <option value="Instrumentos">Instrumentos</option>
-            <option value="Vestimenta">Vestimenta</option>
+            {categoriesList.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
 
           <select 
@@ -760,16 +776,35 @@ const InventarioPatrimonial = () => {
                 <div className="fields-split-row">
                   <div className="input-box-field">
                     <label htmlFor="modal-piece-category">Categoría</label>
-                    <div className="icon-input-container">
-                      <select 
-                        id="modal-piece-category"
-                        value={newPieceCategory}
-                        onChange={(e) => setNewPieceCategory(e.target.value)}
-                      >
-                        <option value="Artesanía">Artesanía</option>
-                        <option value="Instrumentos">Instrumentos</option>
-                        <option value="Vestimenta">Vestimenta</option>
-                      </select>
+                    <div className="icon-input-container" style={{ display: 'flex', gap: '8px' }}>
+                      {isAddingCategory ? (
+                        <>
+                          <input 
+                            type="text" 
+                            placeholder="Nueva categoría..." 
+                            value={customCategory} 
+                            onChange={(e) => setCustomCategory(e.target.value)} 
+                            style={{ flex: 1 }}
+                            autoFocus
+                          />
+                          <button type="button" className="btn-terracota" onClick={handleAddCategory} style={{ padding: '0 10px', height: '100%', borderRadius: '6px' }}>✓</button>
+                          <button type="button" className="btn-secondary" onClick={() => setIsAddingCategory(false)} style={{ padding: '0 10px', height: '100%', borderRadius: '6px' }}>✕</button>
+                        </>
+                      ) : (
+                        <>
+                          <select 
+                            id="modal-piece-category"
+                            value={newPieceCategory}
+                            onChange={(e) => setNewPieceCategory(e.target.value)}
+                            style={{ flex: 1 }}
+                          >
+                            {categoriesList.map(c => <option key={c} value={c}>{c}</option>)}
+                          </select>
+                          <button type="button" className="btn-terracota" onClick={() => setIsAddingCategory(true)} style={{ padding: '0 10px', height: '100%', borderRadius: '6px' }} title="Añadir categoría">
+                            <Plus size={16} />
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
 

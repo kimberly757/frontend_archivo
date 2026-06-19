@@ -116,6 +116,15 @@ const Layout = ({ children, currentView, onViewChange, onLogout }) => {
               <span className="profile-location">SEDE PRINCIPAL</span>
             </div>
           </div>
+          <button 
+            className="sidebar-logout-btn" 
+            onClick={onLogout}
+            title="Cerrar sesión"
+            data-label="Cerrar sesión"
+          >
+            <LogOut size={18} />
+            <span>Cerrar sesión</span>
+          </button>
         </div>
       </aside>
 
@@ -135,15 +144,6 @@ const Layout = ({ children, currentView, onViewChange, onLogout }) => {
               <span className="admin-role">Admin</span>
               <img src={adminAvatar} alt="Admin avatar" className="avatar-img" />
             </div>
-            <button 
-              className="icon-btn" 
-              aria-label="Cerrar sesión" 
-              onClick={onLogout}
-              title="Cerrar sesión"
-              style={{ color: '#bf360c', borderColor: 'rgba(191, 54, 12, 0.15)', backgroundColor: 'var(--orange-bg-light)' }}
-            >
-              <LogOut size={18} />
-            </button>
           </div>
         </header>
 

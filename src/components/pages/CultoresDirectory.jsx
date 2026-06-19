@@ -16,6 +16,25 @@ import {
 import './CultoresDirectory.css'
 
 const CultoresDirectory = ({ cultores, setCultores }) => {
+  // Dynamic Options State
+  const [techniquesList, setTechniquesList] = useState([
+    'Talla en Madera',
+    'Cerámica Tradicional',
+    'Tejeduría',
+    'Cestería'
+  ])
+  const [isAddingTechnique, setIsAddingTechnique] = useState(false)
+  const [customTechnique, setCustomTechnique] = useState('')
+
+  const handleAddTechnique = () => {
+    if (customTechnique.trim() && !techniquesList.includes(customTechnique.trim())) {
+      setTechniquesList([...techniquesList, customTechnique.trim()])
+      setNewTechnique(customTechnique.trim())
+    }
+    setCustomTechnique('')
+    setIsAddingTechnique(false)
+  }
+
   // Filters State
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedTechnique, setSelectedTechnique] = useState('all')
@@ -172,10 +191,7 @@ const CultoresDirectory = ({ cultores, setCultores }) => {
             className="filter-dropdown-select"
           >
             <option value="all">Todas las Técnicas</option>
-            <option value="Talla en Madera">Talla en Madera</option>
-            <option value="Cerámica Tradicional">Cerámica Tradicional</option>
-            <option value="Tejeduría">Tejeduría</option>
-            <option value="Cestería">Cestería</option>
+            {techniquesList.map(t => <option key={t} value={t}>{t}</option>)}
           </select>
 
           <select 
@@ -440,17 +456,35 @@ const CultoresDirectory = ({ cultores, setCultores }) => {
                 <div className="fields-split-row">
                   <div className="input-box-field">
                     <label htmlFor="modal-cultor-technique">Técnica principal</label>
-                    <div className="icon-input-container">
-                      <select 
-                        id="modal-cultor-technique"
-                        value={newTechnique}
-                        onChange={(e) => setNewTechnique(e.target.value)}
-                      >
-                        <option value="Talla en Madera">Talla en Madera</option>
-                        <option value="Cerámica Tradicional">Cerámica Tradicional</option>
-                        <option value="Tejeduría">Tejeduría</option>
-                        <option value="Cestería">Cestería</option>
-                      </select>
+                    <div className="icon-input-container" style={{ display: 'flex', gap: '8px' }}>
+                      {isAddingTechnique ? (
+                        <>
+                          <input 
+                            type="text" 
+                            placeholder="Nueva técnica..." 
+                            value={customTechnique} 
+                            onChange={(e) => setCustomTechnique(e.target.value)} 
+                            style={{ flex: 1 }}
+                            autoFocus
+                          />
+                          <button type="button" className="btn-terracota" onClick={handleAddTechnique} style={{ padding: '0 10px', height: '100%', borderRadius: '6px' }}>✓</button>
+                          <button type="button" className="btn-secondary" onClick={() => setIsAddingTechnique(false)} style={{ padding: '0 10px', height: '100%', borderRadius: '6px' }}>✕</button>
+                        </>
+                      ) : (
+                        <>
+                          <select 
+                            id="modal-cultor-technique"
+                            value={newTechnique}
+                            onChange={(e) => setNewTechnique(e.target.value)}
+                            style={{ flex: 1 }}
+                          >
+                            {techniquesList.map(t => <option key={t} value={t}>{t}</option>)}
+                          </select>
+                          <button type="button" className="btn-terracota" onClick={() => setIsAddingTechnique(true)} style={{ padding: '0 10px', height: '100%', borderRadius: '6px' }} title="Añadir técnica">
+                            <Plus size={16} />
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
 
