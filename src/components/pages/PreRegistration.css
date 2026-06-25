@@ -437,6 +437,13 @@
   max-width: 280px;
 }
 
+/* Table responsive wrapper */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 /* Responsive Overrides */
 @media (max-width: 900px) {
   .prereg-module-container .filter-bar-card {
@@ -473,7 +480,71 @@
     display: none;
   }
   
-  .prereg-module-container .filter-dropdown-select {
+  .prereg-module-container   .filter-dropdown-select {
     flex: 1 1 100%;
+  }
+
+  /* Modal responsive adjustments */
+  .modal-overlay-backdrop {
+    padding: 8px;
+    align-items: flex-start;
+    padding-top: 24px;
+    overflow-y: auto;
+  }
+
+  .modal-box-card {
+    width: 100%;
+    max-width: 100%;
+    max-height: none;
+    margin: 0;
+    border-radius: 16px;
+  }
+
+  .modal-box-card.dossier-modal {
+    width: 100%;
+  }
+
+  .modal-box-header {
+    padding: 16px 20px;
+  }
+
+  .modal-box-header h2 {
+    font-size: 15px;
+  }
+
+  .modal-box-body {
+    padding: 20px;
+  }
+
+  .modal-box-footer {
+    padding: 16px 20px;
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+
+  .modal-box-footer .btn-secondary,
+  .modal-box-footer .btn-terracota {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .dossier-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .review-actions-row {
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+
+  .review-actions-row .btn-approve,
+  .review-actions-row .btn-reject {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .fields-split-row {
+    grid-template-columns: 1fr;
   }
 }

@@ -345,10 +345,18 @@
   border-radius: 16px;
   width: 480px;
   max-width: 90%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  overflow: hidden;
   border: 1px solid var(--border-color);
   animation: slideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-body {
+  overflow-y: auto;
+  flex-shrink: 1;
+  min-height: 0;
 }
 
 .modal-header {
@@ -510,5 +518,47 @@
   .users-table th:nth-child(3),
   .users-table td:nth-child(3) {
     display: none; /* Hide role on small mobiles */
+  }
+}
+
+/* Modal responsive fixes for Users Management modals */
+@media (max-width: 768px) {
+  .modal-overlay {
+    padding: 16px;
+    align-items: flex-start;
+    padding-top: 24px;
+    overflow-y: auto;
+  }
+
+  .modal-card {
+    width: 100%;
+    max-width: 100%;
+    max-height: none;
+    margin: 0;
+    border-radius: 16px;
+  }
+
+  .modal-header {
+    padding: 16px 20px;
+  }
+
+  .modal-body {
+    padding: 20px;
+  }
+
+  .modal-footer {
+    padding: 16px 20px;
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+
+  .modal-footer .btn-secondary,
+  .modal-footer .btn-primary {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .form-row-grid {
+    grid-template-columns: 1fr;
   }
 }

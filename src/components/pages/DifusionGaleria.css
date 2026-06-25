@@ -529,4 +529,22 @@
   .difusion-module-container .page-header-actions {
     justify-content: flex-end;
   }
+
+  .exhibitions-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .public-simulator-box {
+    width: 100%;
+    max-width: 100%;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+    margin: 0;
+  }
+
+  .public-simulator-body {
+    padding: 20px;
+  }
 }

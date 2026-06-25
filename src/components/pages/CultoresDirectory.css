@@ -403,10 +403,7 @@
 /* Modal Overlay Form */
 .modal-overlay-backdrop {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
+  inset: 0;
   background-color: rgba(45, 30, 27, 0.4);
   backdrop-filter: blur(4px);
   display: flex;
@@ -421,8 +418,10 @@
   border-radius: 24px;
   width: 480px;
   max-width: 90%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 10px 15px -5px rgba(0, 0, 0, 0.05);
-  overflow: hidden;
   border: 1px solid rgba(0,0,0,0.06);
   animation: slideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -466,6 +465,9 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
+  overflow-y: auto;
+  flex-shrink: 1;
+  min-height: 0;
 }
 
 .error-banner-group {
@@ -636,6 +638,28 @@
   max-width: 280px;
 }
 
+/* Table responsive wrapper */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Modal scroll fix - avoid overflowing viewport */
+.modal-overlay-backdrop {
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.modal-box-card {
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-box-body {
+  overflow-y: auto;
+}
+
 /* Responsive Overrides */
 @media (max-width: 900px) {
   .filter-bar-card {
@@ -678,6 +702,70 @@
   
   .filter-dropdown-select {
     flex: 1 1 100%;
+  }
+
+  /* Modal responsive adjustments */
+  .modal-overlay-backdrop {
+    padding: 8px;
+    align-items: flex-start;
+    padding-top: 24px;
+    overflow-y: auto;
+  }
+
+  .modal-box-card {
+    width: 100%;
+    max-width: 100%;
+    max-height: none;
+    margin: 0;
+    border-radius: 16px;
+  }
+
+  .modal-box-card.dossier-modal {
+    width: 100%;
+  }
+
+  .modal-box-header {
+    padding: 16px 20px;
+  }
+
+  .modal-box-header h2 {
+    font-size: 15px;
+  }
+
+  .modal-box-body {
+    padding: 20px;
+  }
+
+  .modal-box-footer {
+    padding: 16px 20px;
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+
+  .modal-box-footer .btn-secondary,
+  .modal-box-footer .btn-terracota {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .dossier-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .review-actions-row {
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+
+  .review-actions-row .btn-approve,
+  .review-actions-row .btn-reject {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .fields-split-row {
+    grid-template-columns: 1fr;
   }
 }
 
