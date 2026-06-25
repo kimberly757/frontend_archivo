@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Search,
   Plus,
@@ -7,23 +7,16 @@ import {
   Shield,
   Trash2,
   X,
-  ToggleLeft,
-  ToggleRight,
   UserCheck,
-  UserX
+  UserX,
+  Lock
 } from 'lucide-react'
 import './UsersManagement.css'
+import { getUsersRequest, createUserRequest } from '../../services/api'
 
 const UsersManagement = () => {
-  // Initial list of mock users
-  const [users, setUsers] = useState([
-    { id: 1, name: 'Juan R. Castañeda', email: 'juan.castaneda@folklore.org', role: 'cultor', status: 'activo' },
-    { id: 2, name: 'María Sosa - "El Rezo"', email: 'maria.sosa@folklore.org', role: 'cultor', status: 'activo' },
-    { id: 3, name: 'Carlos Delgado', email: 'carlos.delgado@admin.folklore.org', role: 'admin', status: 'activo' },
-    { id: 4, name: 'Elena Méndez', email: 'elena.mendez@investigacion.org', role: 'investigador', status: 'inactivo' },
-    { id: 5, name: 'Ramón Rivera', email: 'ramon.rivera@folklore.org', role: 'investigador', status: 'activo' },
-    { id: 6, name: 'Ana Teresa Hernández', email: 'ana.hernandez@folklore.org', role: 'cultor', status: 'inactivo' }
-  ])
+  const [users, setUsers] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
 
   // Filters state
   const [roleFilter, setRoleFilter] = useState('todos')
@@ -31,82 +24,99 @@ const UsersManagement = () => {
 
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [newUserName, setNewUserName] = useState('')
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
   const [newUserEmail, setNewUserEmail] = useState('')
-  const [newUserRole, setNewUserRole] = useState('cultor')
-  const [newUserStatus, setNewUserStatus] = useState('activo')
+  const [newPassword, setNewPassword] = useState('')
+  const [newUserRoleId, setNewUserRoleId] = useState('4')
+  const [newUserStatus, setNewUserStatus] = useState(true)
   const [formError, setFormError] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Toggle user status between active and inactive
-  const handleToggleStatus = (id) => {
-    setUsers(users.map(user => {
-      if (user.id === id) {
-        return {
-          ...user,
-          status: user.status === 'activo' ? 'inactivo' : 'activo'
-        }
-      }
-      return user
-    }))
-  }
+  // Load users and roles on mount
+  useEffect(() => {
+    fetchData()
+  }, [])
 
-  // Delete user from list
-  const handleDeleteUser = (id) => {
-    if (window.confirm('¿Estás seguro de que deseas eliminar este usuario?')) {
-      setUsers(users.filter(user => user.id !== id))
+  const fetchData = async () => {
+    setIsLoading(true)
+    try {
+      const token = localStorage.getItem('token')
+      const usersData = await getUsersRequest(token)
+      setUsers(usersData)
+    } catch (error) {
+      console.error('Error loading data:', error)
+    } finally {
+      setIsLoading(false)
     }
   }
 
   // Handle modal submit
-  const handleCreateUserSubmit = (e) => {
+  const handleCreateUserSubmit = async (e) => {
     e.preventDefault()
 
-    if (!newUserName.trim() || !newUserEmail.trim()) {
+    if (!firstName.trim() || !lastName.trim() || !newUserEmail.trim()) {
       setFormError('Por favor completa todos los campos obligatorios.')
       return
     }
 
-    // Simple email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(newUserEmail)) {
       setFormError('Por favor ingresa un correo electrónico válido.')
       return
     }
 
-    const newUser = {
-      id: Date.now(),
-      name: newUserName,
-      email: newUserEmail,
-      role: newUserRole,
-      status: newUserStatus
-    }
-
-    setUsers([newUser, ...users])
-    
-    // Reset form and close modal
-    setNewUserName('')
-    setNewUserEmail('')
-    setNewUserRole('cultor')
-    setNewUserStatus('activo')
+    setIsSubmitting(true)
     setFormError('')
-    setIsModalOpen(false)
+
+    try {
+      const token = localStorage.getItem('token')
+      const payload = {
+        primer_nombre: firstName,
+        primer_apellido: lastName,
+        correo: newUserEmail,
+        id_rol: parseInt(newUserRoleId),
+        activo: newUserStatus
+      }
+
+      if (newPassword.trim()) {
+        payload.password = newPassword.trim()
+      }
+      
+      const newUser = await createUserRequest(payload, token)
+      setUsers([newUser, ...users])
+      
+      // Reset form and close modal
+      setFirstName('')
+      setLastName('')
+      setNewUserEmail('')
+      setNewPassword('')
+      setNewUserRoleId('4')
+      setNewUserStatus(true)
+      setIsModalOpen(false)
+    } catch (error) {
+      setFormError(error.message || 'Error al crear usuario.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   // Filtered users
   const filteredUsers = users.filter(user => {
-    const matchesRole = roleFilter === 'todos' || user.role === roleFilter
-    const matchesSearch = user.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          user.email.toLowerCase().includes(searchQuery.toLowerCase())
+    const roleName = user.rolRel?.nombre_rol?.toLowerCase() || 'desconocido'
+    const matchesRole = roleFilter === 'todos' || roleName === roleFilter
+    const fullName = `${user.primer_nombre} ${user.primer_apellido}`.toLowerCase()
+    const matchesSearch = fullName.includes(searchQuery.toLowerCase()) || 
+                          user.correo.toLowerCase().includes(searchQuery.toLowerCase())
     return matchesRole && matchesSearch
   })
 
   // Get initials for profile badge
-  const getInitials = (name) => {
-    const parts = name.split(' ')
-    if (parts.length >= 2) {
-      return (parts[0][0] + parts[1][0]).toUpperCase()
+  const getInitials = (firstName, lastName) => {
+    if (firstName && lastName) {
+      return (firstName[0] + lastName[0]).toUpperCase()
     }
-    return name.slice(0, 2).toUpperCase()
+    return 'US'
   }
 
   return (
@@ -138,8 +148,8 @@ const UsersManagement = () => {
             Todos
           </button>
           <button 
-            className={`filter-tab ${roleFilter === 'admin' ? 'active' : ''}`}
-            onClick={() => setRoleFilter('admin')}
+            className={`filter-tab ${roleFilter === 'administrador' ? 'active' : ''}`}
+            onClick={() => setRoleFilter('administrador')}
           >
             Administradores
           </button>
@@ -148,12 +158,6 @@ const UsersManagement = () => {
             onClick={() => setRoleFilter('cultor')}
           >
             Cultores
-          </button>
-          <button 
-            className={`filter-tab ${roleFilter === 'investigador' ? 'active' : ''}`}
-            onClick={() => setRoleFilter('investigador')}
-          >
-            Investigadores
           </button>
         </div>
 
@@ -179,7 +183,11 @@ const UsersManagement = () => {
           <h3>Usuarios Registrados ({filteredUsers.length})</h3>
         </div>
 
-        {filteredUsers.length > 0 ? (
+        {isLoading ? (
+          <div className="empty-state">
+            <p>Cargando usuarios...</p>
+          </div>
+        ) : filteredUsers.length > 0 ? (
           <div className="table-responsive">
             <table className="users-table">
               <thead>
@@ -188,53 +196,33 @@ const UsersManagement = () => {
                   <th>CORREO ELECTRÓNICO</th>
                   <th>ROL DE ACCESO</th>
                   <th>ESTATUS</th>
-                  <th className="text-right">ACCIONES</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredUsers.map((user) => (
-                  <tr key={user.id}>
+                  <tr key={user.id_usuario}>
                     <td>
                       <div className="user-profile-cell">
                         <div className={`user-initials-badge ${
-                          user.role === 'admin' ? 'role-admin-badge' : 
-                          user.role === 'cultor' ? 'role-cultor-badge' : 'role-investigador-badge'
+                          user.rolRel?.nombre_rol?.toLowerCase() === 'administrador' ? 'role-admin-badge' : 
+                          user.rolRel?.nombre_rol?.toLowerCase() === 'cultor' ? 'role-cultor-badge' : 'role-investigador-badge'
                         }`}>
-                          {getInitials(user.name)}
+                          {getInitials(user.primer_nombre, user.primer_apellido)}
                         </div>
-                        <span className="user-display-name">{user.name}</span>
+                        <span className="user-display-name">{user.primer_nombre} {user.primer_apellido}</span>
                       </div>
                     </td>
-                    <td className="user-email-cell">{user.email}</td>
+                    <td className="user-email-cell">{user.correo}</td>
                     <td>
-                      <span className={`role-tag ${user.role}`}>
-                        {user.role === 'admin' ? 'Administrador' : 
-                         user.role === 'cultor' ? 'Cultor' : 'Investigador'}
+                      <span className={`role-tag ${user.rolRel?.nombre_rol?.toLowerCase()}`}>
+                        {user.rolRel?.nombre_rol || 'Sin rol'}
                       </span>
                     </td>
                     <td>
-                      <span className={`status-badge ${user.status}`}>
+                      <span className={`status-badge ${user.activo ? 'activo' : 'inactivo'}`}>
                         <span className="status-dot"></span>
-                        {user.status === 'activo' ? 'Activo' : 'Inactivo'}
+                        {user.activo ? 'Activo' : 'Inactivo'}
                       </span>
-                    </td>
-                    <td className="text-right">
-                      <div className="table-actions-row">
-                        <button 
-                          className="action-btn toggle-status"
-                          onClick={() => handleToggleStatus(user.id)}
-                          title={user.status === 'activo' ? 'Desactivar usuario' : 'Activar usuario'}
-                        >
-                          {user.status === 'activo' ? <UserX size={16} /> : <UserCheck size={16} />}
-                        </button>
-                        <button 
-                          className="action-btn delete-user"
-                          onClick={() => handleDeleteUser(user.id)}
-                          title="Eliminar usuario"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
                     </td>
                   </tr>
                 ))}
@@ -265,50 +253,88 @@ const UsersManagement = () => {
               <div className="modal-body">
                 {formError && <div className="form-error-banner">{formError}</div>}
                 
-                <div className="form-group">
-                  <label htmlFor="user-name">Nombre Completo <span className="required">*</span></label>
-                  <div className="input-with-icon">
-                    <User size={16} className="input-icon" />
-                    <input 
-                      type="text" 
-                      id="user-name" 
-                      placeholder="Ej. Juan R. Castañeda"
-                      value={newUserName}
-                      onChange={(e) => setNewUserName(e.target.value)}
-                      required
-                    />
+                <div className="form-row-grid">
+                  <div className="form-group">
+                    <label htmlFor="first-name">Primer Nombre <span className="required">*</span></label>
+                    <div className="input-with-icon">
+                      <User size={16} className="input-icon" />
+                      <input 
+                        type="text" 
+                        id="first-name" 
+                        placeholder="Ej. Juan"
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        required
+                      />
+                    </div>
                   </div>
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="user-email">Correo Electrónico <span className="required">*</span></label>
-                  <div className="input-with-icon">
-                    <Mail size={16} className="input-icon" />
-                    <input 
-                      type="email" 
-                      id="user-email" 
-                      placeholder="Ej. juan.castaneda@folklore.org"
-                      value={newUserEmail}
-                      onChange={(e) => setNewUserEmail(e.target.value)}
-                      required
-                    />
+                  <div className="form-group">
+                    <label htmlFor="last-name">Primer Apellido <span className="required">*</span></label>
+                    <div className="input-with-icon">
+                      <User size={16} className="input-icon" />
+                      <input 
+                        type="text" 
+                        id="last-name" 
+                        placeholder="Ej. Castañeda"
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        required
+                      />
+                    </div>
                   </div>
                 </div>
 
                 <div className="form-row-grid">
                   <div className="form-group">
-                    <label htmlFor="user-role">Rol de Acceso</label>
+                    <label htmlFor="user-email">Correo Electrónico <span className="required">*</span></label>
                     <div className="input-with-icon">
-                      <Shield size={16} className="input-icon" />
-                      <select 
-                        id="user-role"
-                        value={newUserRole}
-                        onChange={(e) => setNewUserRole(e.target.value)}
+                      <Mail size={16} className="input-icon" />
+                      <input 
+                        type="email" 
+                        id="user-email" 
+                        placeholder="Ej. correo@folklore.org"
+                        value={newUserEmail}
+                        onChange={(e) => setNewUserEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="user-password">Contraseña <span style={{color: '#807471', fontWeight: 'normal'}}>(Opcional)</span></label>
+                    <div className="input-with-icon">
+                      <Lock size={16} className="input-icon" />
+                      <input 
+                        type="text" 
+                        id="user-password" 
+                        placeholder="Dejar vacío para aleatoria"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="form-row-grid">
+                  <div className="form-group">
+                    <label>Tipo de Usuario (Rol) <span className="required">*</span></label>
+                    <div className="filter-tabs" style={{ marginTop: '4px' }}>
+                      <button 
+                        type="button"
+                        className={`filter-tab ${newUserRoleId === '1' ? 'active' : ''}`}
+                        onClick={() => setNewUserRoleId('1')}
+                        style={{ flex: 1, textAlign: 'center', display: 'flex', justifyContent: 'center', gap: '8px', alignItems: 'center' }}
                       >
-                        <option value="admin">Administrador</option>
-                        <option value="cultor">Cultor</option>
-                        <option value="investigador">Investigador</option>
-                      </select>
+                        <Shield size={16} /> Administrador
+                      </button>
+                      <button 
+                        type="button"
+                        className={`filter-tab ${newUserRoleId === '4' ? 'active' : ''}`}
+                        onClick={() => setNewUserRoleId('4')}
+                        style={{ flex: 1, textAlign: 'center', display: 'flex', justifyContent: 'center', gap: '8px', alignItems: 'center' }}
+                      >
+                        <User size={16} /> Cultor
+                      </button>
                     </div>
                   </div>
 
@@ -318,11 +344,11 @@ const UsersManagement = () => {
                       <UserCheck size={16} className="input-icon" />
                       <select 
                         id="user-status"
-                        value={newUserStatus}
-                        onChange={(e) => setNewUserStatus(e.target.value)}
+                        value={newUserStatus.toString()}
+                        onChange={(e) => setNewUserStatus(e.target.value === 'true')}
                       >
-                        <option value="activo">Activo</option>
-                        <option value="inactivo">Inactivo</option>
+                        <option value="true">Activo</option>
+                        <option value="false">Inactivo</option>
                       </select>
                     </div>
                   </div>
@@ -333,8 +359,8 @@ const UsersManagement = () => {
                 <button type="button" className="btn-secondary" onClick={() => setIsModalOpen(false)}>
                   Cancelar
                 </button>
-                <button type="submit" className="btn-primary">
-                  Crear Usuario
+                <button type="submit" className="btn-primary" disabled={isSubmitting}>
+                  {isSubmitting ? 'Creando...' : 'Crear Usuario'}
                 </button>
               </div>
             </form>
