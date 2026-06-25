@@ -32,6 +32,20 @@ const UsersManagement = () => {
   const [newUserStatus, setNewUserStatus] = useState(true)
   const [formError, setFormError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [createdUserCredentials, setCreatedUserCredentials] = useState(null)
+  const [copied, setCopied] = useState(false)
+
+  const resetForm = () => {
+    setFirstName('')
+    setLastName('')
+    setNewUserEmail('')
+    setNewPassword('')
+    setNewUserRoleId('4')
+    setNewUserStatus(true)
+    setFormError('')
+    setCreatedUserCredentials(null)
+    setCopied(false)
+  }
 
   // Load users and roles on mount
   useEffect(() => {
@@ -41,7 +55,7 @@ const UsersManagement = () => {
   const fetchData = async () => {
     setIsLoading(true)
     try {
-      const token = localStorage.getItem('token')
+      const token = localStorage.getItem('auth-token')
       const usersData = await getUsersRequest(token)
       setUsers(usersData)
     } catch (error) {
@@ -70,7 +84,7 @@ const UsersManagement = () => {
     setFormError('')
 
     try {
-      const token = localStorage.getItem('token')
+      const token = localStorage.getItem('auth-token')
       const payload = {
         primer_nombre: firstName,
         primer_apellido: lastName,
@@ -86,14 +100,17 @@ const UsersManagement = () => {
       const newUser = await createUserRequest(payload, token)
       setUsers([newUser, ...users])
       
-      // Reset form and close modal
-      setFirstName('')
-      setLastName('')
-      setNewUserEmail('')
-      setNewPassword('')
-      setNewUserRoleId('4')
-      setNewUserStatus(true)
-      setIsModalOpen(false)
+      // Si la contraseña fue auto-generada (dejada vacía en el formulario),
+      // guardamos las credenciales para mostrárselas al administrador en el modal.
+      if (!newPassword.trim() && newUser.password_creada) {
+        setCreatedUserCredentials({
+          correo: newUser.correo,
+          password: newUser.password_creada
+        })
+      } else {
+        resetForm()
+        setIsModalOpen(false)
+      }
     } catch (error) {
       setFormError(error.message || 'Error al crear usuario.')
     } finally {
@@ -244,126 +261,205 @@ const UsersManagement = () => {
           <div className="modal-card">
             <div className="modal-header">
               <h2>Crear Nuevo Usuario</h2>
-              <button className="close-modal-btn" onClick={() => setIsModalOpen(false)} aria-label="Cerrar modal">
+              <button 
+                className="close-modal-btn" 
+                onClick={() => {
+                  resetForm()
+                  setIsModalOpen(false)
+                }} 
+                aria-label="Cerrar modal"
+              >
                 <X size={20} />
               </button>
             </div>
 
-            <form onSubmit={handleCreateUserSubmit}>
-              <div className="modal-body">
-                {formError && <div className="form-error-banner">{formError}</div>}
-                
-                <div className="form-row-grid">
-                  <div className="form-group">
-                    <label htmlFor="first-name">Primer Nombre <span className="required">*</span></label>
-                    <div className="input-with-icon">
-                      <User size={16} className="input-icon" />
-                      <input 
-                        type="text" 
-                        id="first-name" 
-                        placeholder="Ej. Juan"
-                        value={firstName}
-                        onChange={(e) => setFirstName(e.target.value)}
-                        required
-                      />
-                    </div>
+            {createdUserCredentials ? (
+              <div className="modal-body success-credentials-body">
+                <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+                  <div style={{ display: 'inline-flex', padding: '12px', borderRadius: '50%', backgroundColor: '#e6f4ea', color: '#137333', marginBottom: '12px' }}>
+                    <UserCheck size={32} />
                   </div>
-                  <div className="form-group">
-                    <label htmlFor="last-name">Primer Apellido <span className="required">*</span></label>
-                    <div className="input-with-icon">
-                      <User size={16} className="input-icon" />
-                      <input 
-                        type="text" 
-                        id="last-name" 
-                        placeholder="Ej. Castañeda"
-                        value={lastName}
-                        onChange={(e) => setLastName(e.target.value)}
-                        required
-                      />
+                  <h3 style={{ margin: 0, color: '#202124', fontSize: '18px', fontWeight: '600' }}>¡Usuario creado exitosamente!</h3>
+                  <p style={{ margin: '8px 0 0 0', color: '#5f6368', fontSize: '14px' }}>
+                    Se ha enviado un correo de bienvenida a <strong>{createdUserCredentials.correo}</strong>.
+                  </p>
+                </div>
+
+                <div style={{ backgroundColor: '#f8f9fa', border: '1px solid #dadce0', borderRadius: '8px', padding: '16px', marginBottom: '20px' }}>
+                  <p style={{ margin: '0 0 12px 0', fontSize: '12px', fontWeight: 'bold', color: '#5f6368', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    Credenciales de acceso
+                  </p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <div>
+                      <span style={{ fontSize: '13px', color: '#5f6368', display: 'block' }}>Usuario (Correo):</span>
+                      <strong style={{ fontSize: '14px', color: '#202124' }}>{createdUserCredentials.correo}</strong>
+                    </div>
+                    <div style={{ borderTop: '1px solid #f1f3f4', paddingTop: '8px' }}>
+                      <span style={{ fontSize: '13px', color: '#5f6368', display: 'block' }}>Contraseña temporal:</span>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginTop: '4px' }}>
+                        <code style={{ fontSize: '15px', color: '#c53813', fontFamily: 'monospace', fontWeight: 'bold', letterSpacing: '1px', backgroundColor: '#fce8e6', padding: '4px 8px', borderRadius: '4px' }}>
+                          {createdUserCredentials.password}
+                        </code>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(createdUserCredentials.password)
+                            setCopied(true)
+                            setTimeout(() => setCopied(false), 2000)
+                          }}
+                          className="btn-secondary"
+                          style={{ padding: '6px 12px', fontSize: '12px', height: 'auto', display: 'flex', alignItems: 'center', gap: '4px' }}
+                        >
+                          {copied ? '¡Copiado!' : 'Copiar'}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="form-row-grid">
-                  <div className="form-group">
-                    <label htmlFor="user-email">Correo Electrónico <span className="required">*</span></label>
-                    <div className="input-with-icon">
-                      <Mail size={16} className="input-icon" />
-                      <input 
-                        type="email" 
-                        id="user-email" 
-                        placeholder="Ej. correo@folklore.org"
-                        value={newUserEmail}
-                        onChange={(e) => setNewUserEmail(e.target.value)}
-                        required
-                      />
-                    </div>
-                  </div>
+                <p style={{ margin: 0, fontSize: '12px', color: '#a82c14', display: 'flex', gap: '4px', alignItems: 'flex-start', lineHeight: '1.4' }}>
+                  <span>⚠️</span>
+                  <span>Por favor, copia esta contraseña ahora. No se volverá a mostrar en la interfaz por motivos de seguridad.</span>
+                </p>
 
-                  <div className="form-group">
-                    <label htmlFor="user-password">Contraseña <span style={{color: '#807471', fontWeight: 'normal'}}>(Opcional)</span></label>
-                    <div className="input-with-icon">
-                      <Lock size={16} className="input-icon" />
-                      <input 
-                        type="text" 
-                        id="user-password" 
-                        placeholder="Dejar vacío para aleatoria"
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="form-row-grid">
-                  <div className="form-group">
-                    <label>Tipo de Usuario (Rol) <span className="required">*</span></label>
-                    <div className="filter-tabs" style={{ marginTop: '4px' }}>
-                      <button 
-                        type="button"
-                        className={`filter-tab ${newUserRoleId === '1' ? 'active' : ''}`}
-                        onClick={() => setNewUserRoleId('1')}
-                        style={{ flex: 1, textAlign: 'center', display: 'flex', justifyContent: 'center', gap: '8px', alignItems: 'center' }}
-                      >
-                        <Shield size={16} /> Administrador
-                      </button>
-                      <button 
-                        type="button"
-                        className={`filter-tab ${newUserRoleId === '4' ? 'active' : ''}`}
-                        onClick={() => setNewUserRoleId('4')}
-                        style={{ flex: 1, textAlign: 'center', display: 'flex', justifyContent: 'center', gap: '8px', alignItems: 'center' }}
-                      >
-                        <User size={16} /> Cultor
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="form-group">
-                    <label htmlFor="user-status">Estatus Inicial</label>
-                    <div className="input-with-icon">
-                      <UserCheck size={16} className="input-icon" />
-                      <select 
-                        id="user-status"
-                        value={newUserStatus.toString()}
-                        onChange={(e) => setNewUserStatus(e.target.value === 'true')}
-                      >
-                        <option value="true">Activo</option>
-                        <option value="false">Inactivo</option>
-                      </select>
-                    </div>
-                  </div>
+                <div className="modal-footer" style={{ borderTop: 'none', padding: '20px 0 0 0' }}>
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    style={{ width: '100%' }}
+                    onClick={() => {
+                      resetForm()
+                      setIsModalOpen(false)
+                    }}
+                  >
+                    Entendido
+                  </button>
                 </div>
               </div>
+            ) : (
+              <form onSubmit={handleCreateUserSubmit}>
+                <div className="modal-body">
+                  {formError && <div className="form-error-banner">{formError}</div>}
+                  
+                  <div className="form-row-grid">
+                    <div className="form-group">
+                      <label htmlFor="first-name">Primer Nombre <span className="required">*</span></label>
+                      <div className="input-with-icon">
+                        <User size={16} className="input-icon" />
+                        <input 
+                          type="text" 
+                          id="first-name" 
+                          placeholder="Ej. Juan"
+                          value={firstName}
+                          onChange={(e) => setFirstName(e.target.value)}
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="last-name">Primer Apellido <span className="required">*</span></label>
+                      <div className="input-with-icon">
+                        <User size={16} className="input-icon" />
+                        <input 
+                          type="text" 
+                          id="last-name" 
+                          placeholder="Ej. Castañeda"
+                          value={lastName}
+                          onChange={(e) => setLastName(e.target.value)}
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
 
-              <div className="modal-footer">
-                <button type="button" className="btn-secondary" onClick={() => setIsModalOpen(false)}>
-                  Cancelar
-                </button>
-                <button type="submit" className="btn-primary" disabled={isSubmitting}>
-                  {isSubmitting ? 'Creando...' : 'Crear Usuario'}
-                </button>
-              </div>
-            </form>
+                  <div className="form-row-grid">
+                    <div className="form-group">
+                      <label htmlFor="user-email">Correo Electrónico <span className="required">*</span></label>
+                      <div className="input-with-icon">
+                        <Mail size={16} className="input-icon" />
+                        <input 
+                          type="email" 
+                          id="user-email" 
+                          placeholder="Ej. correo@folklore.org"
+                          value={newUserEmail}
+                          onChange={(e) => setNewUserEmail(e.target.value)}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="form-group">
+                      <label htmlFor="user-password">Contraseña <span style={{color: '#807471', fontWeight: 'normal'}}>(Opcional)</span></label>
+                      <div className="input-with-icon">
+                        <Lock size={16} className="input-icon" />
+                        <input 
+                          type="text" 
+                          id="user-password" 
+                          placeholder="Dejar vacío para aleatoria"
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="form-row-grid">
+                    <div className="form-group">
+                      <label>Tipo de Usuario (Rol) <span className="required">*</span></label>
+                      <div className="filter-tabs" style={{ marginTop: '4px' }}>
+                        <button 
+                          type="button"
+                          className={`filter-tab ${newUserRoleId === '1' ? 'active' : ''}`}
+                          onClick={() => setNewUserRoleId('1')}
+                          style={{ flex: 1, textAlign: 'center', display: 'flex', justifyContent: 'center', gap: '8px', alignItems: 'center' }}
+                        >
+                          <Shield size={16} /> Administrador
+                        </button>
+                        <button 
+                          type="button"
+                          className={`filter-tab ${newUserRoleId === '4' ? 'active' : ''}`}
+                          onClick={() => setNewUserRoleId('4')}
+                          style={{ flex: 1, textAlign: 'center', display: 'flex', justifyContent: 'center', gap: '8px', alignItems: 'center' }}
+                        >
+                          <User size={16} /> Cultor
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="form-group">
+                      <label htmlFor="user-status">Estatus Inicial</label>
+                      <div className="input-with-icon">
+                        <UserCheck size={16} className="input-icon" />
+                        <select 
+                          id="user-status"
+                          value={newUserStatus.toString()}
+                          onChange={(e) => setNewUserStatus(e.target.value === 'true')}
+                        >
+                          <option value="true">Activo</option>
+                          <option value="false">Inactivo</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="modal-footer">
+                  <button 
+                    type="button" 
+                    className="btn-secondary" 
+                    onClick={() => {
+                      resetForm()
+                      setIsModalOpen(false)
+                    }}
+                  >
+                    Cancelar
+                  </button>
+                  <button type="submit" className="btn-primary" disabled={isSubmitting}>
+                    {isSubmitting ? 'Creando...' : 'Crear Usuario'}
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}
