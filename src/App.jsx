@@ -1,12 +1,14 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import Layout from './components/Layout'
 import Dashboard from './components/pages/Dashboard'
 import UsersManagement from './components/pages/UsersManagement'
 import CultoresDirectory from './components/pages/CultoresDirectory'
 import PreRegistration from './components/pages/PreRegistration'
 import InventarioPatrimonial from './components/pages/InventarioPatrimonial'
+import DifusionGaleria from './components/pages/DifusionGaleria'
 import ReportesCatalogo from './components/pages/ReportesCatalogo'
 import Login from './components/pages/Login'
+import ForgotPassword from './components/pages/ForgotPassword'
 import ResetPassword from './components/pages/ResetPassword'
 import './App.css'
 
@@ -15,54 +17,6 @@ function App() {
     return localStorage.getItem('user-authenticated') === 'true'
   })
   const [currentView, setCurrentView] = useState('dashboard')
-
-  // Lifted state of cultores
-  const [cultores, setCultores] = useState([
-    {
-      id: 1,
-      name: 'Juan R. Castañeda',
-      cedula: 'V-7.481.902',
-      technique: 'Talla en Madera',
-      municipio: 'San Cristóbal',
-      status: 'ACTIVO',
-      supports: { cedula: true, resume: true, certification: false },
-      obras: 18,
-      verificationStatus: 'aprobado'
-    },
-    {
-      id: 2,
-      name: 'María Sosa',
-      cedula: 'V-12.902.501',
-      technique: 'Cerámica Tradicional',
-      municipio: 'Lobatera',
-      status: 'ACTIVO',
-      supports: { cedula: true, resume: false, certification: true },
-      obras: 24,
-      verificationStatus: 'aprobado'
-    },
-    {
-      id: 3,
-      name: 'Eleazar Rojas',
-      cedula: 'V-6.281.340',
-      technique: 'Tejeduría',
-      municipio: 'Capacho',
-      status: 'RETIRADO',
-      supports: { cedula: true, resume: true, certification: false },
-      obras: 12,
-      verificationStatus: 'pendiente'
-    },
-    {
-      id: 4,
-      name: 'Isabel de Rivera',
-      cedula: 'V-4.102.589',
-      technique: 'Cestería',
-      municipio: 'San Cristóbal',
-      status: 'FALLECIDO',
-      supports: { cedula: true, resume: true, certification: true },
-      obras: 32,
-      verificationStatus: 'aprobado'
-    }
-  ])
 
   const handleLogin = (data) => {
     localStorage.setItem('user-authenticated', 'true')
@@ -78,23 +32,17 @@ function App() {
     setIsAuthenticated(false)
   }
 
-  const [resetToken, setResetToken] = React.useState(null)
+  // Sin router: "rutas" resueltas manualmente por pathname, mismo enfoque que ya
+  // usaba este archivo para leer ?token= en la URL. Cada navegación entre estas
+  // vistas es una recarga completa (<a href>, window.location.href), no SPA.
+  const pathname = window.location.pathname
 
-  React.useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    const token = params.get('token')
-    if (token) {
-      setResetToken(token)
-    }
-  }, [])
-
-  const clearToken = () => {
-    setResetToken(null)
-    window.history.replaceState({}, document.title, window.location.pathname)
+  if (pathname === '/recuperar-password') {
+    return <ResetPassword />
   }
 
-  if (resetToken) {
-    return <ResetPassword token={resetToken} onResetSuccess={clearToken} onCancel={clearToken} />
+  if (pathname === '/olvide-password') {
+    return <ForgotPassword onBack={() => { window.location.href = '/' }} />
   }
 
   if (!isAuthenticated) {
@@ -106,10 +54,10 @@ function App() {
       {currentView === 'dashboard' && <Dashboard />}
       {currentView === 'usuarios' && <UsersManagement />}
       {currentView === 'cultores' && (
-        <CultoresDirectory cultores={cultores} setCultores={setCultores} />
+        <CultoresDirectory />
       )}
       {currentView === 'preregistro' && (
-        <PreRegistration cultores={cultores} setCultores={setCultores} />
+        <PreRegistration />
       )}
       {currentView === 'patrimonio' && (
         <InventarioPatrimonial />

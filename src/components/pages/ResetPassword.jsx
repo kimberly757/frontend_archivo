@@ -1,9 +1,14 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { Lock, Eye, EyeOff, ArrowRight, Landmark } from 'lucide-react'
 import './Login.css'
 import { resetPasswordRequest } from '../../services/api'
 
-const ResetPassword = ({ token, onResetSuccess, onCancel }) => {
+// Vista "neutral": no sabe ni decide nada sobre roles (Administrador/Cultor) — solo
+// confirma el cambio de contraseña y devuelve a la raíz, donde el Login real maneja
+// la sesión y cualquier redirección por rol.
+const ResetPassword = () => {
+  const token = new URLSearchParams(window.location.search).get('token')
+
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -11,28 +16,35 @@ const ResetPassword = ({ token, onResetSuccess, onCancel }) => {
   const [successMessage, setSuccessMessage] = useState('')
   const [loading, setLoading] = useState(false)
 
+  const volverAlInicio = () => {
+    window.location.href = '/'
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
     setSuccessMessage('')
+
+    if (!token) {
+      setError('El enlace de recuperación no es válido. Solicita uno nuevo.')
+      return
+    }
 
     if (password !== confirmPassword) {
       setError('Las contraseñas no coinciden')
       return
     }
 
-    if (password.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres')
+    if (password.length < 8) {
+      setError('La contraseña debe tener al menos 8 caracteres')
       return
     }
 
     setLoading(true)
     try {
       const data = await resetPasswordRequest(token, password)
-      setSuccessMessage(data.message || 'Contraseña restablecida con éxito. Redirigiendo...')
-      setTimeout(() => {
-        if (onResetSuccess) onResetSuccess()
-      }, 3000)
+      setSuccessMessage(data.message || 'Contraseña restablecida con éxito. Redirigiendo al inicio de sesión...')
+      setTimeout(volverAlInicio, 3000)
     } catch (err) {
       setError(err?.message || 'Error al restablecer contraseña')
     } finally {
@@ -45,7 +57,7 @@ const ResetPassword = ({ token, onResetSuccess, onCancel }) => {
       {/* Left Branding Panel */}
       <div className="login-brand-panel">
         <span className="brand-top-label">Ministerio de Cultura</span>
-        
+
         <div className="brand-center-content">
           <div className="landmark-icon-container">
             <Landmark size={28} />
@@ -68,15 +80,14 @@ const ResetPassword = ({ token, onResetSuccess, onCancel }) => {
           {successMessage && <p style={{ color: '#005f00', backgroundColor: '#e2f5e2', padding: '10px', borderRadius: '5px', fontSize: '0.85rem', marginBottom: '15px' }}>{successMessage}</p>}
 
           <form onSubmit={handleSubmit} className="login-form">
-            {/* Password Group */}
             <div className="form-group">
               <label className="form-label" htmlFor="new-password">Nueva Contraseña</label>
               <div className="input-wrapper">
                 <Lock className="input-icon" size={18} />
-                <input 
+                <input
                   id="new-password"
-                  type={showPassword ? 'text' : 'password'} 
-                  placeholder="••••••••" 
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -92,15 +103,14 @@ const ResetPassword = ({ token, onResetSuccess, onCancel }) => {
               </div>
             </div>
 
-            {/* Confirm Password Group */}
             <div className="form-group">
               <label className="form-label" htmlFor="confirm-password">Confirmar Contraseña</label>
               <div className="input-wrapper">
                 <Lock className="input-icon" size={18} />
-                <input 
+                <input
                   id="confirm-password"
-                  type={showPassword ? 'text' : 'password'} 
-                  placeholder="••••••••" 
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="••••••••"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
@@ -108,16 +118,15 @@ const ResetPassword = ({ token, onResetSuccess, onCancel }) => {
               </div>
             </div>
 
-            {/* Action Button */}
             <button type="submit" className="btn-login" disabled={loading}>
               <span>{loading ? 'Guardando...' : 'Guardar Contraseña'}</span>
               <ArrowRight size={18} />
             </button>
 
-            <div className="text-center" style={{ marginTop: '15px', textAlign: 'center' }}>
-              <button 
-                type="button" 
-                onClick={onCancel}
+            <div style={{ marginTop: '15px', textAlign: 'center' }}>
+              <button
+                type="button"
+                onClick={volverAlInicio}
                 style={{ background: 'none', border: 'none', color: '#1a365d', textDecoration: 'underline', cursor: 'pointer', fontSize: '0.9rem' }}
               >
                 Volver al inicio de sesión
@@ -126,7 +135,6 @@ const ResetPassword = ({ token, onResetSuccess, onCancel }) => {
           </form>
         </div>
 
-        {/* Small Copyright Footer */}
         <p className="login-copyright">
           © 2024 Archivo Regional de Folklore. Reservados todos los derechos.
         </p>

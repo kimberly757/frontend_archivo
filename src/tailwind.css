@@ -1,0 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Preflight está apagado (corePlugins.preflight: false en tailwind.config.js) para no
+   afectar el resto del dashboard, que usa CSS propio. Pero eso significa que ningún
+   elemento tiene box-sizing: border-box por defecto, así que w-full + px-* (padding)
+   se suman POR FUERA del 100% y desbordan su contenedor. Se repone ese único reset,
+   acotado a .tw-scope (los componentes copiados de la web pública), sin tocar el resto
+   del panel. */
+.tw-scope,
+.tw-scope *,
+.tw-scope *::before,
+.tw-scope *::after {
+  box-sizing: border-box;
+}

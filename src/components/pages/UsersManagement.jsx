@@ -12,11 +12,17 @@ import {
   Lock
 } from 'lucide-react'
 import './UsersManagement.css'
-import { getUsersRequest, createUserRequest } from '../../services/api'
+import { getUsersRequest, createUserRequest, getRolesRequest } from '../../services/api'
+import { enviarCredenciales } from '../../services/emailNotifications'
 
 const UsersManagement = () => {
   const [users, setUsers] = useState([])
   const [isLoading, setIsLoading] = useState(true)
+
+  // Roles disponibles para el selector de "Crear Usuario" — excluye 'cultor' a
+  // propósito: esa creación es exclusiva del flujo de Ingreso Manual (ManualCultorForm),
+  // que además aprueba al cultor de inmediato y genera su cuenta de forma distinta.
+  const [roles, setRoles] = useState([])
 
   // Filters state
   const [roleFilter, setRoleFilter] = useState('todos')
@@ -28,23 +34,27 @@ const UsersManagement = () => {
   const [lastName, setLastName] = useState('')
   const [newUserEmail, setNewUserEmail] = useState('')
   const [newPassword, setNewPassword] = useState('')
-  const [newUserRoleId, setNewUserRoleId] = useState('4')
+  const [newUserRoleId, setNewUserRoleId] = useState('')
   const [newUserStatus, setNewUserStatus] = useState(true)
   const [formError, setFormError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [createdUserCredentials, setCreatedUserCredentials] = useState(null)
   const [copied, setCopied] = useState(false)
+  const [emailSendError, setEmailSendError] = useState('')
+
+  const rolesSeleccionables = roles.filter((rol) => rol.nombre_rol?.toLowerCase() !== 'cultor')
 
   const resetForm = () => {
     setFirstName('')
     setLastName('')
     setNewUserEmail('')
     setNewPassword('')
-    setNewUserRoleId('4')
+    setNewUserRoleId(String(rolesSeleccionables[0]?.id_rol || ''))
     setNewUserStatus(true)
     setFormError('')
     setCreatedUserCredentials(null)
     setCopied(false)
+    setEmailSendError('')
   }
 
   // Load users and roles on mount
@@ -56,8 +66,16 @@ const UsersManagement = () => {
     setIsLoading(true)
     try {
       const token = localStorage.getItem('auth-token')
-      const usersData = await getUsersRequest(token)
+      const [usersData, rolesData] = await Promise.all([
+        getUsersRequest(token),
+        getRolesRequest(token),
+      ])
       setUsers(usersData)
+      setRoles(rolesData)
+
+      const seleccionables = rolesData.filter((rol) => rol.nombre_rol?.toLowerCase() !== 'cultor')
+      const admin = seleccionables.find((rol) => rol.nombre_rol?.toLowerCase() === 'administrador')
+      setNewUserRoleId(String((admin || seleccionables[0])?.id_rol || ''))
     } catch (error) {
       console.error('Error loading data:', error)
     } finally {
@@ -99,14 +117,26 @@ const UsersManagement = () => {
       
       const newUser = await createUserRequest(payload, token)
       setUsers([newUser, ...users])
-      
+
       // Si la contraseña fue auto-generada (dejada vacía en el formulario),
-      // guardamos las credenciales para mostrárselas al administrador en el modal.
+      // guardamos las credenciales para mostrárselas al administrador en el modal
+      // y disparamos la plantilla de EmailJS hacia el correo del nuevo usuario.
       if (!newPassword.trim() && newUser.password_creada) {
         setCreatedUserCredentials({
           correo: newUser.correo,
           password: newUser.password_creada
         })
+
+        const nombreCompleto = `${newUser.primer_nombre} ${newUser.primer_apellido}`
+        const nombreRol = newUser.rolRel?.nombre_rol || 'usuario'
+        const rolUsuario = nombreRol.charAt(0).toUpperCase() + nombreRol.slice(1)
+        try {
+          await enviarCredenciales({ correo: newUser.correo, nombre: nombreCompleto, password: newUser.password_creada, rol_usuario: rolUsuario })
+        } catch {
+          // La cuenta ya quedó creada en la base de datos; si solo falla el correo,
+          // las credenciales siguen visibles en el modal para copiarlas manualmente.
+          setEmailSendError('El usuario se creó correctamente, pero no se pudo enviar el correo de notificación. Copia la contraseña manualmente.')
+        }
       } else {
         resetForm()
         setIsModalOpen(false)
@@ -281,9 +311,17 @@ const UsersManagement = () => {
                   </div>
                   <h3 style={{ margin: 0, color: '#202124', fontSize: '18px', fontWeight: '600' }}>¡Usuario creado exitosamente!</h3>
                   <p style={{ margin: '8px 0 0 0', color: '#5f6368', fontSize: '14px' }}>
-                    Se ha enviado un correo de bienvenida a <strong>{createdUserCredentials.correo}</strong>.
+                    {emailSendError
+                      ? <>No se pudo notificar por correo a <strong>{createdUserCredentials.correo}</strong>.</>
+                      : <>Se ha enviado un correo de bienvenida a <strong>{createdUserCredentials.correo}</strong>.</>}
                   </p>
                 </div>
+
+                {emailSendError && (
+                  <p style={{ margin: '0 0 16px 0', fontSize: '13px', color: '#a82c14', backgroundColor: '#fce8e6', padding: '10px', borderRadius: '6px' }}>
+                    {emailSendError}
+                  </p>
+                )}
 
                 <div style={{ backgroundColor: '#f8f9fa', border: '1px solid #dadce0', borderRadius: '8px', padding: '16px', marginBottom: '20px' }}>
                   <p style={{ margin: '0 0 12px 0', fontSize: '12px', fontWeight: 'bold', color: '#5f6368', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
@@ -405,25 +443,16 @@ const UsersManagement = () => {
 
                   <div className="form-row-grid">
                     <div className="form-group">
-                      <label>Tipo de Usuario (Rol) <span className="required">*</span></label>
-                      <div className="filter-tabs" style={{ marginTop: '4px' }}>
-                        <button 
-                          type="button"
-                          className={`filter-tab ${newUserRoleId === '1' ? 'active' : ''}`}
-                          onClick={() => setNewUserRoleId('1')}
-                          style={{ flex: 1, textAlign: 'center', display: 'flex', justifyContent: 'center', gap: '8px', alignItems: 'center' }}
-                        >
-                          <Shield size={16} /> Administrador
-                        </button>
-                        <button 
-                          type="button"
-                          className={`filter-tab ${newUserRoleId === '4' ? 'active' : ''}`}
-                          onClick={() => setNewUserRoleId('4')}
-                          style={{ flex: 1, textAlign: 'center', display: 'flex', justifyContent: 'center', gap: '8px', alignItems: 'center' }}
-                        >
-                          <User size={16} /> Cultor
-                        </button>
+                      <label htmlFor="user-role">Tipo de Usuario (Rol) <span className="required">*</span></label>
+                      <div className="input-with-icon">
+                        <Shield size={16} className="input-icon" />
+                        <select id="user-role" value="administrador" disabled>
+                          <option value="administrador">Administrador</option>
+                        </select>
                       </div>
+                      <p style={{ marginTop: '6px', fontSize: '11px', color: '#807471' }}>
+                        Los cultores se registran desde "Ingreso Manual" en Directorio de Cultores, no aquí.
+                      </p>
                     </div>
 
                     <div className="form-group">

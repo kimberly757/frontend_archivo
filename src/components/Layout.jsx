@@ -98,13 +98,15 @@ const Layout = ({ children, currentView, onViewChange, onLogout }) => {
             <LayoutDashboard className="nav-icon" size={20} />
             <span>Dashboard</span>
           </button>
+
+          <span className="nav-section-label">Manejo Web</span>
           <button
-            onClick={() => handleViewChange('usuarios')}
-            className={`nav-item nav-btn ${currentView === 'usuarios' ? 'active' : ''}`}
-            data-label="Gestión de Usuarios"
+            onClick={() => handleViewChange('preregistro')}
+            className={`nav-item nav-btn ${currentView === 'preregistro' ? 'active' : ''}`}
+            data-label="Pre-registro"
           >
-            <UserCheck className="nav-icon" size={20} />
-            <span>Gestión de Usuarios</span>
+            <FileText className="nav-icon" size={20} />
+            <span>Pre-registro</span>
           </button>
           <button
             onClick={() => handleViewChange('cultores')}
@@ -113,14 +115,6 @@ const Layout = ({ children, currentView, onViewChange, onLogout }) => {
           >
             <Users className="nav-icon" size={20} />
             <span>Directorio de Cultores</span>
-          </button>
-          <button
-            onClick={() => handleViewChange('preregistro')}
-            className={`nav-item nav-btn ${currentView === 'preregistro' ? 'active' : ''}`}
-            data-label="Pre-registro"
-          >
-            <FileText className="nav-icon" size={20} />
-            <span>Pre-registro</span>
           </button>
           <button
             onClick={() => handleViewChange('patrimonio')}
@@ -137,6 +131,16 @@ const Layout = ({ children, currentView, onViewChange, onLogout }) => {
           >
             <ImageIcon className="nav-icon" size={20} />
             <span>Difusión y Galería</span>
+          </button>
+
+          <span className="nav-section-label">Manejo Administrativo</span>
+          <button
+            onClick={() => handleViewChange('usuarios')}
+            className={`nav-item nav-btn ${currentView === 'usuarios' ? 'active' : ''}`}
+            data-label="Gestión de Usuarios"
+          >
+            <UserCheck className="nav-icon" size={20} />
+            <span>Gestión de Usuarios</span>
           </button>
           <button
             onClick={() => handleViewChange('reportes')}
