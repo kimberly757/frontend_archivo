@@ -1,922 +1,609 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
-  Search,
-  Plus,
-  X,
-  Edit2,
-  Trash2,
-  QrCode,
-  Calendar,
-  ChevronLeft,
-  ChevronRight,
-  Eye,
-  Laptop,
-  UploadCloud,
-  FileText,
-  Image as ImageIcon,
-  Mail,
-  Send,
-  Layers
+  Edit2, Trash2, Plus, Monitor, Link as LinkIcon, Folder, FolderOpen, Eye, EyeOff, Camera, Layers, X
 } from 'lucide-react'
-import partituraImg from '../../assets/featured_partitura.png'
 import './DifusionGaleria.css'
+import { 
+  getConfiguracionWebRequest, 
+  updateConfiguracionWebRequest,
+  getExposicionesAdminRequest, 
+  createExposicionAdminRequest, 
+  updateExposicionAdminRequest, 
+  deleteExposicionAdminRequest,
+  getObrasPorExposicionRequest, 
+  linkObraExposicionRequest, 
+  unlinkObraExposicionRequest,
+  getObrasAdminRequest,
+  updateObraDestacadoRequest
+} from '../../services/api'
+import TextInput from '../form/TextInput'
+import Textarea from '../form/Textarea'
 
 const DifusionGaleria = () => {
-  // Mock data of exhibitions
-  const [exhibitions, setExhibitions] = useState([
-    {
-      id: 1,
-      title: 'Talla y Madera del Táchira',
-      dates: '15 Jun - 30 Jun',
-      published: true,
-      image: partituraImg,
-      pieces: [
-        { id: 101, name: 'Talla de San Isidro', author: 'Familia Roa', enabled: true, image: null },
-        { id: 102, name: 'Silla artesanal de pino', author: 'José Ramírez', enabled: true, image: null }
-      ]
-    },
-    {
-      id: 2,
-      title: 'Instrumentos de Viento y Cuerdas tradicionales',
-      dates: '01 Jul - 15 Jul',
-      published: false,
-      image: null,
-      pieces: [
-        { id: 103, name: 'Cuatro de Cedro', author: 'Eleazar Rojas', enabled: true, image: null }
-      ]
-    },
-    {
-      id: 3,
-      title: 'Vestimentas Típicas de Capacho',
-      dates: '20 Jul - 05 Ago',
-      published: true,
-      image: null,
-      pieces: []
-    }
-  ])
+  const token = localStorage.getItem('auth-token')
+  const [iframeKey, setIframeKey] = useState(Date.now())
 
-  // States
-  const [searchQuery, setSearchQuery] = useState('')
-  const [currentPage, setCurrentPage] = useState(1)
+  const [configWeb, setConfigWeb] = useState({
+    hero_titulo: '',
+    hero_subtitulo: '',
+    about_texto: '',
+    contacto_email: '',
+    contacto_telefono: '',
+    contacto_direccion: ''
+  })
+  const [loadingConfig, setLoadingConfig] = useState(true)
 
-  // Efemérides State
-  const [efemerideText, setEfemerideText] = useState(
-    'Mes del Folklore Tachirense: Conoce los rostros y saberes que tallan la identidad de nuestra región a través de nuestras expresiones vivas.'
-  )
-  const [efemerideBg, setEfemerideBg] = useState(null)
+  const [exposiciones, setExposiciones] = useState([])
+  const [loadingExposiciones, setLoadingExposiciones] = useState(true)
 
-  // Exhibition Form Modal State
+  const [obrasColeccion, setObrasColeccion] = useState([])
+  const [loadingObras, setLoadingObras] = useState(true)
+
+  // Estados del modal de exposiciones
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [modalMode, setModalMode] = useState('create') // 'create' | 'edit'
-  const [editingExhibitionId, setEditingExhibitionId] = useState(null)
-  const [newTitle, setNewTitle] = useState('')
-  const [newDates, setNewDates] = useState('')
-  const [newPublished, setNewPublished] = useState(true)
-  const [newImage, setNewImage] = useState(null)
-  const [formError, setFormError] = useState('')
+  const [modalMode, setModalMode] = useState('create')
+  const [editingExpoId, setEditingExpoId] = useState(null)
+  const [expoForm, setExpoForm] = useState({
+    nombre_exposicion: '',
+    descripcion: '',
+    lugar_fisico: '',
+    organizador: '',
+    fecha_inicio: '',
+    fecha_fin: ''
+  })
 
-  // Pieces Management State
-  const [selectedExhibitionForPieces, setSelectedExhibitionForPieces] = useState(null)
-  const [isPiecesModalOpen, setIsPiecesModalOpen] = useState(false)
-  const [isPieceFormOpen, setIsPieceFormOpen] = useState(false)
-  const [pieceModalMode, setPieceModalMode] = useState('create')
-  const [editingPieceId, setEditingPieceId] = useState(null)
-  const [newPieceName, setNewPieceName] = useState('')
-  const [newPieceAuthor, setNewPieceAuthor] = useState('')
-  const [newPieceImage, setNewPieceImage] = useState(null)
+  // Estados para vinculación de obras a exposición
+  const [isObrasModalOpen, setIsObrasModalOpen] = useState(false)
+  const [selectedExpo, setSelectedExpo] = useState(null)
+  const [linkedObrasIds, setLinkedObrasIds] = useState([])
 
-  // Public Simulator State
-  const [isSimulatorOpen, setIsSimulatorOpen] = useState(false)
+  useEffect(() => {
+    fetchConfigWeb()
+    fetchExposiciones()
+    fetchObras()
+  }, [])
 
-  // Single QR Popup State
-  const [isQrPopupOpen, setIsQrPopupOpen] = useState(false)
-  const [selectedQrForView, setSelectedQrForView] = useState(null)
-
-  // Email Campaign Modal State
-  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
-  const [selectedExhibitionForEmail, setSelectedExhibitionForEmail] = useState(null)
-  const [isSendingEmail, setIsSendingEmail] = useState(false)
-  const [emailNotification, setEmailNotification] = useState('')
-
-  // Toggle switch handler
-  const handleTogglePublished = (id) => {
-    setExhibitions(prev => prev.map(ex => 
-      ex.id === id ? { ...ex, published: !ex.published } : ex
-    ))
-  }
-
-  // Open Create Exhibition Modal
-  const handleOpenCreateModal = () => {
-    setModalMode('create')
-    setEditingExhibitionId(null)
-    setNewTitle('')
-    setNewDates('')
-    setNewPublished(true)
-    setNewImage(null)
-    setFormError('')
-    setIsModalOpen(true)
-  }
-
-  // Open Edit Exhibition Modal
-  const handleOpenEditModal = (ex) => {
-    setModalMode('edit')
-    setEditingExhibitionId(ex.id)
-    setNewTitle(ex.title)
-    setNewDates(ex.dates)
-    setNewPublished(ex.published)
-    setNewImage(ex.image)
-    setFormError('')
-    setIsModalOpen(true)
-  }
-
-  // Handle Email Modal
-  const handleOpenEmailModal = (ex) => {
-    setSelectedExhibitionForEmail(ex)
-    setIsEmailModalOpen(true)
-    setEmailNotification('')
-  }
-
-  const handleConfirmSendEmail = () => {
-    setIsSendingEmail(true)
-    setTimeout(() => {
-      setIsSendingEmail(false)
-      setEmailNotification(`¡Invitaciones enviadas con éxito a los autores de las obras en la exposición "${selectedExhibitionForEmail.title}"!`)
-      setTimeout(() => {
-        setIsEmailModalOpen(false)
-        setSelectedExhibitionForEmail(null)
-      }, 3000)
-    }, 1500)
-  }
-
-  // Handle Pieces Modal & CRUD
-  const handleOpenPieces = (ex) => {
-    setSelectedExhibitionForPieces(ex)
-    setIsPiecesModalOpen(true)
-    setIsPieceFormOpen(false)
-    setNewPieceImage(null)
-  }
-
-  const handleTogglePieceStatus = (pieceId) => {
-    const updatedPieces = selectedExhibitionForPieces.pieces.map(p => 
-      p.id === pieceId ? { ...p, enabled: !p.enabled } : p
-    )
-    updateExhibitionPieces(updatedPieces)
-  }
-
-  const handleDeletePiece = (pieceId) => {
-    if (window.confirm('¿Está seguro de que desea eliminar esta obra?')) {
-      const updatedPieces = selectedExhibitionForPieces.pieces.filter(p => p.id !== pieceId)
-      updateExhibitionPieces(updatedPieces)
-    }
-  }
-
-  const handleOpenPieceForm = (mode, piece = null) => {
-    setPieceModalMode(mode)
-    if (mode === 'edit' && piece) {
-      setEditingPieceId(piece.id)
-      setNewPieceName(piece.name)
-      setNewPieceAuthor(piece.author || '')
-      setNewPieceImage(piece.image || null)
-    } else {
-      setEditingPieceId(null)
-      setNewPieceName('')
-      setNewPieceAuthor('')
-      setNewPieceImage(null)
-    }
-    setIsPieceFormOpen(true)
-  }
-
-  const handleSavePiece = (e) => {
-    e.preventDefault()
-    if (!newPieceName.trim()) return
-
-    let updatedPieces = [...(selectedExhibitionForPieces.pieces || [])]
-    if (pieceModalMode === 'create') {
-      updatedPieces.push({
-        id: Date.now(),
-        name: newPieceName.trim(),
-        author: newPieceAuthor.trim(),
-        image: newPieceImage,
-        enabled: true
-      })
-    } else {
-      updatedPieces = updatedPieces.map(p => 
-        p.id === editingPieceId 
-          ? { ...p, name: newPieceName.trim(), author: newPieceAuthor.trim(), image: newPieceImage } 
-          : p
-      )
-    }
-    updateExhibitionPieces(updatedPieces)
-    setIsPieceFormOpen(false)
-  }
-
-  const updateExhibitionPieces = (updatedPieces) => {
-    const updatedExhibition = { ...selectedExhibitionForPieces, pieces: updatedPieces }
-    setSelectedExhibitionForPieces(updatedExhibition)
-    setExhibitions(prev => prev.map(ex => ex.id === updatedExhibition.id ? updatedExhibition : ex))
-  }
-
-  // Handle Base64 Image upload for exhibitions and efemérides
-  const handleImageChange = (e, target) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const file = e.target.files[0]
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        if (target === 'exhibition') setNewImage(reader.result)
-        else if (target === 'efemeride') setEfemerideBg(reader.result)
-        else if (target === 'piece') setNewPieceImage(reader.result)
+  const fetchConfigWeb = async () => {
+    try {
+      setLoadingConfig(true)
+      const data = await getConfiguracionWebRequest()
+      if (data) {
+        setConfigWeb({
+          hero_titulo: data.hero_titulo || '',
+          hero_subtitulo: data.hero_subtitulo || '',
+          about_texto: data.about_texto || '',
+          contacto_email: data.contacto_email || '',
+          contacto_telefono: data.contacto_telefono || '',
+          contacto_direccion: data.contacto_direccion || ''
+        })
       }
-      reader.readAsDataURL(file)
+    } catch (error) {
+      console.error("Error al cargar configuración web", error)
+    } finally {
+      setLoadingConfig(false)
     }
   }
 
-  // Form Submit (Create/Edit)
-  const handleRegisterExhibition = (e) => {
-    e.preventDefault()
-
-    if (!newTitle.trim() || !newDates.trim()) {
-      setFormError('Por favor completa los campos obligatorios: Título y Fechas.')
-      return
+  const fetchExposiciones = async () => {
+    try {
+      setLoadingExposiciones(true)
+      const data = await getExposicionesAdminRequest(token)
+      setExposiciones(data)
+    } catch (error) {
+      console.error("Error al cargar exposiciones", error)
+    } finally {
+      setLoadingExposiciones(false)
     }
+  }
 
-    if (modalMode === 'create') {
-      const newEx = {
-        id: Date.now(),
-        title: newTitle.trim(),
-        dates: newDates.trim(),
-        published: newPublished,
-        image: newImage,
-        pieces: []
-      }
-      setExhibitions([...exhibitions, newEx])
-    } else {
-      setExhibitions(prev => prev.map(ex => 
-        ex.id === editingExhibitionId 
-          ? { 
-              ...ex, 
-              title: newTitle.trim(), 
-              dates: newDates.trim(), 
-              published: newPublished, 
-              image: newImage
-            } 
-          : ex
+  const fetchObras = async () => {
+    try {
+      setLoadingObras(true)
+      const data = await getObrasAdminRequest(token)
+      setObrasColeccion(data)
+    } catch (error) {
+      console.error("Error al cargar obras", error)
+    } finally {
+      setLoadingObras(false)
+    }
+  }
+
+  const handleSaveConfigWeb = async (e) => {
+    e.preventDefault()
+    try {
+      await updateConfiguracionWebRequest(configWeb, token)
+      alert("¡Configuración Web actualizada con éxito!")
+      setIframeKey(Date.now())
+    } catch (error) {
+      alert("Error al guardar la configuración web: " + (error.response?.data?.message || error.response?.data?.error || error.message))
+    }
+  }
+
+  const handleToggleObraDestacado = async (id_obra) => {
+    const obra = obrasColeccion.find(o => o.id_obra === id_obra)
+    const nuevoDestacado = obra.destacado_galeria === 'si' ? 'no' : 'si'
+    try {
+      await updateObraDestacadoRequest(id_obra, nuevoDestacado, token)
+      setObrasColeccion(prev => prev.map(o => 
+        o.id_obra === id_obra ? { ...o, destacado_galeria: nuevoDestacado } : o
       ))
+      setIframeKey(Date.now())
+    } catch (error) {
+      alert("Error al actualizar destacado de la obra")
     }
-
-    setNewTitle('')
-    setNewDates('')
-    setNewPublished(true)
-    setNewImage(null)
-    setEditingExhibitionId(null)
-    setFormError('')
-    setIsModalOpen(false)
   }
 
-  // Delete Exhibition
-  const handleDeleteExhibition = (id) => {
-    if (window.confirm('¿Está seguro de que desea eliminar esta exposición?')) {
-      setExhibitions(exhibitions.filter(ex => ex.id !== id))
+  const handleToggleEstatus = async (expo) => {
+    const newEstatus = expo.estatus === 'activa' ? 'inactiva' : 'activa'
+    try {
+      await updateExposicionAdminRequest(expo.id_exposicion, { ...expo, estatus: newEstatus }, token)
+      fetchExposiciones()
+      setIframeKey(Date.now())
+    } catch (error) {
+      alert("Error al cambiar estatus")
+    }
+  }
+
+  const handleDeleteExposicion = async (id) => {
+    if (window.confirm("¿Estás seguro de eliminar esta exposición?")) {
+      try {
+        await deleteExposicionAdminRequest(id, token)
+        setExposiciones(prev => prev.filter(e => e.id_exposicion !== id))
+        setIframeKey(Date.now())
+      } catch (error) {
+        alert("Error al eliminar")
+      }
+    }
+  }
+
+  const openCreateModal = () => {
+    setModalMode('create')
+    setExpoForm({ nombre_exposicion: '', descripcion: '', lugar_fisico: '', organizador: '', fecha_inicio: '', fecha_fin: '' })
+    setIsModalOpen(true)
+  }
+
+  const openEditModal = (expo) => {
+    setModalMode('edit')
+    setEditingExpoId(expo.id_exposicion)
+    setExpoForm({
+      nombre_exposicion: expo.nombre_exposicion || '',
+      descripcion: expo.descripcion || '',
+      lugar_fisico: expo.lugar_fisico || '',
+      organizador: expo.organizador || '',
+      fecha_inicio: expo.fecha_inicio ? expo.fecha_inicio.split('T')[0] : '',
+      fecha_fin: expo.fecha_fin ? expo.fecha_fin.split('T')[0] : ''
+    })
+    setIsModalOpen(true)
+  }
+
+  const handleSaveExposicion = async (e) => {
+    e.preventDefault()
+    try {
+      if (modalMode === 'create') {
+        await createExposicionAdminRequest(expoForm, token)
+      } else {
+        await updateExposicionAdminRequest(editingExpoId, expoForm, token)
+      }
+      setIsModalOpen(false)
+      fetchExposiciones()
+      setIframeKey(Date.now())
+    } catch (error) {
+      alert("Error al guardar exposición")
+    }
+  }
+
+  // VINCULACIÓN DE OBRAS
+  const openObrasModal = async (expo) => {
+    setSelectedExpo(expo)
+    setIsObrasModalOpen(true)
+    try {
+      const vinculos = await getObrasPorExposicionRequest(token)
+      const myVinculos = vinculos.filter(v => v.id_exposicion === expo.id_exposicion)
+      setLinkedObrasIds(myVinculos.map(v => v.id_obra))
+    } catch (error) {
+      console.error("Error al cargar vínculos")
+    }
+  }
+
+  const handleToggleLinkObra = async (id_obra) => {
+    const isLinked = linkedObrasIds.includes(id_obra)
+    try {
+      if (isLinked) {
+        await unlinkObraExposicionRequest(selectedExpo.id_exposicion, id_obra, token)
+        setLinkedObrasIds(prev => prev.filter(id => id !== id_obra))
+        setIframeKey(Date.now())
+      } else {
+        await linkObraExposicionRequest(selectedExpo.id_exposicion, id_obra, token)
+        setLinkedObrasIds(prev => [...prev, id_obra])
+        setIframeKey(Date.now())
+      }
+    } catch (error) {
+      alert("Error al cambiar vínculo de la obra")
     }
   }
 
   return (
-    <div className="difusion-module-container">
-      {/* 1. Cabecera de la Sección */}
-      <header className="page-header">
+    <div className="module-container">
+      <header className="page-header" style={{ marginBottom: '24px' }}>
         <div className="breadcrumbs-title">
           <nav className="breadcrumbs">
-            <span>ARCHIVO</span>
-            <span className="separator">&gt;</span>
-            <span className="current">DIFUSIÓN Y GALERÍA</span>
+            <span>ARCHIVO FOLKLORE</span>
+            <span className="separator">/</span>
+            <span className="current">DIFUSIÓN Y GALERÍA (WEB)</span>
           </nav>
-          <h1>Difusión y Galería Virtual</h1>
-          <p className="cultor-subinfo text-light" style={{ fontSize: '14px', marginTop: '4px' }}>
-            Configuración de exposiciones, visibilidad pública y gestión de códigos QR.
+          <h1>Difusión y Galería (Web)</h1>
+          <p className="page-subtitle">
+            Gestiona el contenido de la Galería, Exposiciones y Textos del sitio público.
           </p>
-        </div>
-
-        <div className="page-header-actions">
-          <button className="btn-terracota-outline" onClick={() => setIsSimulatorOpen(true)}>
-            <Laptop size={16} />
-            <span>Previsualizar Galería</span>
-          </button>
-          <button className="btn-terracota" onClick={handleOpenCreateModal}>
-            <Plus size={16} />
-            <span>Nueva Exposición</span>
-          </button>
         </div>
       </header>
 
-      {/* 2. Sección de Efemérides / Destacados */}
-      <section className="efemerides-editor-section">
-        <h2 className="section-card-title">
-          <ImageIcon size={18} style={{ color: '#C05640' }} />
-          <span>Configuración del Banner de Efemérides Patrimoniales</span>
+      {/* 0. Previsualización en la Web */}
+      <section style={{ marginBottom: '32px' }}>
+        <h2 className="section-card-title" style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Monitor size={18} style={{ color: '#C05640' }} />
+          Vista Previa del Portal Web
         </h2>
-        <div className="efemerides-banner-editor">
-          <div className="efemerides-form-group">
-            <label htmlFor="efemeride-text">Texto Destacado de la Efeméride</label>
-            <textarea 
-              id="efemeride-text"
-              className="efemerides-textarea"
-              placeholder="Escribe el mensaje destacado..."
-              value={efemerideText}
-              onChange={(e) => setEfemerideText(e.target.value)}
-            />
-          </div>
-
-          <div className="efemerides-bg-uploader">
-            <span style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Imagen de Fondo</span>
-            {efemerideBg ? (
-              <div className="image-form-preview" style={{ marginTop: '4px' }}>
-                <img src={efemerideBg} alt="Fondo efeméride" style={{ width: '60px', height: '60px' }} />
-                <button 
-                  type="button" 
-                  className="remove-img-form-btn"
-                  onClick={() => setEfemerideBg(null)}
-                >
-                  Quitar
-                </button>
-              </div>
-            ) : (
-              <button 
-                type="button" 
-                className="btn-terracota-outline" 
-                style={{ padding: '8px 12px', fontSize: '12px' }}
-                onClick={() => document.getElementById('efemeride-bg-picker').click()}
-              >
-                <UploadCloud size={14} />
-                <span>Subir Imagen</span>
-                <input 
-                  type="file" 
-                  id="efemeride-bg-picker" 
-                  accept="image/*" 
-                  style={{ display: 'none' }}
-                  onChange={(e) => handleImageChange(e, 'efemeride')}
-                />
-              </button>
-            )}
-          </div>
+        <div style={{ padding: '4px', backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #eaeaea', height: '500px', overflow: 'hidden' }}>
+          <iframe 
+            key={iframeKey}
+            src={`http://localhost:5174/?t=${iframeKey}`} 
+            title="Previsualización de la Web Pública"
+            style={{ width: '100%', height: '100%', border: 'none', borderRadius: '8px' }}
+          />
         </div>
       </section>
 
-      {/* 3. Tablero de Exposiciones (Exhibition Cards Board) */}
-      <section>
+      {/* 1. Textos y Contenido de la Web */}
+      <section style={{ marginBottom: '32px' }}>
         <h2 className="section-card-title" style={{ marginBottom: '16px' }}>
-          <span>Exposiciones y Muestras Activas</span>
+          <Edit2 size={18} style={{ color: '#C05640' }} />
+          Textos y Contenido de la Web
         </h2>
-
-        <div className="exhibitions-grid">
-          {exhibitions.map(ex => (
-            <div className="exhibition-card" key={ex.id}>
-              {ex.image ? (
-                <img src={ex.image} alt={ex.title} className="exhibition-card-img" style={{ cursor: 'pointer' }} onClick={() => handleOpenPieces(ex)} />
-              ) : (
-                <div className="exhibition-card-no-img" style={{ cursor: 'pointer' }} onClick={() => handleOpenPieces(ex)}>
-                  <ImageIcon size={32} />
-                  <span style={{ fontSize: '12px', fontWeight: '600' }}>Sin imagen de fondo</span>
-                </div>
-              )}
-
-              <div className="exhibition-card-body">
-                <h3 style={{ cursor: 'pointer' }} onClick={() => handleOpenPieces(ex)}>{ex.title}</h3>
-                <div className="exhibition-date-row">
-                  <Calendar size={14} />
-                  <span>{ex.dates}</span>
-                  <span style={{ margin: '0 8px', color: '#d8d7d3' }}>|</span>
-                  <FileText size={14} />
-                  <span>{ex.pieces ? ex.pieces.length : 0} Obras</span>
-                </div>
-
-                <div className="exhibition-status-row">
-                  <span className={`status-text-pill ${ex.published ? 'publicado' : 'borrador'}`}>
-                    {ex.published ? 'Publicado' : 'Borrador'}
-                  </span>
-                  
-                  {/* CSS Toggle switch */}
-                  <label className="toggle-switch-wrapper">
-                    <input 
-                      type="checkbox" 
-                      checked={ex.published}
-                      onChange={() => handleTogglePublished(ex.id)}
-                    />
-                    <span className="toggle-slider"></span>
-                  </label>
-                </div>
+        <div style={{ padding: '24px', backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #eaeaea' }}>
+          {loadingConfig ? (
+            <p className="text-sm text-cafe-noir/60 text-center py-8">Cargando configuración...</p>
+          ) : (
+            <form onSubmit={handleSaveConfigWeb} className="tw-scope space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <TextInput 
+                  label="Título Principal (Hero)" 
+                  name="hero_titulo" 
+                  value={configWeb.hero_titulo} 
+                  onChange={(e) => setConfigWeb({...configWeb, hero_titulo: e.target.value})}
+                  placeholder="Ej. Táchira: Cuna de Tradición"
+                />
+                <TextInput 
+                  label="Subtítulo (Hero)" 
+                  name="hero_subtitulo" 
+                  value={configWeb.hero_subtitulo} 
+                  onChange={(e) => setConfigWeb({...configWeb, hero_subtitulo: e.target.value})}
+                  placeholder="Ej. Preservando el folklore..."
+                />
               </div>
 
-              {/* Card Footer Quick Actions */}
-              <div className="exhibition-card-footer">
-                <button 
-                  className="exhibition-action-btn" 
-                  title="Gestionar Obras"
-                  onClick={() => handleOpenPieces(ex)}
-                >
-                  <Layers size={14} />
-                </button>
-                <button 
-                  className="exhibition-action-btn" 
-                  title="Mostrar Código QR"
-                  onClick={() => {
-                    setSelectedQrForView(ex)
-                    setIsQrPopupOpen(true)
-                  }}
-                >
-                  <QrCode size={15} />
-                </button>
-                <button 
-                  className="exhibition-action-btn" 
-                  title="Enviar Invitaciones por Correo"
-                  onClick={() => handleOpenEmailModal(ex)}
-                >
-                  <Mail size={14} />
-                </button>
-                <button 
-                  className="exhibition-action-btn" 
-                  title="Editar Exposición"
-                  onClick={() => handleOpenEditModal(ex)}
-                >
-                  <Edit2 size={14} />
-                </button>
-                <button 
-                  className="exhibition-action-btn delete-btn" 
-                  title="Eliminar Exposición"
-                  onClick={() => handleDeleteExhibition(ex.id)}
-                >
-                  <Trash2 size={14} />
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+              <Textarea 
+                label="Texto: Acerca del Archivo" 
+                name="about_texto" 
+                value={configWeb.about_texto} 
+                onChange={(e) => setConfigWeb({...configWeb, about_texto: e.target.value})}
+                placeholder="Escribe la historia o propósito del archivo..."
+              />
 
-      {/* 4. Registrar / Editar Exposición Modal Overlay */}
-      {isModalOpen && (
-        <div className="modal-overlay-backdrop">
-          <div className="modal-box-card">
-            {/* Header */}
-            <div className="modal-box-header">
-              <h2>{modalMode === 'create' ? 'Crear Nueva Exposición' : 'Editar Exposición'}</h2>
-              <button 
-                onClick={() => setIsModalOpen(false)}
-                className="close-x-btn"
-                aria-label="Cerrar modal"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            {/* Form */}
-            <form onSubmit={handleRegisterExhibition}>
-              <div className="modal-box-body">
-                {formError && (
-                  <div className="error-banner-group">
-                    {formError}
-                  </div>
-                )}
-
-                {/* Title */}
-                <div className="input-box-field">
-                  <label htmlFor="modal-exhibition-title">Título de la Exposición <span className="req-star">*</span></label>
-                  <div className="icon-input-container">
-                    <ImageIcon size={15} className="field-icon-left" />
-                    <input 
-                      type="text" 
-                      id="modal-exhibition-title" 
-                      placeholder="Ej. Talla y Madera del Táchira"
-                      value={newTitle}
-                      onChange={(e) => setNewTitle(e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* Dates */}
-                <div className="input-box-field">
-                  <label htmlFor="modal-exhibition-dates">Rango de Fechas <span className="req-star">*</span></label>
-                  <div className="icon-input-container">
-                    <Calendar size={15} className="field-icon-left" />
-                    <input 
-                      type="text" 
-                      id="modal-exhibition-dates" 
-                      placeholder="Ej. 15 Jun - 30 Jun"
-                      value={newDates}
-                      onChange={(e) => setNewDates(e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* Image Picker */}
-                <div className="input-box-field">
-                  <label>Imagen Destacada de la Temática</label>
-                  <div className="image-upload-row">
-                    {newImage ? (
-                      <div className="image-form-preview">
-                        <img src={newImage} alt="Exhibition Preview" style={{ width: '74px', height: '74px' }} />
-                        <button 
-                          type="button" 
-                          className="remove-img-form-btn"
-                          onClick={() => setNewImage(null)}
-                        >
-                          Quitar Foto
-                        </button>
-                      </div>
-                    ) : (
-                      <button 
-                        type="button" 
-                        className="btn-terracota-outline"
-                        onClick={() => document.getElementById('exhibition-image-file').click()}
-                      >
-                        <UploadCloud size={16} />
-                        <span>Subir Imagen</span>
-                        <input 
-                          type="file" 
-                          id="exhibition-image-file" 
-                          accept="image/*" 
-                          style={{ display: 'none' }}
-                          onChange={(e) => handleImageChange(e, 'exhibition')}
-                        />
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Switch default status */}
-                <div className="input-box-field" style={{ flexDirection: 'row', alignItems: 'center', gap: '12px', marginTop: '6px' }}>
-                  <label style={{ margin: '0' }}>Publicar inmediatamente</label>
-                  <label className="toggle-switch-wrapper">
-                    <input 
-                      type="checkbox" 
-                      checked={newPublished}
-                      onChange={(e) => setNewPublished(e.target.checked)}
-                    />
-                    <span className="toggle-slider"></span>
-                  </label>
-                </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <TextInput 
+                  label="Email de Contacto" 
+                  name="contacto_email" 
+                  type="email"
+                  value={configWeb.contacto_email} 
+                  onChange={(e) => setConfigWeb({...configWeb, contacto_email: e.target.value})}
+                />
+                <TextInput 
+                  label="Teléfono de Contacto" 
+                  name="contacto_telefono" 
+                  value={configWeb.contacto_telefono} 
+                  onChange={(e) => setConfigWeb({...configWeb, contacto_telefono: e.target.value})}
+                />
+                <TextInput 
+                  label="Dirección Física" 
+                  name="contacto_direccion" 
+                  value={configWeb.contacto_direccion} 
+                  onChange={(e) => setConfigWeb({...configWeb, contacto_direccion: e.target.value})}
+                />
               </div>
 
-              {/* Footer */}
-              <div className="modal-box-footer">
-                <button type="button" className="btn-secondary" onClick={() => setIsModalOpen(false)}>
-                  Cancelar
-                </button>
+              <div className="flex justify-end pt-4">
                 <button type="submit" className="btn-terracota">
-                  {modalMode === 'create' ? 'Crear Exposición' : 'Guardar Cambios'}
+                  Guardar Cambios Web
                 </button>
               </div>
             </form>
-          </div>
+          )}
         </div>
-      )}
+      </section>
 
-      {/* 6. Simulador de Galería Pública Modal Overlay */}
-      {isSimulatorOpen && (
-        <div className="public-simulator-overlay">
-          <div className="public-simulator-box">
-            {/* Header */}
-            <div className="public-simulator-header">
-              <h2>
-                <Eye size={18} />
-                <span>Simulador de Galería Pública</span>
-                <span className="simulator-tag">VISTA PORTAL PUBLICO</span>
-              </h2>
-              <button 
-                onClick={() => setIsSimulatorOpen(false)}
-                className="close-x-btn"
-                style={{ color: '#ffffff' }}
-                aria-label="Cerrar simulador"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            {/* Portal Body */}
-            <div className="public-simulator-body">
-              {/* Public Efemérides Banner */}
-              <div className="public-efemerides-banner">
-                {efemerideBg && (
-                  <img src={efemerideBg} alt="Banner background" className="public-efemerides-bg" />
-                )}
-                <div className="public-efemerides-content">
-                  <h4>Efemérides Destacadas</h4>
-                  <p>{efemerideText || 'Cargando efemérides del folklore...'}</p>
-                </div>
-              </div>
-
-              {/* Exhibitions list */}
-              <div>
-                <h3 className="public-section-title">Galería de Exposiciones Virtuales</h3>
-                <div className="public-exhibitions-grid">
-                  {exhibitions.filter(ex => ex.published).length > 0 ? (
-                    exhibitions.filter(ex => ex.published).map(ex => (
-                      <div className="public-exhibition-card" key={ex.id}>
-                        {ex.image ? (
-                          <img src={ex.image} alt={ex.title} />
+      {/* 2. Colección General */}
+      <section style={{ marginBottom: '32px' }}>
+        <h2 className="section-card-title" style={{ marginBottom: '16px' }}>
+          <Eye size={18} style={{ color: '#C05640' }} />
+          Colección General (Obras Públicas)
+        </h2>
+        <div style={{ padding: '16px', backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #eaeaea' }}>
+          {loadingObras ? (
+            <p className="text-sm text-cafe-noir/60 text-center py-8">Cargando obras...</p>
+          ) : (
+            <div className="table-container overflow-x-auto rounded-xl border border-cafe-noir/20 bg-white/50">
+              <table className="w-full text-left font-sans">
+                <thead style={{ backgroundColor: '#f9f8f6' }}>
+                  <tr className="text-xs uppercase tracking-wider text-cafe-noir/80 border-b border-cafe-noir/10">
+                    <th className="py-4 px-4 w-16 text-center">Imagen</th>
+                    <th className="py-4 px-4">Código</th>
+                    <th className="py-4 px-4">Obra / Pieza</th>
+                    <th className="py-4 px-4 text-center">Web (Pública)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {obrasColeccion.map(obra => (
+                    <tr key={obra.id_obra} className="border-b border-cafe-noir/5 hover:bg-cafe-noir/5 transition-colors">
+                      <td className="py-3 px-4">
+                        {obra.fotografia_principal ? (
+                          <img src={obra.fotografia_principal} alt={obra.titulo} style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px', margin: '0 auto' }} />
                         ) : (
-                          <div style={{ height: '130px', backgroundColor: '#ebeae6', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#a39996' }}>
-                            <ImageIcon size={28} />
+                          <div style={{ width: '40px', height: '40px', backgroundColor: '#e2dacf', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8a7a6a', margin: '0 auto' }}>
+                            <Camera size={20} />
                           </div>
                         )}
-                        <div className="public-exhibition-card-body">
-                          <h4>{ex.title}</h4>
-                          <span>Periodo: {ex.dates}</span>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <p style={{ gridColumn: '1/-1', textAlign: 'center', padding: '24px', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
-                      No hay exposiciones publicadas en este momento.
-                    </p>
+                      </td>
+                      <td className="py-3 px-4 text-sm font-medium text-cafe-noir">{obra.id_obra}</td>
+                      <td className="py-3 px-4 text-sm text-cafe-noir/80">{obra.titulo}</td>
+                      <td className="py-3 px-4 text-center">
+                        <label className="toggle-switch-wrapper inline-block">
+                          <input 
+                            type="checkbox" 
+                            checked={obra.destacado_galeria === 'si'}
+                            onChange={() => handleToggleObraDestacado(obra.id_obra)}
+                          />
+                          <span className="toggle-slider"></span>
+                        </label>
+                      </td>
+                    </tr>
+                  ))}
+                  {obrasColeccion.length === 0 && (
+                    <tr>
+                      <td colSpan="4" className="py-12 text-center text-sm text-cafe-noir/40">No hay obras en el inventario.</td>
+                    </tr>
                   )}
-                </div>
-              </div>
+                </tbody>
+              </table>
             </div>
-
-            {/* Footer */}
-            <div className="modal-box-footer" style={{ borderTop: '1px solid var(--border-color)', backgroundColor: '#faf9f6' }}>
-              <button className="btn-secondary" onClick={() => setIsSimulatorOpen(false)}>
-                Cerrar Previsualización
-              </button>
-            </div>
-          </div>
+          )}
         </div>
-      )}
+      </section>
 
-      {/* 7. Modal de visualización de QR individual */}
-      {isQrPopupOpen && selectedQrForView && (
-        <div className="modal-overlay-backdrop">
-          <div className="modal-box-card" style={{ width: '360px' }}>
-            <div className="modal-box-header">
-              <h2>Código QR de Exposición</h2>
-              <button 
-                onClick={() => {
-                  setIsQrPopupOpen(false)
-                  setSelectedQrForView(null)
-                }}
-                className="close-x-btn"
-                aria-label="Cerrar modal"
-              >
-                <X size={18} />
-              </button>
-            </div>
-            
-            <div className="modal-box-body" style={{ textAlign: 'center', padding: '32px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
-              <div style={{ padding: '16px', border: '2px solid #C05640', borderRadius: '12px', backgroundColor: '#faf9f6' }}>
-                <QrCode size={180} style={{ color: '#2d1e1b' }} />
-              </div>
-              <div>
-                <h3 style={{ fontSize: '15px', fontWeight: '700', margin: '0' }}>{selectedQrForView.title}</h3>
-                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '4px 0 0 0' }}>Periodo: {selectedQrForView.dates}</p>
-              </div>
-              <span style={{ fontSize: '10.5px', color: 'var(--text-secondary)', fontStyle: 'italic' }}>Escanea este código para acceder a la sala pública virtual.</span>
-            </div>
-
-            <div className="modal-box-footer">
-              <button 
-                className="btn-terracota" 
-                onClick={() => {
-                  setIsQrPopupOpen(false)
-                  setSelectedQrForView(null)
-                }}
-              >
-                Aceptar
-              </button>
-            </div>
-          </div>
+      {/* 3. Exposiciones */}
+      <section>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h2 className="section-card-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Layers size={18} style={{ color: '#C05640' }} />
+            Exposiciones Virtuales
+          </h2>
+          <button className="btn-terracota flex items-center gap-2" onClick={openCreateModal} style={{ padding: '8px 16px', fontSize: '13px' }}>
+            <Plus size={16} /> Nueva Exposición
+          </button>
         </div>
-      )}
-
-      {/* 8. Modal de Envío de Correos (Campaña) */}
-      {isEmailModalOpen && selectedExhibitionForEmail && (
-        <div className="modal-overlay-backdrop">
-          <div className="modal-box-card">
-            <div className="modal-box-header">
-              <h2>Campaña de Invitaciones</h2>
-              <button 
-                onClick={() => {
-                  if (!isSendingEmail) {
-                    setIsEmailModalOpen(false)
-                    setSelectedExhibitionForEmail(null)
-                  }
-                }}
-                className="close-x-btn"
-                aria-label="Cerrar modal"
-              >
-                <X size={18} />
-              </button>
-            </div>
-            
-            <div className="modal-box-body">
-              {emailNotification ? (
-                <div className="success-banner-alert" style={{ marginBottom: '16px', flexDirection: 'column', alignItems: 'flex-start', gap: '8px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Send size={16} />
-                    <span>{emailNotification}</span>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <p style={{ fontSize: '13.5px', color: 'var(--text-main)', marginBottom: '16px', lineHeight: '1.5' }}>
-                    Se enviará una invitación por correo electrónico a todos los autores y personas vinculadas a las piezas de la exposición <strong>{selectedExhibitionForEmail.title}</strong>.
-                  </p>
-                  
-                  <div style={{ backgroundColor: '#f5f4f0', padding: '16px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                    <p style={{ margin: '0 0 8px 0', fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '700' }}>VISTA PREVIA DEL CORREO:</p>
-                    <div style={{ backgroundColor: '#ffffff', padding: '16px', borderRadius: '6px', border: '1px solid #ebeae6' }}>
-                      <p style={{ margin: '0 0 12px 0', fontSize: '13px', fontWeight: '600' }}>
-                        Asunto: Invitación Especial - {selectedExhibitionForEmail.title}
-                      </p>
-                      <hr style={{ border: 'none', borderTop: '1px solid #ebeae6', margin: '0 0 12px 0' }} />
-                      <p style={{ margin: '0 0 12px 0', fontSize: '13px', color: 'var(--text-main)', lineHeight: '1.6' }}>
-                        Estimado cultor/autor,
-                      </p>
-                      <p style={{ margin: '0 0 12px 0', fontSize: '13px', color: 'var(--text-main)', lineHeight: '1.6' }}>
-                        Le invitamos cordialmente a pasar por el archivo para que pueda experimentar en persona la exposición <strong>"{selectedExhibitionForEmail.title}"</strong>.
-                      </p>
-                      <p style={{ margin: '0 0 12px 0', fontSize: '13px', color: 'var(--text-main)', lineHeight: '1.6' }}>
-                        Este evento estará disponible durante el periodo: <strong>{selectedExhibitionForEmail.dates}</strong>. Será un honor contar con su presencia para compartir juntos la riqueza de nuestro patrimonio cultural.
-                      </p>
-                      <p style={{ margin: '0', fontSize: '13px', color: 'var(--text-secondary)' }}>
-                        Atentamente,<br/>
-                        El Equipo del Archivo de Folklore
-                      </p>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-
-            <div className="modal-box-footer">
-              {!emailNotification && (
-                <>
-                  <button 
-                    type="button" 
-                    className="btn-secondary" 
-                    onClick={() => setIsEmailModalOpen(false)}
-                    disabled={isSendingEmail}
-                  >
-                    Cancelar
-                  </button>
-                  <button 
-                    type="button" 
-                    className="btn-terracota" 
-                    onClick={handleConfirmSendEmail}
-                    disabled={isSendingEmail}
-                    style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-                  >
-                    {isSendingEmail ? (
-                      'Enviando...'
-                    ) : (
-                      <>
-                        <Send size={15} />
-                        Enviar Invitaciones
-                      </>
-                    )}
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 9. Modal de Gestión de Obras por Evento */}
-      {isPiecesModalOpen && selectedExhibitionForPieces && (
-        <div className="modal-overlay-backdrop" style={{ zIndex: 1100 }}>
-          <div className="modal-box-card" style={{ maxWidth: '800px' }}>
-            <div className="modal-box-header">
-              <h2>Obras de: {selectedExhibitionForPieces.title}</h2>
-              <button 
-                onClick={() => setIsPiecesModalOpen(false)}
-                className="close-x-btn"
-                aria-label="Cerrar modal"
-              >
-                <X size={18} />
-              </button>
-            </div>
-            
-            <div className="modal-box-body">
-              {!isPieceFormOpen ? (
-                <>
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '24px' }}>
-                    <button className="btn-terracota" onClick={() => handleOpenPieceForm('create')}>
-                      <Plus size={16} />
-                      Añadir Obra
-                    </button>
-                  </div>
-
-                  {selectedExhibitionForPieces.pieces && selectedExhibitionForPieces.pieces.length > 0 ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                      {selectedExhibitionForPieces.pieces.map(piece => (
-                        <div key={piece.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px', border: '1px solid rgba(0,0,0,0.06)', borderRadius: '16px', backgroundColor: '#faf9f6', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
-                          <div style={{ display: 'flex', gap: '20px', alignItems: 'center', flex: 1, opacity: piece.enabled ? 1 : 0.5, transition: 'opacity 0.2s' }}>
-                            {piece.image ? (
-                              <img src={piece.image} alt={piece.name} style={{ width: '72px', height: '72px', objectFit: 'cover', borderRadius: '12px', border: '1px solid #ebeae6' }} />
-                            ) : (
-                              <div style={{ width: '72px', height: '72px', backgroundColor: '#ebeae6', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#a39996' }}>
-                                <ImageIcon size={24} />
-                              </div>
-                            )}
-                            <div>
-                              <p style={{ margin: '0 0 6px 0', fontSize: '16px', fontWeight: '800', color: 'var(--text-main)' }}>{piece.name}</p>
-                              <p style={{ margin: '0', fontSize: '13.5px', color: 'var(--text-secondary)' }}>Autor / Cultor: {piece.author || 'Desconocido'}</p>
-                            </div>
-                          </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                            <label className="toggle-switch-wrapper" title={piece.enabled ? 'Deshabilitar Obra' : 'Habilitar Obra'}>
-                              <input 
-                                type="checkbox" 
-                                checked={piece.enabled}
-                                onChange={() => handleTogglePieceStatus(piece.id)}
-                              />
-                              <span className="toggle-slider"></span>
-                            </label>
-                            <div style={{ width: '1px', height: '16px', backgroundColor: '#d8d7d3' }}></div>
-                            <button className="exhibition-action-btn" title="Editar Obra" onClick={() => handleOpenPieceForm('edit', piece)}>
-                              <Edit2 size={14} />
-                            </button>
-                            <button className="exhibition-action-btn delete-btn" title="Eliminar Obra" onClick={() => handleDeletePiece(piece.id)}>
-                              <Trash2 size={14} />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p style={{ textAlign: 'center', color: 'var(--text-secondary)', fontStyle: 'italic', padding: '24px 0' }}>
-                      No hay obras registradas en este evento.
-                    </p>
-                  )}
-                </>
-              ) : (
-                <form onSubmit={handleSavePiece}>
-                  <h3 style={{ fontSize: '15px', fontWeight: '600', marginBottom: '16px' }}>
-                    {pieceModalMode === 'create' ? 'Añadir Nueva Obra' : 'Editar Obra'}
-                  </h3>
-                  <div className="input-box-field">
-                    <label>Nombre de la Obra <span className="req-star">*</span></label>
-                    <input 
-                      type="text" 
-                      value={newPieceName}
-                      onChange={(e) => setNewPieceName(e.target.value)}
-                      placeholder="Ej. Vasija de Barro Cocido"
-                      required
-                    />
-                  </div>
-                  <div className="input-box-field">
-                    <label>Autor / Cultor</label>
-                    <input 
-                      type="text" 
-                      value={newPieceAuthor}
-                      onChange={(e) => setNewPieceAuthor(e.target.value)}
-                      placeholder="Ej. Familia Roa"
-                    />
-                  </div>
-                  <div className="input-box-field">
-                    <label>Fotografía de la Obra</label>
-                    <div className="image-upload-row">
-                      {newPieceImage ? (
-                        <div className="image-form-preview">
-                          <img src={newPieceImage} alt="Preview" style={{ width: '74px', height: '74px', objectFit: 'cover', borderRadius: '6px' }} />
-                          <button 
-                            type="button" 
-                            className="remove-img-form-btn"
-                            onClick={() => setNewPieceImage(null)}
-                          >
-                            Quitar Foto
+        <div style={{ padding: '16px', backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #eaeaea' }}>
+          {loadingExposiciones ? (
+            <p className="text-sm text-cafe-noir/60 text-center py-8">Cargando exposiciones...</p>
+          ) : (
+            <div className="table-container overflow-x-auto rounded-xl border border-cafe-noir/20 bg-white/50">
+              <table className="w-full text-left font-sans">
+                <thead style={{ backgroundColor: '#f9f8f6' }}>
+                  <tr className="text-xs uppercase tracking-wider text-cafe-noir/80 border-b border-cafe-noir/10">
+                    <th className="py-4 px-4">Exposición</th>
+                    <th className="py-4 px-4">Descripción</th>
+                    <th className="py-4 px-4">Lugar</th>
+                    <th className="py-4 px-4">Estatus (Web)</th>
+                    <th className="py-4 px-4">Fechas</th>
+                    <th className="py-4 px-4 text-center">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {exposiciones.map(expo => (
+                    <tr key={expo.id_exposicion} className="border-b border-cafe-noir/5 hover:bg-cafe-noir/5">
+                      <td className="py-3 px-4 text-sm font-bold text-cafe-noir">{expo.nombre_exposicion}</td>
+                      <td className="py-3 px-4 text-sm text-cafe-noir/70">{expo.descripcion?.length > 40 ? expo.descripcion.substring(0,40)+'...' : expo.descripcion}</td>
+                      <td className="py-3 px-4 text-sm text-cafe-noir/70">{expo.lugar_fisico || 'N/A'}</td>
+                      <td className="py-3 px-4">
+                        <span style={{ 
+                          padding: '4px 8px', 
+                          borderRadius: '12px', 
+                          fontSize: '11px', 
+                          fontWeight: 'bold',
+                          backgroundColor: expo.estatus === 'activa' ? '#E1F5FE' : '#F5F5F5',
+                          color: expo.estatus === 'activa' ? '#0277BD' : '#757575'
+                        }}>
+                          {expo.estatus === 'activa' ? 'Pública' : 'Oculta'}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-xs text-cafe-noir/60">
+                        {expo.fecha_inicio && new Date(expo.fecha_inicio).toLocaleDateString()} - 
+                        {expo.fecha_fin && new Date(expo.fecha_fin).toLocaleDateString()}
+                      </td>
+                      <td className="py-3 px-4 text-right">
+                        <div className="flex items-center justify-center gap-2">
+                          <button className="p-2 rounded-full hover:bg-cafe-noir/10" title={expo.estatus === 'activa' ? 'Ocultar en Web' : 'Publicar en Web'} onClick={() => handleToggleEstatus(expo)}>
+                            {expo.estatus === 'activa' ? <EyeOff size={16} /> : <Eye size={16} />}
+                          </button>
+                          <button className="p-2 rounded-full hover:bg-cafe-noir/10" title="Vincular Obras" onClick={() => openObrasModal(expo)}>
+                            <Folder size={16} />
+                          </button>
+                          <button className="p-2 rounded-full hover:bg-cafe-noir/10" onClick={() => openEditModal(expo)}>
+                            <Edit2 size={16} />
+                          </button>
+                          <button className="p-2 rounded-full hover:bg-red-50 text-red-500" onClick={() => handleDeleteExposicion(expo.id_exposicion)}>
+                            <Trash2 size={16} />
                           </button>
                         </div>
-                      ) : (
-                        <button 
-                          type="button" 
-                          className="btn-terracota-outline"
-                          onClick={() => document.getElementById('piece-image-file').click()}
-                        >
-                          <UploadCloud size={16} />
-                          <span>Subir Imagen</span>
-                          <input 
-                            type="file" 
-                            id="piece-image-file" 
-                            accept="image/*" 
-                            style={{ display: 'none' }}
-                            onChange={(e) => handleImageChange(e, 'piece')}
-                          />
-                        </button>
-                      )}
+                      </td>
+                    </tr>
+                  ))}
+                  {exposiciones.length === 0 && (
+                    <tr>
+                      <td colSpan="6" className="py-12 text-center text-sm text-cafe-noir/40">No hay exposiciones registradas.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* MODAL CREAR/EDITAR EXPOSICION */}
+      {isModalOpen && (
+        <div className="tw-scope">
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 bg-[#3a200d]/50 backdrop-blur-md">
+            <div className="relative w-full max-w-2xl h-auto max-h-[90vh] rounded-[2rem] bg-[#F4F0E6] shadow-2xl shadow-black/50 flex flex-col">
+              <button
+                type="button"
+                onClick={() => setIsModalOpen(false)}
+                className="absolute top-6 right-6 z-20 flex h-10 w-10 items-center justify-center rounded-full text-cafe-noir hover:opacity-70"
+              >
+                <X className="h-6 w-6" />
+              </button>
+              <div className="relative z-10 w-full overflow-y-auto px-6 py-10 sm:px-12 sm:py-14 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-cafe-noir/20">
+                <div className="text-center text-cafe-noir">
+                  <span className="font-sans text-xs uppercase tracking-[0.1em] text-cafe-noir/80">Panel Administrativo</span>
+                  <h2 className="mt-1 font-sans font-semibold tracking-tight text-3xl sm:text-4xl text-cafe-noir">
+                    {modalMode === 'create' ? 'Nueva Exposición' : 'Editar Exposición'}
+                  </h2>
+                </div>
+                <div className="mt-10">
+                  <form onSubmit={handleSaveExposicion} className="space-y-7">
+                    <TextInput 
+                      label="Nombre de la Exposición *" 
+                      name="nombre_exposicion" 
+                      value={expoForm.nombre_exposicion} 
+                      onChange={(e) => setExpoForm({...expoForm, nombre_exposicion: e.target.value})}
+                      required
+                    />
+                    <Textarea 
+                      label="Descripción" 
+                      name="descripcion" 
+                      value={expoForm.descripcion} 
+                      onChange={(e) => setExpoForm({...expoForm, descripcion: e.target.value})}
+                    />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-7">
+                      <TextInput 
+                        label="Lugar Físico" 
+                        name="lugar_fisico" 
+                        value={expoForm.lugar_fisico} 
+                        onChange={(e) => setExpoForm({...expoForm, lugar_fisico: e.target.value})}
+                      />
+                      <TextInput 
+                        label="Organizador" 
+                        name="organizador" 
+                        value={expoForm.organizador} 
+                        onChange={(e) => setExpoForm({...expoForm, organizador: e.target.value})}
+                      />
                     </div>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '16px' }}>
-                    <button type="button" className="btn-secondary" onClick={() => setIsPieceFormOpen(false)}>Cancelar</button>
-                    <button type="submit" className="btn-terracota">Guardar Obra</button>
-                  </div>
-                </form>
-              )}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-7">
+                      <label className="flex flex-col gap-2">
+                        <span className="font-sans text-xs font-semibold uppercase tracking-wide text-cafe-noir">Fecha Inicio</span>
+                        <input 
+                          type="date" 
+                          value={expoForm.fecha_inicio} 
+                          onChange={(e) => setExpoForm({...expoForm, fecha_inicio: e.target.value})} 
+                          className="w-full rounded-xl border border-cafe-noir/30 bg-white/50 px-4 py-2.5 font-sans text-cafe-noir"
+                        />
+                      </label>
+                      <label className="flex flex-col gap-2">
+                        <span className="font-sans text-xs font-semibold uppercase tracking-wide text-cafe-noir">Fecha Fin</span>
+                        <input 
+                          type="date" 
+                          value={expoForm.fecha_fin} 
+                          onChange={(e) => setExpoForm({...expoForm, fecha_fin: e.target.value})} 
+                          className="w-full rounded-xl border border-cafe-noir/30 bg-white/50 px-4 py-2.5 font-sans text-cafe-noir"
+                        />
+                      </label>
+                    </div>
+                    <div className="pt-6">
+                      <button type="submit" className="w-full rounded-full bg-[#8E412E] py-4 font-sans text-sm font-semibold text-white shadow-md transition-all hover:bg-[#A94F38]">
+                        {modalMode === 'create' ? 'Crear Exposición' : 'Guardar Cambios'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       )}
+
+      {/* MODAL VINCULAR OBRAS */}
+      {isObrasModalOpen && selectedExpo && (
+        <div className="tw-scope">
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 bg-[#3a200d]/50 backdrop-blur-md">
+            <div className="relative w-full max-w-3xl h-auto max-h-[90vh] rounded-[2rem] bg-[#F4F0E6] shadow-2xl shadow-black/50 flex flex-col">
+              <button
+                type="button"
+                onClick={() => setIsObrasModalOpen(false)}
+                className="absolute top-6 right-6 z-20 flex h-10 w-10 items-center justify-center rounded-full text-cafe-noir hover:opacity-70"
+              >
+                <X className="h-6 w-6" />
+              </button>
+              <div className="relative z-10 w-full overflow-y-auto px-6 py-10 sm:px-12 sm:py-14">
+                <div className="text-center text-cafe-noir">
+                  <span className="font-sans text-xs uppercase tracking-[0.1em] text-cafe-noir/80">Obras de Exposición</span>
+                  <h2 className="mt-1 font-sans font-semibold tracking-tight text-3xl sm:text-4xl text-cafe-noir">
+                    {selectedExpo.nombre_exposicion}
+                  </h2>
+                  <p className="mt-2 font-sans text-sm text-cafe-noir/90">Selecciona las obras a incluir.</p>
+                </div>
+                <div className="mt-8">
+                  <div className="table-container rounded-xl border border-cafe-noir/20 bg-white/50" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                    <table className="w-full text-left font-sans">
+                      <thead style={{ position: 'sticky', top: 0, backgroundColor: '#EADFC8', zIndex: 1 }}>
+                        <tr className="text-xs uppercase tracking-wider text-cafe-noir/80 border-b border-cafe-noir/20">
+                          <th className="py-3 px-4 w-16 text-center">Imagen</th>
+                          <th className="py-3 px-4">Código</th>
+                          <th className="py-3 px-4">Obra / Pieza</th>
+                          <th className="py-3 px-4 text-center">Incluir en Exposición</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {obrasColeccion.map(obra => {
+                          const isLinked = linkedObrasIds.includes(obra.id_obra)
+                          return (
+                            <tr key={obra.id_obra} className="border-b border-cafe-noir/10 hover:bg-white/40">
+                              <td className="py-3 px-4">
+                                {obra.fotografia_principal ? (
+                                  <img src={obra.fotografia_principal} alt={obra.titulo} style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px', margin: '0 auto' }} />
+                                ) : (
+                                  <div style={{ width: '40px', height: '40px', backgroundColor: '#e2dacf', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8a7a6a', margin: '0 auto' }}><Camera size={20} /></div>
+                                )}
+                              </td>
+                              <td className="py-3 px-4 text-sm text-cafe-noir font-medium">{obra.id_obra}</td>
+                              <td className="py-3 px-4 text-sm text-cafe-noir/80">{obra.titulo}</td>
+                              <td className="py-3 px-4 text-center">
+                                <label className="toggle-switch-wrapper inline-block">
+                                  <input type="checkbox" checked={isLinked} onChange={() => handleToggleLinkObra(obra.id_obra)} />
+                                  <span className="toggle-slider"></span>
+                                </label>
+                              </td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }

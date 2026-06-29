@@ -252,3 +252,193 @@ export async function actualizarEstatusCultorRequest(idCultor, estatus, token) {
     throw new Error(errorMsg, { cause: error })
   }
 }
+
+// ==========================================
+// OBRAS E INVENTARIO
+// ==========================================
+
+// Obtener todas las obras del inventario (Administrativo)
+export async function getObrasAdminRequest(token) {
+  exigirToken(token)
+  try {
+    const response = await axios.get(`${API_URL}/obras`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    return response.data
+  } catch (error) {
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      throw crearErrorDeSesion('Tu sesión expiró o no es válida. Inicia sesión nuevamente.')
+    }
+    const errorMsg = error.response?.data?.error || error.response?.data?.message || 'Error al obtener el inventario de obras'
+    throw new Error(errorMsg, { cause: error })
+  }
+}
+
+// Actualizar campo destacado_galeria de una obra
+export async function updateObraDestacadoRequest(idObra, destacado, token) {
+  exigirToken(token)
+  try {
+    const response = await axios.patch(`${API_URL}/obras/${idObra}/destacado`, {
+      destacado_galeria: destacado
+    }, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    return response.data
+  } catch (error) {
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      throw crearErrorDeSesion('Tu sesión expiró o no es válida. Inicia sesión nuevamente.')
+    }
+    const errorMsg = error.response?.data?.error || error.response?.data?.message || 'Error al actualizar destacado_galeria'
+    throw new Error(errorMsg, { cause: error })
+  }
+}
+
+// ==========================================
+// CONFIGURACIÓN WEB
+// ==========================================
+
+export async function getConfiguracionWebRequest() {
+  try {
+    const response = await axios.get(`${API_URL}/configuracion-web`)
+    return response.data
+  } catch (error) {
+    const errorMsg = error.response?.data?.error || error.response?.data?.message || 'Error al obtener la configuración web'
+    throw new Error(errorMsg, { cause: error })
+  }
+}
+
+export async function updateConfiguracionWebRequest(data, token) {
+  exigirToken(token)
+  try {
+    const response = await axios.put(`${API_URL}/configuracion-web`, data, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    return response.data
+  } catch (error) {
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      throw crearErrorDeSesion('Tu sesión expiró o no es válida. Inicia sesión nuevamente.')
+    }
+    const errorMsg = error.response?.data?.error || error.response?.data?.message || 'Error al actualizar la configuración web'
+    throw new Error(errorMsg, { cause: error })
+  }
+}
+
+// ==========================================
+// EXPOSICIONES
+// ==========================================
+
+export async function getExposicionesAdminRequest(token) {
+  exigirToken(token)
+  try {
+    const response = await axios.get(`${API_URL}/exposiciones`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    return response.data
+  } catch (error) {
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      throw crearErrorDeSesion('Tu sesión expiró o no es válida. Inicia sesión nuevamente.')
+    }
+    const errorMsg = error.response?.data?.error || error.response?.data?.message || 'Error al obtener exposiciones'
+    throw new Error(errorMsg, { cause: error })
+  }
+}
+
+export async function createExposicionAdminRequest(data, token) {
+  exigirToken(token)
+  try {
+    const response = await axios.post(`${API_URL}/exposiciones`, data, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    return response.data
+  } catch (error) {
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      throw crearErrorDeSesion('Tu sesión expiró o no es válida. Inicia sesión nuevamente.')
+    }
+    const errorMsg = error.response?.data?.error || error.response?.data?.message || 'Error al crear exposición'
+    throw new Error(errorMsg, { cause: error })
+  }
+}
+
+export async function updateExposicionAdminRequest(id_exposicion, data, token) {
+  exigirToken(token)
+  try {
+    const response = await axios.put(`${API_URL}/exposiciones/${id_exposicion}`, data, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    return response.data
+  } catch (error) {
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      throw crearErrorDeSesion('Tu sesión expiró o no es válida. Inicia sesión nuevamente.')
+    }
+    const errorMsg = error.response?.data?.error || error.response?.data?.message || 'Error al actualizar exposición'
+    throw new Error(errorMsg, { cause: error })
+  }
+}
+
+export async function deleteExposicionAdminRequest(id_exposicion, token) {
+  exigirToken(token)
+  try {
+    const response = await axios.delete(`${API_URL}/exposiciones/${id_exposicion}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    return response.data
+  } catch (error) {
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      throw crearErrorDeSesion('Tu sesión expiró o no es válida. Inicia sesión nuevamente.')
+    }
+    const errorMsg = error.response?.data?.error || error.response?.data?.message || 'Error al eliminar exposición'
+    throw new Error(errorMsg, { cause: error })
+  }
+}
+
+// ==========================================
+// EXPOSICION_OBRAS (Vínculos)
+// ==========================================
+
+export async function getObrasPorExposicionRequest(token) {
+  exigirToken(token)
+  try {
+    const response = await axios.get(`${API_URL}/exposicion_obras`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    return response.data
+  } catch (error) {
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      throw crearErrorDeSesion('Tu sesión expiró o no es válida. Inicia sesión nuevamente.')
+    }
+    const errorMsg = error.response?.data?.error || error.response?.data?.message || 'Error al obtener vínculos de obras'
+    throw new Error(errorMsg, { cause: error })
+  }
+}
+
+export async function linkObraExposicionRequest(id_exposicion, id_obra, token) {
+  exigirToken(token)
+  try {
+    const response = await axios.post(`${API_URL}/exposicion_obras`, { id_exposicion, id_obra }, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    return response.data
+  } catch (error) {
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      throw crearErrorDeSesion('Tu sesión expiró o no es válida. Inicia sesión nuevamente.')
+    }
+    const errorMsg = error.response?.data?.error || error.response?.data?.message || 'Error al vincular obra'
+    throw new Error(errorMsg, { cause: error })
+  }
+}
+
+export async function unlinkObraExposicionRequest(id_exposicion, id_obra, token) {
+  exigirToken(token)
+  try {
+    const response = await axios.delete(`${API_URL}/exposicion_obras/${id_exposicion}/${id_obra}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    return response.data
+  } catch (error) {
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      throw crearErrorDeSesion('Tu sesión expiró o no es válida. Inicia sesión nuevamente.')
+    }
+    const errorMsg = error.response?.data?.error || error.response?.data?.message || 'Error al desvincular obra'
+    throw new Error(errorMsg, { cause: error })
+  }
+}
