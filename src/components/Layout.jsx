@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {
   Calendar,
   Bell,
@@ -14,11 +14,13 @@ import {
   Menu,
   Lock as LockIcon,
   Settings,
-  X
+  X,
+  AlertTriangle
 } from 'lucide-react'
 import './Layout.css'
 import adminAvatar from '../assets/admin_avatar.png'
 import ChangePasswordModal from './ChangePasswordModal'
+import { getProfileRequest, getNotificacionesRequest, marcarNotificacionesLeidasRequest, getObrasAdminRequest } from '../services/api'
 
 const Layout = ({ children, currentView, onViewChange, onLogout }) => {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
@@ -26,6 +28,83 @@ const Layout = ({ children, currentView, onViewChange, onLogout }) => {
     return localStorage.getItem('sidebar-collapsed') === 'true'
   })
   const [isMobileOpen, setIsMobileOpen] = useState(false)
+
+  // Perfil real del usuario logueado (nombre, rol, correo, si su contraseña sigue
+  // siendo la temporal generada por el sistema), traído de /auth/profile.
+  const [profile, setProfile] = useState(null)
+  const [notificaciones, setNotificaciones] = useState([])
+  const [notifAbiertas, setNotifAbiertas] = useState(false)
+  const notifRef = useRef(null)
+
+  // Contador inmediato de obras pendientes de aprobación, para el badge del sidebar.
+  const [obrasPendientesCount, setObrasPendientesCount] = useState(0)
+
+  const cargarObrasPendientes = () => {
+    const token = localStorage.getItem('auth-token')
+    if (!token) return
+    getObrasAdminRequest(token, 'pendiente')
+      .then((obras) => setObrasPendientesCount(Array.isArray(obras) ? obras.length : 0))
+      .catch(() => {})
+  }
+
+  const cargarPerfil = () => {
+    const token = localStorage.getItem('auth-token')
+    if (!token) return
+    getProfileRequest(token).then(setProfile).catch(() => {})
+  }
+
+  const cargarNotificaciones = () => {
+    const token = localStorage.getItem('auth-token')
+    if (!token) return
+    getNotificacionesRequest(token).then(setNotificaciones).catch(() => {})
+  }
+
+  useEffect(() => {
+    cargarPerfil()
+    cargarNotificaciones()
+    cargarObrasPendientes()
+  }, [])
+
+  // Refresca el contador cada vez que se cambia de vista (ej. tras aprobar/rechazar
+  // una obra en Inventario Patrimonial, al volver aquí el badge ya se actualiza).
+  useEffect(() => {
+    cargarObrasPendientes()
+  }, [currentView])
+
+  // Cerrar el dropdown de notificaciones al hacer clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (notifRef.current && !notifRef.current.contains(event.target)) {
+        setNotifAbiertas(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const toggleNotificaciones = () => {
+    const nuevoEstado = !notifAbiertas
+    setNotifAbiertas(nuevoEstado)
+    if (nuevoEstado) {
+      cargarNotificaciones()
+      const token = localStorage.getItem('auth-token')
+      if (token) {
+        marcarNotificacionesLeidasRequest(token)
+          .then(() => setNotificaciones((prev) => prev.map((n) => ({ ...n, leida: true }))))
+          .catch(() => {})
+      }
+    }
+  }
+
+  const noLeidas = notificaciones.filter((n) => !n.leida).length
+
+  const getInitials = (nombre, apellido) => {
+    if (nombre && apellido) return (nombre[0] + apellido[0]).toUpperCase()
+    return 'AD'
+  }
+
+  const nombreCompleto = profile ? `${profile.primer_nombre} ${profile.primer_apellido}` : 'Administrador'
+  const nombreRol = profile?.rolRel?.nombre_rol || 'Administrador'
 
   // Cerrar sidebar móvil al cambiar de vista
   const handleViewChange = (view) => {
@@ -124,6 +203,18 @@ const Layout = ({ children, currentView, onViewChange, onLogout }) => {
           >
             <Landmark className="nav-icon" size={20} />
             <span>Inventario Patrimonial</span>
+            {obrasPendientesCount > 0 && (
+              <span
+                title={`${obrasPendientesCount} obra(s) pendiente(s) de aprobación`}
+                style={{
+                  marginLeft: 'auto', background: '#B4533C', color: '#fff', fontSize: '11px',
+                  fontWeight: 700, borderRadius: '999px', padding: '1px 7px', minWidth: '18px',
+                  textAlign: 'center', lineHeight: '16px',
+                }}
+              >
+                {obrasPendientesCount}
+              </span>
+            )}
           </button>
           <button
             onClick={() => handleViewChange('difusion')}
@@ -156,23 +247,23 @@ const Layout = ({ children, currentView, onViewChange, onLogout }) => {
         <div className="sidebar-footer">
           <div
             className="profile-badge"
-            data-label="Administrador (Sede Principal)"
-            title="Administrador"
+            data-label={`${nombreCompleto} (${nombreRol})`}
+            title={nombreCompleto}
           >
-            <div className="profile-initials">AD</div>
+            <div className="profile-initials">{getInitials(profile?.primer_nombre, profile?.primer_apellido)}</div>
             <div className="profile-info">
-              <span className="profile-name">Administrador</span>
-              <span className="profile-location">SEDE PRINCIPAL</span>
+              <span className="profile-name">{nombreCompleto}</span>
+              <span className="profile-location">{nombreRol.toUpperCase()}</span>
             </div>
           </div>
           <button
             className="sidebar-changepw-btn"
             onClick={() => setIsProfileModalOpen(true)}
-            title="Cambiar contraseña"
-            data-label="Cambiar contraseña"
+            title="Mi Perfil"
+            data-label="Mi Perfil"
           >
             <LockIcon size={16} />
-            <span>Cambiar Contraseña</span>
+            <span>Mi Perfil</span>
           </button>
           <button
             className="sidebar-logout-btn"
@@ -203,12 +294,59 @@ const Layout = ({ children, currentView, onViewChange, onLogout }) => {
             <button className="icon-btn" aria-label="Calendario">
               <Calendar size={18} />
             </button>
-            <button className="icon-btn" aria-label="Notificaciones">
-              <Bell size={18} />
-              <span className="notif-dot"></span>
-            </button>
+            <div style={{ position: 'relative' }} ref={notifRef}>
+              <button className="icon-btn" aria-label="Notificaciones" onClick={toggleNotificaciones}>
+                <Bell size={18} />
+                {noLeidas > 0 && <span className="notif-dot"></span>}
+              </button>
+              {notifAbiertas && (
+                <div
+                  style={{
+                    position: 'absolute', right: 0, top: 'calc(100% + 8px)', width: '320px',
+                    maxHeight: '380px', overflowY: 'auto', background: 'var(--card-bg, #fff)',
+                    border: '1px solid var(--border-color, #e0e0e0)', borderRadius: '10px',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 50,
+                  }}
+                >
+                  <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-color, #eee)', fontWeight: 600, fontSize: '13px' }}>
+                    Notificaciones
+                  </div>
+                  {notificaciones.length > 0 ? (
+                    notificaciones.map((n) => (
+                      <div key={n.id_notificacion} style={{ padding: '10px 16px', borderBottom: '1px solid #f1f1f1', background: n.leida ? 'transparent' : 'rgba(197,56,19,0.06)' }}>
+                        <p style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: '#202124' }}>{n.titulo}</p>
+                        {n.mensaje && <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#5f6368' }}>{n.mensaje}</p>}
+                      </div>
+                    ))
+                  ) : (
+                    <div style={{ padding: '16px', fontSize: '12px', color: '#807471', textAlign: 'center' }}>Sin notificaciones</div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </header>
+
+        {/* Aviso de contraseña temporal: se mantiene hasta que el usuario la cambie */}
+        {profile?.password_temporal && (
+          <div
+            style={{
+              display: 'flex', alignItems: 'center', gap: '10px', margin: '0 24px 16px',
+              padding: '12px 16px', background: '#fde8d7', border: '1px solid #e8a561',
+              borderRadius: '10px', color: '#7a4a12', fontSize: '13px',
+            }}
+          >
+            <AlertTriangle size={18} />
+            <span style={{ flex: 1 }}>Tu cuenta usa una contraseña temporal generada por el sistema. Cámbiala para proteger tu acceso.</span>
+            <button
+              className="btn-primary"
+              style={{ padding: '6px 14px', fontSize: '12px', height: 'auto' }}
+              onClick={() => setIsProfileModalOpen(true)}
+            >
+              Cambiar ahora
+            </button>
+          </div>
+        )}
 
         {/* Content Area */}
         <div className="content-body">
@@ -220,6 +358,8 @@ const Layout = ({ children, currentView, onViewChange, onLogout }) => {
       <ChangePasswordModal
         isOpen={isProfileModalOpen}
         onClose={() => setIsProfileModalOpen(false)}
+        profile={profile}
+        onProfileUpdated={cargarPerfil}
       />
     </div>
   )

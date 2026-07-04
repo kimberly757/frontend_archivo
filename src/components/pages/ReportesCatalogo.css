@@ -68,8 +68,8 @@
 }
 
 .btn-refresh-charts:hover:not(:disabled) {
-  border-color: #C05640;
-  color: #C05640;
+  border-color: #B4533C;
+  color: #B4533C;
 }
 
 .btn-refresh-charts:disabled {
@@ -91,10 +91,10 @@
 
 .chart-card-header h3 {
   margin: 0;
-  border-left: 3px solid #C05640;
-  padding-left: 8px;
-  font-size: 14.5px;
-  font-weight: 700;
+  border-left: 3px solid #B4533C;
+  padding-left: 12px;
+  font-size: 15px;
+  font-weight: 800;
   color: var(--text-main);
 }
 
@@ -102,7 +102,7 @@
 .chart-total-badge {
   background: #fdf4f2;
   border: 1px solid #f5d0c8;
-  color: #C05640;
+  color: #B4533C;
   border-radius: 9999px;
   padding: 2px 10px;
   font-size: 11px;
@@ -148,21 +148,21 @@
 
 .kpi-card {
   background-color: var(--card-bg);
-  border: 1px solid var(--border-color);
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.01);
+  border: none;
+  border-radius: 28px;
+  padding: 28px;
+  box-shadow: 0 10px 50px rgba(93, 64, 55, 0.07);
   display: flex;
   flex-direction: column;
   gap: 12px;
   position: relative;
   overflow: hidden;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
 .kpi-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.04);
+  transform: translateY(-3px);
+  box-shadow: 0 25px 70px rgba(93, 64, 55, 0.12);
 }
 
 .kpi-card::before {
@@ -172,10 +172,10 @@
   left: 0;
   width: 4px;
   height: 100%;
-  background-color: #C05640; /* Terracota border indicator */
+  background-color: #B4533C; /* Terracota border indicator */
 }
 
-.kpi-card.kpi-cultores::before { background-color: #C05640; }
+.kpi-card.kpi-cultores::before { background-color: #B4533C; }
 .kpi-card.kpi-inventario::before { background-color: #10b981; }
 .kpi-card.kpi-consultas::before { background-color: #f59e0b; }
 
@@ -194,7 +194,7 @@
 }
 
 .kpi-value {
-  font-size: 32px;
+  font-size: 36px;
   font-weight: 800;
   color: var(--text-main);
   letter-spacing: -1px;
@@ -230,10 +230,10 @@
 
 .chart-card {
   background-color: var(--card-bg);
-  border: 1px solid var(--border-color);
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+  border: none;
+  border-radius: 28px;
+  padding: 28px;
+  box-shadow: 0 10px 50px rgba(93, 64, 55, 0.07);
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -245,7 +245,7 @@
   font-size: 14.5px;
   font-weight: 700;
   color: var(--text-main);
-  border-left: 3px solid #C05640;
+  border-left: 3px solid #B4533C;
   padding-left: 8px;
 }
 
@@ -275,15 +275,15 @@
   justify-content: center;
   gap: 7px;
   width: 100%;
-  padding: 9px 0;
+  padding: 10px 0;
   margin-top: 4px;
-  background: linear-gradient(135deg, #fdf4f2 0%, #faf9f7 100%);
-  border: 1px solid #f0cdc6;
-  border-radius: 9px;
+  background: linear-gradient(135deg, #fdf4f2 0%, #FAF7F2 100%);
+  border: none;
+  border-radius: 12px;
   font-family: inherit;
   font-size: 12.5px;
   font-weight: 700;
-  color: #C05640;
+  color: #B4533C;
   cursor: pointer;
   transition: all 0.2s ease;
   letter-spacing: 0.2px;
@@ -291,8 +291,7 @@
 
 .btn-ver-municipios:hover {
   background: #fde8e3;
-  border-color: #C05640;
-  box-shadow: 0 2px 8px rgba(192, 86, 64, 0.12);
+  box-shadow: 0 4px 12px rgba(180, 83, 60, 0.12);
   transform: translateY(-1px);
 }
 
@@ -328,7 +327,7 @@
   flex-direction: column;
   box-shadow:
     0 25px 50px -12px rgba(0,0,0,0.25),
-    0 0 0 1px rgba(192,86,64,0.08);
+    0 0 0 1px rgba(180, 83, 60,0.08);
   animation: modal-in 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
 }
@@ -381,7 +380,7 @@
 
 .municipios-modal-close:hover {
   background: #fde8e3;
-  color: #C05640;
+  color: #B4533C;
 }
 
 /* Barra de resumen de 4 KPIs */
@@ -396,7 +395,7 @@
 }
 
 .summary-stat {
-  background: #faf9f7;
+  background: #FAF7F2;
   padding: 14px 16px;
   display: flex;
   flex-direction: column;
@@ -407,7 +406,7 @@
 .summary-stat-value {
   font-size: 26px;
   font-weight: 800;
-  color: #C05640;
+  color: #B4533C;
   line-height: 1;
   letter-spacing: -0.5px;
 }
@@ -441,7 +440,7 @@
   gap: 5px;
   padding: 12px 14px;
   border-radius: 10px;
-  background: #faf9f7;
+  background: #FAF7F2;
   border: 1px solid #f0eeeb;
   transition: box-shadow 0.15s;
 }
@@ -573,16 +572,16 @@
 
 .svg-chart-line {
   fill: none;
-  stroke: #C05640;
+  stroke: #B4533C;
   stroke-width: 2.5;
   stroke-linecap: round;
   stroke-linejoin: round;
-  filter: drop-shadow(0 3px 5px rgba(192, 86, 64, 0.22));
+  filter: drop-shadow(0 3px 5px rgba(180, 83, 60, 0.22));
 }
 
 .svg-chart-dot {
   fill: #ffffff;
-  stroke: #C05640;
+  stroke: #B4533C;
   stroke-width: 2.5;
   cursor: pointer;
   transition: r 0.15s ease, fill 0.15s ease;
@@ -590,7 +589,7 @@
 
 .svg-chart-dot:hover {
   r: 6;
-  fill: #C05640;
+  fill: #B4533C;
 }
 
 /* Tooltip de la gráfica de línea */
@@ -650,7 +649,7 @@
   width: 20px;
   height: 20px;
   border: 2.5px solid #e5e1de;
-  border-top-color: #C05640;
+  border-top-color: #B4533C;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
   flex-shrink: 0;
@@ -678,33 +677,35 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 14px;
-  background: #C05640;
+  padding: 8px 16px;
+  background: #B4533C;
   color: #fff;
   border: none;
-  border-radius: 6px;
+  border-radius: 10px;
   font-family: inherit;
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
   margin-left: auto;
-  transition: background 0.2s;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .btn-retry:hover {
-  background: #a84a35;
+  background: #96432F;
+  box-shadow: 0 4px 12px rgba(180, 83, 60, 0.25);
+  transform: translateY(-1px);
 }
 
 /* Export and Catalogue Section */
 .export-catalog-card {
-  background-color: #fbfbfa;
-  border: 1px solid var(--border-color);
-  border-radius: 16px;
-  padding: 24px;
+  background-color: #ffffff;
+  border: none;
+  border-radius: 28px;
+  padding: 28px;
   display: grid;
   grid-template-columns: 1fr 1.2fr;
   gap: 32px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.01);
+  box-shadow: 0 10px 50px rgba(93, 64, 55, 0.07);
 }
 
 .export-column {
@@ -736,50 +737,58 @@
 }
 
 /* Format specific color themes for export buttons */
-.btn-export-pdf {
+/* Cada acción de exportación usa un tono distinto, tomado de la misma paleta tierra
+   del panel (ver MUNICIPIO_COLORS en ReportesCatalogo.jsx), para diferenciarlas sin
+   recurrir a colores saturados que no van con la identidad del archivo. */
+.btn-export-pdf,
+.btn-export-excel,
+.btn-export-cultores-excel,
+.btn-export-municipio-excel {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 16px;
+  padding: 14px 20px;
   color: #ffffff;
-  background-color: #ef4444; /* Red */
-  border: 1px solid #ef4444;
-  border-radius: 8px;
+  border-radius: 14px;
   font-family: inherit;
   font-size: 13.5px;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 1px 2px rgba(239, 68, 68, 0.15);
+  border: none;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.btn-export-pdf:hover {
-  background-color: #dc2626;
-  border-color: #dc2626;
-  box-shadow: 0 4px 6px rgba(239, 68, 68, 0.2);
+.btn-export-pdf:hover,
+.btn-export-excel:hover,
+.btn-export-cultores-excel:hover,
+.btn-export-municipio-excel:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.10);
+}
+
+.btn-export-pdf {
+  background-color: #B4533C; /* Terracota */
+  border: 1px solid #B4533C;
+  box-shadow: 0 1px 2px rgba(180, 83, 60, 0.15);
 }
 
 .btn-export-excel {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
-  color: #ffffff;
-  background-color: #10b981; /* Green */
-  border: 1px solid #10b981;
-  border-radius: 8px;
-  font-family: inherit;
-  font-size: 13.5px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 1px 2px rgba(16, 185, 129, 0.15);
+  background-color: #707C55; /* Verde musgo */
+  border: 1px solid #707C55;
+  box-shadow: 0 1px 2px rgba(112, 124, 85, 0.15);
 }
 
-.btn-export-excel:hover {
-  background-color: #059669;
-  border-color: #059669;
-  box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);
+.btn-export-cultores-excel {
+  background-color: #A87F32; /* Ocre */
+  border: 1px solid #A87F32;
+  box-shadow: 0 1px 2px rgba(168, 127, 50, 0.15);
+}
+
+.btn-export-municipio-excel {
+  background-color: #5D4037; /* Marrón */
+  border: 1px solid #5D4037;
+  box-shadow: 0 1px 2px rgba(93, 64, 55, 0.15);
 }
 
 .btn-export-logs {
@@ -815,17 +824,17 @@
 .catalog-search-wrapper {
   display: flex;
   align-items: center;
-  background-color: #ffffff;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 8px 12px;
+  background-color: #f5f4f0;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 14px;
   position: relative;
   transition: all 0.2s ease;
 }
 
 .catalog-search-wrapper:focus-within {
-  border-color: #C05640;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(180, 83, 60, 0.09);
 }
 
 .catalog-search-wrapper input {
@@ -839,12 +848,13 @@
 }
 
 .catalog-table-wrapper {
-  border: 1px solid var(--border-color);
-  border-radius: 10px;
+  border: none;
+  border-radius: 14px;
   background-color: #ffffff;
   overflow: hidden;
   max-height: 180px;
   overflow-y: auto;
+  box-shadow: 0 2px 12px rgba(93, 64, 55, 0.04);
 }
 
 .simple-table {
@@ -858,17 +868,17 @@
   font-weight: 700;
   color: var(--text-secondary);
   letter-spacing: 0.5px;
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--border-color);
-  background-color: #faf9f7;
+  padding: 12px 14px;
+  border-bottom: 1px solid #f0eeeb;
+  background-color: #FAF7F2;
   text-transform: uppercase;
 }
 
 .simple-table td {
-  padding: 10px 12px;
+  padding: 12px 14px;
   font-size: 12.5px;
   color: var(--text-main);
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid #f3f1ee;
   vertical-align: middle;
 }
 
@@ -876,24 +886,27 @@
   border-bottom: none;
 }
 
-.simple-table tr:hover td {
-  background-color: #fdfdfc;
+.simple-table tbody tr:hover td {
+  background-color: rgba(250, 247, 242, 0.6);
+  transition: background-color 0.15s ease;
 }
 
 .btn-export-inline {
   background: none;
   border: none;
-  color: #C05640;
+  color: #B4533C;
   font-family: inherit;
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
-  text-decoration: underline;
-  padding: 0;
+  padding: 6px 12px;
+  border-radius: 8px;
+  transition: all 0.15s ease;
 }
 
 .btn-export-inline:hover {
-  color: #a84a35;
+  background: rgba(180, 83, 60, 0.08);
+  color: #96432F;
 }
 
 /* Consolidated PDF download action button */
@@ -908,24 +921,23 @@
   align-items: center;
   justify-content: center;
   gap: 10px;
-  padding: 14px 28px;
+  padding: 16px 32px;
   font-family: inherit;
   font-size: 14px;
   font-weight: 700;
-  border-radius: 12px;
+  border-radius: 14px;
   cursor: pointer;
-  background-color: #C05640;
-  border: 1px solid #C05640;
+  background-color: #B4533C;
+  border: none;
   color: #ffffff;
-  box-shadow: 0 4px 6px rgba(192, 86, 64, 0.15);
-  transition: all 0.2s ease;
+  box-shadow: 0 4px 6px rgba(180, 83, 60, 0.15);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .btn-consolidated-pdf:hover:not(:disabled) {
-  background-color: #a84a35;
-  border-color: #a84a35;
-  box-shadow: 0 10px 15px -3px rgba(192, 86, 64, 0.25);
-  transform: translateY(-1px);
+  background-color: #96432F;
+  box-shadow: 0 12px 24px rgba(180, 83, 60, 0.25);
+  transform: translateY(-2px);
 }
 
 .btn-consolidated-pdf:disabled {

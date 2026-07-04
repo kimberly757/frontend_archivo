@@ -11,12 +11,14 @@ import {
   getReportesResumenRequest,
   getObrasAdminRequest,
   exportarCultoresPdfRequest,
+  exportarCultoresExcelRequest,
   exportarObrasCsvRequest,
+  exportarObrasPorMunicipioExcelRequest,
   exportarCatalogoConsolidadoRequest,
   exportarFichaCultorRequest,
 } from '../../services/api'
 
-const MUNICIPIO_COLORS = ['#C05640', '#b1791f', '#8a5a3c', '#807471', '#7a8454', '#c9a227']
+const MUNICIPIO_COLORS = ['#B4533C', '#A87F32', '#5D4037', '#807471', '#707C55', '#c9a227']
 
 function formatearFechaCorta(fechaISO) {
   if (!fechaISO) return 'Sin fecha'
@@ -45,30 +47,37 @@ function LineChart({ puntos }) {
   const cx = (i) => PAD_LEFT + (puntos.length > 1 ? (i / (puntos.length - 1)) * chartW : chartW / 2)
   const cy = (v) => PAD_TOP + chartH - (v / techo) * chartH
 
-  // Línea y área rellena
-  const linePath = puntos.map((p, i) => `${i === 0 ? 'M' : 'L'} ${cx(i).toFixed(1)} ${cy(p.acumulado).toFixed(1)}`).join(' ')
+  // Curva suave (Catmull-Rom → Bezier, tensión 0.4) en vez de segmentos rectos.
+  const puntosXY = puntos.map((p, i) => [cx(i), cy(p.acumulado)])
+  const TENSION = 0.4 / 3
+  let linePath = puntosXY.length
+    ? `M ${puntosXY[0][0].toFixed(1)} ${puntosXY[0][1].toFixed(1)}`
+    : ''
+  for (let i = 0; i < puntosXY.length - 1; i++) {
+    const [x0, y0] = puntosXY[i === 0 ? i : i - 1]
+    const [x1, y1] = puntosXY[i]
+    const [x2, y2] = puntosXY[i + 1]
+    const [x3, y3] = puntosXY[i + 2 < puntosXY.length ? i + 2 : i + 1]
+    const cp1x = x1 + (x2 - x0) * TENSION
+    const cp1y = y1 + (y2 - y0) * TENSION
+    const cp2x = x2 - (x3 - x1) * TENSION
+    const cp2y = y2 - (y3 - y1) * TENSION
+    linePath += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${x2.toFixed(1)} ${y2.toFixed(1)}`
+  }
   const areaPath = `${linePath} L ${cx(puntos.length - 1).toFixed(1)} ${(PAD_TOP + chartH).toFixed(1)} L ${cx(0).toFixed(1)} ${(PAD_TOP + chartH).toFixed(1)} Z`
 
-  // Etiquetas eje Y: 0, mitad, techo
+  // Etiquetas eje Y: 0, mitad, techo (sin líneas de cuadrícula: diseño "Modern Heritage" limpio)
   const yLabels = [0, Math.round(techo / 2), techo]
-
-  // Líneas de cuadrícula
-  const gridYs = yLabels.map((v) => cy(v))
 
   return (
     <div className="svg-chart-container" style={{ position: 'relative' }}>
       <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: '100%', overflow: 'visible' }}>
         <defs>
           <linearGradient id="lineAreaGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#C05640" stopOpacity="0.18" />
-            <stop offset="100%" stopColor="#C05640" stopOpacity="0" />
+            <stop offset="0%" stopColor="#B4533C" stopOpacity="0.18" />
+            <stop offset="100%" stopColor="#B4533C" stopOpacity="0" />
           </linearGradient>
         </defs>
-
-        {/* Grid lines */}
-        {gridYs.map((gy, i) => (
-          <line key={i} x1={PAD_LEFT} y1={gy.toFixed(1)} x2={W - PAD_RIGHT} y2={gy.toFixed(1)} className="svg-grid-line" />
-        ))}
 
         {/* Y-axis labels */}
         {yLabels.map((v, i) => (
@@ -171,6 +180,8 @@ const ReportesCatalogo = () => {
   const [isDownloading, setIsDownloading] = useState({
     pdf: false,
     excel: false,
+    cultoresExcel: false,
+    municipioExcel: false,
     consolidated: false
   })
   const [notificationMsg, setNotificationMsg] = useState('')
@@ -405,7 +416,7 @@ const ReportesCatalogo = () => {
               onClick={() => handleExportFile('pdf', 'reporte_cultores_registrados.pdf', exportarCultoresPdfRequest)}
             >
               <FileText size={18} />
-              <span>{isDownloading.pdf ? 'Generando PDF...' : 'Descargar Reporte en PDF'}</span>
+              <span>{isDownloading.pdf ? 'Generando PDF...' : 'Descargar Registros de Cultores PDF'}</span>
             </button>
 
             <button
@@ -414,7 +425,25 @@ const ReportesCatalogo = () => {
               onClick={() => handleExportFile('excel', 'inventario_obras.xlsx', exportarObrasCsvRequest)}
             >
               <FileText size={18} />
-              <span>{isDownloading.excel ? 'Generando Excel...' : 'Descargar Excel de Inventario'}</span>
+              <span>{isDownloading.excel ? 'Generando Excel...' : 'Descargar Excel de Registro por Región'}</span>
+            </button>
+
+            <button
+              className="btn-export-cultores-excel"
+              disabled={isDownloading.cultoresExcel}
+              onClick={() => handleExportFile('cultoresExcel', 'reporte_cultores_registrados.xlsx', exportarCultoresExcelRequest)}
+            >
+              <FileText size={18} />
+              <span>{isDownloading.cultoresExcel ? 'Generando Excel...' : 'Descargar Excel de Cultores'}</span>
+            </button>
+
+            <button
+              className="btn-export-municipio-excel"
+              disabled={isDownloading.municipioExcel}
+              onClick={() => handleExportFile('municipioExcel', 'patrimonio_por_municipio.xlsx', exportarObrasPorMunicipioExcelRequest)}
+            >
+              <FileText size={18} />
+              <span>{isDownloading.municipioExcel ? 'Generando Excel...' : 'Descargar Patrimonio por Municipio'}</span>
             </button>
           </div>
         </div>
@@ -428,7 +457,7 @@ const ReportesCatalogo = () => {
 
           {/* Search bar inside catalog */}
           <div className="catalog-search-wrapper">
-            <Search className="search-input-icon" size={16} style={{ color: 'var(--text-secondary)', marginRight: '8px' }} />
+            <Search className="search-input-icon" size={16} />
             <input 
               type="text" 
               placeholder="Filtrar catálogo para exportación (Ej. Vasija, Cera...)" 

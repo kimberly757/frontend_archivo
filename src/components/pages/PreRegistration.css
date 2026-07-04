@@ -28,7 +28,7 @@
 }
 
 .prereg-module-container .breadcrumbs .current {
-  color: #C05640;
+  color: #B4533C;
 }
 
 .prereg-module-container h1 {
@@ -50,16 +50,16 @@
   font-weight: 600;
   border-radius: 8px;
   cursor: pointer;
-  background-color: #C05640;
-  border: 1px solid #C05640;
+  background-color: #B4533C;
+  border: 1px solid #B4533C;
   color: #ffffff;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   transition: all 0.2s ease;
 }
 
 .prereg-module-container .btn-terracota:hover {
-  background-color: #a84a35;
-  border-color: #a84a35;
+  background-color: #96432F;
+  border-color: #96432F;
 }
 
 /* Filter Controls Bar */
@@ -155,7 +155,7 @@
 }
 
 .prereg-module-container .filter-dropdown-select:focus {
-  border-color: #C05640;
+  border-color: #B4533C;
   background-color: #ffffff;
 }
 
@@ -208,7 +208,7 @@
 }
 
 .prereg-module-container .cultor-profile-cell.clickable:hover .cultor-display-name {
-  color: #C05640;
+  color: #B4533C;
   text-decoration: underline;
 }
 
@@ -217,7 +217,7 @@
   height: 38px;
   border-radius: 50%;
   background-color: #f3eae8;
-  color: #C05640;
+  color: #B4533C;
   font-weight: 700;
   font-size: 13px;
   display: flex;
@@ -346,7 +346,7 @@
 
 .prereg-module-container .grid-action-btn:hover {
   background-color: #f5f4f0;
-  color: #C05640;
+  color: #B4533C;
   border-color: #ebeae6;
 }
 
@@ -404,9 +404,9 @@
 }
 
 .prereg-module-container .page-number-btn.active {
-  background-color: #C05640;
+  background-color: #B4533C;
   color: #ffffff;
-  box-shadow: 0 2px 4px rgba(192, 86, 64, 0.15);
+  box-shadow: 0 2px 4px rgba(180, 83, 60, 0.15);
 }
 
 .prereg-module-container .empty-grid-state {

@@ -7,10 +7,60 @@ export async function loginRequest(correo, password) {
     const response = await axios.post(`${API_URL}/auth/login`, {
       correo,
       password,
+      // Este panel solo autentica cuentas que no sean de cultor (ver authController.login).
+      portal: 'admin',
     })
     return response.data
   } catch (error) {
     const errorMsg = error.response?.data?.error || error.response?.data?.message || 'Error al iniciar sesión'
+    throw new Error(errorMsg)
+  }
+}
+
+export async function getProfileRequest(token) {
+  try {
+    const response = await axios.get(`${API_URL}/auth/profile`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    return response.data
+  } catch (error) {
+    const errorMsg = error.response?.data?.error || error.response?.data?.message || 'Error al obtener el perfil'
+    throw new Error(errorMsg)
+  }
+}
+
+export async function updateProfileRequest(data, token) {
+  try {
+    const response = await axios.put(`${API_URL}/auth/profile`, data, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    return response.data
+  } catch (error) {
+    const errorMsg = error.response?.data?.error || error.response?.data?.message || 'Error al actualizar el perfil'
+    throw new Error(errorMsg)
+  }
+}
+
+export async function getNotificacionesRequest(token) {
+  try {
+    const response = await axios.get(`${API_URL}/notificaciones`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    return response.data
+  } catch (error) {
+    const errorMsg = error.response?.data?.error || error.response?.data?.message || 'Error al obtener notificaciones'
+    throw new Error(errorMsg)
+  }
+}
+
+export async function marcarNotificacionesLeidasRequest(token) {
+  try {
+    const response = await axios.put(`${API_URL}/notificaciones/marcar-leidas`, {}, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    return response.data
+  } catch (error) {
+    const errorMsg = error.response?.data?.error || error.response?.data?.message || 'Error al marcar notificaciones'
     throw new Error(errorMsg)
   }
 }
@@ -201,6 +251,25 @@ export async function updateCultorRequest(idCultor, data, token) {
   }
 }
 
+// Valida mediante OCR que la imagen sea una Cédula de Identidad venezolana, SIN crear
+// ningún registro. Ruta pública (sin auth) — se usa antes de crear el cultor.
+export async function validarCedulaRequest(archivo) {
+  try {
+    const formData = new FormData()
+    formData.append('archivo', archivo)
+
+    const response = await axios.post(`${API_URL}/documentos_cultor/validar-cedula`, formData)
+    return response.data
+  } catch (error) {
+    const data = error.response?.data
+    const errorMsg = data?.error || 'La imagen no corresponde a una Cédula de Identidad válida.'
+    const err = new Error(errorMsg, { cause: error })
+    err.detalles = data?.detalles || []
+    err.ocrData = data
+    throw err
+  }
+}
+
 // Sube la foto/documento de cédula a Cloudinary (vía backend) y la asocia al id_cultor
 // recién creado. No fijamos Content-Type a mano: el navegador debe generar el boundary
 // del multipart automáticamente al detectar que el body es un FormData.
@@ -328,6 +397,29 @@ export async function toggleActivoCultorRequest(idCultor, token) {
       throw crearErrorDeSesion('Tu sesión expiró o no es válida. Inicia sesión nuevamente.')
     }
     const errorMsg = error.response?.data?.error || error.response?.data?.message || 'Error al cambiar estado del cultor'
+    throw new Error(errorMsg, { cause: error })
+  }
+}
+
+// Registra un nuevo control de fe de vida para un cultor (miembro activo/honorario).
+// Cada llamada crea un registro nuevo; el directorio muestra el más reciente por fecha_control.
+export async function registrarFeDeVidaRequest(idCultor, estatusConfirmado, token) {
+  exigirToken(token)
+  try {
+    const response = await axios.post(`${API_URL}/fe_de_vida`, {
+      id_cultor: idCultor,
+      estatus_confirmado: estatusConfirmado,
+      fecha_control: new Date().toISOString().slice(0, 10),
+      metodo_verificacion: 'Registro manual (admin)',
+    }, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    return response.data
+  } catch (error) {
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      throw crearErrorDeSesion('Tu sesión expiró o no es válida. Inicia sesión nuevamente.')
+    }
+    const errorMsg = error.response?.data?.error || error.response?.data?.message || 'Error al registrar la fe de vida'
     throw new Error(errorMsg, { cause: error })
   }
 }
@@ -535,8 +627,16 @@ export function exportarCultoresPdfRequest(token) {
   return descargarArchivoRequest('/dashboard/exportar/cultores-pdf', token, 'reporte_cultores_registrados.pdf')
 }
 
+export function exportarCultoresExcelRequest(token) {
+  return descargarArchivoRequest('/dashboard/exportar/cultores-excel', token, 'reporte_cultores_registrados.xlsx')
+}
+
 export function exportarObrasCsvRequest(token) {
   return descargarArchivoRequest('/dashboard/exportar/obras-csv', token, 'inventario_obras.xlsx')
+}
+
+export function exportarObrasPorMunicipioExcelRequest(token) {
+  return descargarArchivoRequest('/dashboard/exportar/obras-por-municipio-excel', token, 'patrimonio_por_municipio.xlsx')
 }
 
 export function exportarCatalogoConsolidadoRequest(token) {
@@ -643,6 +743,78 @@ export async function deleteExposicionAdminRequest(id_exposicion, token) {
       throw crearErrorDeSesion('Tu sesión expiró o no es válida. Inicia sesión nuevamente.')
     }
     const errorMsg = error.response?.data?.error || error.response?.data?.message || 'Error al eliminar exposición'
+    throw new Error(errorMsg, { cause: error })
+  }
+}
+
+// ==========================================
+// EFEMÉRIDES
+// ==========================================
+
+export async function getEfemeridesAdminRequest(token) {
+  exigirToken(token)
+  try {
+    const response = await axios.get(`${API_URL}/efemerides`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    return response.data
+  } catch (error) {
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      throw crearErrorDeSesion('Tu sesión expiró o no es válida. Inicia sesión nuevamente.')
+    }
+    const errorMsg = error.response?.data?.error || error.response?.data?.message || 'Error al obtener efemérides'
+    throw new Error(errorMsg, { cause: error })
+  }
+}
+
+export async function createEfemerideRequest(data, token) {
+  exigirToken(token)
+  try {
+    const headers = { Authorization: `Bearer ${token}` }
+    if (data instanceof FormData) {
+      headers['Content-Type'] = 'multipart/form-data'
+    }
+    const response = await axios.post(`${API_URL}/efemerides`, data, { headers })
+    return response.data
+  } catch (error) {
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      throw crearErrorDeSesion('Tu sesión expiró o no es válida. Inicia sesión nuevamente.')
+    }
+    const errorMsg = error.response?.data?.error || error.response?.data?.message || 'Error al crear la efeméride'
+    throw new Error(errorMsg, { cause: error })
+  }
+}
+
+export async function updateEfemerideRequest(id_efemeride, data, token) {
+  exigirToken(token)
+  try {
+    const headers = { Authorization: `Bearer ${token}` }
+    if (data instanceof FormData) {
+      headers['Content-Type'] = 'multipart/form-data'
+    }
+    const response = await axios.put(`${API_URL}/efemerides/${id_efemeride}`, data, { headers })
+    return response.data
+  } catch (error) {
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      throw crearErrorDeSesion('Tu sesión expiró o no es válida. Inicia sesión nuevamente.')
+    }
+    const errorMsg = error.response?.data?.error || error.response?.data?.message || 'Error al actualizar la efeméride'
+    throw new Error(errorMsg, { cause: error })
+  }
+}
+
+export async function deleteEfemerideRequest(id_efemeride, token) {
+  exigirToken(token)
+  try {
+    const response = await axios.delete(`${API_URL}/efemerides/${id_efemeride}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    return response.data
+  } catch (error) {
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      throw crearErrorDeSesion('Tu sesión expiró o no es válida. Inicia sesión nuevamente.')
+    }
+    const errorMsg = error.response?.data?.error || error.response?.data?.message || 'Error al eliminar la efeméride'
     throw new Error(errorMsg, { cause: error })
   }
 }

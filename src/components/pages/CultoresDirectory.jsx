@@ -8,7 +8,7 @@ import {
   Image as ImageIcon
 } from 'lucide-react'
 import './CultoresDirectory.css'
-import { getCultoresAprobadosRequest, toggleActivoCultorRequest } from '../../services/api'
+import { getCultoresAprobadosRequest, toggleActivoCultorRequest, getMunicipiosRequest, getParroquiasByMunicipioRequest, registrarFeDeVidaRequest } from '../../services/api'
 import ManualCultorForm from '../ManualCultorForm'
 import EditCultorForm from '../EditCultorForm'
 
@@ -26,9 +26,13 @@ const CultoresDirectory = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
 
-  // Filtros: texto + píldora de certificación
+  // Filtros: texto + píldora de certificación + ubicación (municipio/parroquia encadenados)
   const [searchQuery, setSearchQuery] = useState('')
   const [filtroCertificacion, setFiltroCertificacion] = useState('todos')
+  const [municipios, setMunicipios] = useState([])
+  const [parroquias, setParroquias] = useState([])
+  const [filtroMunicipio, setFiltroMunicipio] = useState('')
+  const [filtroParroquia, setFiltroParroquia] = useState('')
 
   // Modal de expediente
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
@@ -77,7 +81,19 @@ const CultoresDirectory = () => {
 
   useEffect(() => {
     cargarCultores()
+    getMunicipiosRequest().then(setMunicipios).catch(() => setMunicipios([]))
   }, [])
+
+  // Encadenado: al cambiar el municipio, se recargan sus parroquias y se limpia
+  // la parroquia seleccionada previamente (podría no pertenecer al nuevo municipio).
+  useEffect(() => {
+    setFiltroParroquia('')
+    if (!filtroMunicipio) {
+      setParroquias([])
+      return
+    }
+    getParroquiasByMunicipioRequest(filtroMunicipio).then(setParroquias).catch(() => setParroquias([]))
+  }, [filtroMunicipio])
 
   const nombreCompleto = (cultor) =>
     [cultor.primer_nombre, cultor.segundo_nombre, cultor.primer_apellido, cultor.segundo_apellido]
@@ -90,7 +106,34 @@ const CultoresDirectory = () => {
     return `${nombre.charAt(0)}${apellido.charAt(0)}`.toUpperCase() || '--'
   }
 
-  // Filtrado combinado: texto (nombre/cédula) Y píldora de certificación
+  // Registro de fe de vida más reciente de un cultor, o null si nunca se le ha
+  // registrado uno. Se ordena por id_fe_vida (autoincremental) y no por fecha_control:
+  // dos registros creados el mismo día tienen la misma fecha, así que ordenar solo por
+  // fecha dejaba "atascado" el primero del día en vez del último elegido.
+  const feDeVidaActual = (cultor) => {
+    const registros = cultor.fesDeVida || []
+    if (registros.length === 0) return null
+    return [...registros].sort((a, b) => (b.id_fe_vida || 0) - (a.id_fe_vida || 0))[0]
+  }
+
+  const handleCambiarFeDeVida = async (cultor, nuevoEstatus) => {
+    if (!nuevoEstatus) return
+    const token = localStorage.getItem('auth-token')
+    try {
+      const nuevoRegistro = await registrarFeDeVidaRequest(cultor.id_cultor, nuevoEstatus, token)
+      setCultores((prev) =>
+        prev.map((c) =>
+          c.id_cultor === cultor.id_cultor
+            ? { ...c, fesDeVida: [...(c.fesDeVida || []), nuevoRegistro] }
+            : c
+        )
+      )
+    } catch (err) {
+      alert(err.message)
+    }
+  }
+
+  // Filtrado combinado: texto (nombre/cédula) Y píldora de certificación Y ubicación
   const cultoresFiltrados = cultores.filter((cultor) => {
     const term = searchQuery.toLowerCase()
     const coincideTexto =
@@ -102,7 +145,13 @@ const CultoresDirectory = () => {
       (filtroCertificacion === 'certificados' && cultor.esta_certificado) ||
       (filtroCertificacion === 'no_certificados' && !cultor.esta_certificado)
 
-    return coincideTexto && coincideCertificacion
+    const coincideMunicipio =
+      !filtroMunicipio || String(cultor.parroquia?.municipio?.id_municipio) === String(filtroMunicipio)
+
+    const coincideParroquia =
+      !filtroParroquia || String(cultor.id_parroquia) === String(filtroParroquia)
+
+    return coincideTexto && coincideCertificacion && coincideMunicipio && coincideParroquia
   })
 
   return (
@@ -145,6 +194,32 @@ const CultoresDirectory = () => {
           ))}
         </div>
 
+        <div className="selectors-wrapper">
+          <select
+            value={filtroMunicipio}
+            onChange={(e) => setFiltroMunicipio(e.target.value)}
+            className="filter-dropdown-select"
+            aria-label="Filtrar por municipio"
+          >
+            <option value="">Todos los municipios</option>
+            {municipios.map((m) => (
+              <option key={m.id_municipio} value={m.id_municipio}>{m.nombre}</option>
+            ))}
+          </select>
+          <select
+            value={filtroParroquia}
+            onChange={(e) => setFiltroParroquia(e.target.value)}
+            className="filter-dropdown-select"
+            disabled={!filtroMunicipio}
+            aria-label="Filtrar por parroquia"
+          >
+            <option value="">Todas las parroquias</option>
+            {parroquias.map((p) => (
+              <option key={p.id_parroquia} value={p.id_parroquia}>{p.nombre}</option>
+            ))}
+          </select>
+        </div>
+
         <div className="search-input-wrapper">
           <Search className="search-input-icon" size={16} />
           <input
@@ -176,13 +251,14 @@ const CultoresDirectory = () => {
                 <th>CORREO DE CONTACTO</th>
                 <th>TELÉFONO</th>
                 <th>ESTADO</th>
+                <th>FE DE VIDA</th>
                 <th className="text-right">ACCIONES</th>
               </tr>
             </thead>
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan="6">
+                  <td colSpan="7">
                     <div className="empty-grid-state">
                       <p className="empty-grid-title">Cargando directorio...</p>
                     </div>
@@ -190,7 +266,7 @@ const CultoresDirectory = () => {
                 </tr>
               ) : loadError ? (
                 <tr>
-                  <td colSpan="6">
+                  <td colSpan="7">
                     <div className="empty-grid-state">
                       <p className="empty-grid-title">No se pudo cargar el directorio</p>
                       <p className="empty-grid-desc">{loadError}</p>
@@ -249,6 +325,37 @@ const CultoresDirectory = () => {
                         <span>{cultor.usuario?.activo ? 'Activo' : 'Inactivo'}</span>
                       </button>
                     </td>
+                    <td>
+                      {(() => {
+                        const registro = feDeVidaActual(cultor)
+                        const estatus = registro?.estatus_confirmado || ''
+                        const etiquetas = { activo: 'Miembro Activo', honorario: 'Miembro Honorario' }
+                        return (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <span
+                              className={`v-badge ${estatus === 'activo' ? 'aprobado' : ''}`}
+                              style={!estatus ? { color: 'var(--text-secondary)', background: 'transparent', border: '1px solid var(--border-color)' } : estatus === 'honorario' ? { background: '#f4e3b2', color: '#7a5c00', border: 'none' } : undefined}
+                            >
+                              {etiquetas[estatus] || 'Sin Registrar'}
+                            </span>
+                            {/* Select controlado por el estatus actual: siempre editable, incluso
+                                después de haber elegido una opción (antes quedaba fijo en "Registrar..."
+                                y parecía bloqueado para volver a cambiarlo). */}
+                            <select
+                              value={estatus}
+                              onChange={(e) => handleCambiarFeDeVida(cultor, e.target.value)}
+                              className="filter-dropdown-select"
+                              style={{ fontSize: '11px', padding: '4px 6px' }}
+                              aria-label="Modificar fe de vida"
+                            >
+                              {!estatus && <option value="" disabled>Registrar...</option>}
+                              <option value="activo">Miembro Activo</option>
+                              <option value="honorario">Miembro Honorario</option>
+                            </select>
+                          </div>
+                        )
+                      })()}
+                    </td>
                     <td className="text-right">
                       <div className="grid-actions-row">
                         <button
@@ -279,7 +386,7 @@ const CultoresDirectory = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="6">
+                  <td colSpan="7">
                     <div className="empty-grid-state">
                       <User size={40} />
                       <p className="empty-grid-title">No se encontraron cultores</p>
@@ -372,6 +479,16 @@ const CultoresDirectory = () => {
                   <span className="dossier-label">Fecha de Registro:</span>
                   <span className="dossier-value">
                     {cultorSeleccionado.fecha_registro ? new Date(cultorSeleccionado.fecha_registro).toLocaleDateString() : '—'}
+                  </span>
+                </div>
+                <div className="dossier-field">
+                  <span className="dossier-label">Fe de Vida:</span>
+                  <span className="dossier-value">
+                    {(() => {
+                      const registro = feDeVidaActual(cultorSeleccionado)
+                      const etiquetas = { activo: 'Miembro Activo', honorario: 'Miembro Honorario' }
+                      return etiquetas[registro?.estatus_confirmado] || 'Sin Registrar'
+                    })()}
                   </span>
                 </div>
                 <div className="dossier-field">

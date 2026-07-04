@@ -38,3 +38,28 @@ html {
     background-color: #242424;
   }
 }
+
+/* Scrollbar minimalista "Modern Heritage": delgado, track transparente,
+   thumb marrón suave que no sobresale del contenido. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(93, 64, 55, 0.2) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: rgba(93, 64, 55, 0.2);
+  border-radius: 9999px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(93, 64, 55, 0.35);
+}

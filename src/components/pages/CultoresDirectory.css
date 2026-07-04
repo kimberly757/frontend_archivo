@@ -17,18 +17,18 @@
   font-weight: 700;
   border-radius: 12px;
   cursor: pointer;
-  background-color: #C05640;
-  border: 1px solid #C05640;
+  background-color: #B4533C;
+  border: 1px solid #B4533C;
   color: #ffffff;
-  box-shadow: 0 4px 10px rgba(192, 86, 64, 0.15);
+  box-shadow: 0 4px 10px rgba(180, 83, 60, 0.15);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .btn-terracota:hover {
-  background-color: #a84a35;
-  border-color: #a84a35;
+  background-color: #96432F;
+  border-color: #96432F;
   transform: translateY(-2px);
-  box-shadow: 0 6px 15px rgba(192, 86, 64, 0.25);
+  box-shadow: 0 6px 15px rgba(180, 83, 60, 0.25);
 }
 
 .btn-secondary {
@@ -146,7 +146,7 @@
 }
 
 .filter-dropdown-select:focus {
-  border-color: #C05640;
+  border-color: #B4533C;
   background-color: #ffffff;
 }
 
@@ -199,7 +199,7 @@
   height: 38px;
   border-radius: 50%;
   background-color: #f3eae8;
-  color: #C05640;
+  color: #B4533C;
   font-weight: 700;
   font-size: 13px;
   display: flex;
@@ -337,7 +337,7 @@
 
 .grid-action-btn:hover {
   background-color: #f5f4f0;
-  color: #C05640;
+  color: #B4533C;
   border-color: #ebeae6;
 }
 
@@ -395,9 +395,9 @@
 }
 
 .page-number-btn.active {
-  background-color: #C05640;
+  background-color: #B4533C;
   color: #ffffff;
-  box-shadow: 0 2px 4px rgba(192, 86, 64, 0.15);
+  box-shadow: 0 2px 4px rgba(180, 83, 60, 0.15);
 }
 
 /* Modal Overlay Form */
@@ -493,7 +493,7 @@
 }
 
 .input-box-field label .req-star {
-  color: #C05640;
+  color: #B4533C;
 }
 
 .icon-input-container {
@@ -543,9 +543,9 @@
 .input-box-field > input:focus, 
 .input-box-field > select:focus,
 .input-box-field > textarea:focus {
-  border-color: #C05640;
+  border-color: #B4533C;
   background-color: #ffffff;
-  box-shadow: 0 0 0 3px rgba(192, 86, 64, 0.08);
+  box-shadow: 0 0 0 3px rgba(180, 83, 60, 0.08);
 }
 
 .icon-input-container select {
@@ -558,9 +558,9 @@
 }
 
 .icon-input-container input:focus, .icon-input-container select:focus {
-  border-color: #C05640;
+  border-color: #B4533C;
   background-color: #ffffff;
-  box-shadow: 0 0 0 3px rgba(192, 86, 64, 0.08);
+  box-shadow: 0 0 0 3px rgba(180, 83, 60, 0.08);
 }
 
 .fields-split-row {
@@ -597,7 +597,7 @@
 }
 
 .checkbox-label-item input[type="checkbox"] {
-  accent-color: #C05640;
+  accent-color: #B4533C;
   cursor: pointer;
 }
 
@@ -822,7 +822,7 @@
 }
 
 .cultor-profile-cell.clickable:hover .cultor-display-name {
-  color: #C05640;
+  color: #B4533C;
   text-decoration: underline;
 }
 
@@ -865,7 +865,7 @@
   height: 46px;
   border-radius: 50%;
   background-color: #f3eae8;
-  color: #C05640;
+  color: #B4533C;
   font-weight: 700;
   font-size: 15px;
   display: flex;

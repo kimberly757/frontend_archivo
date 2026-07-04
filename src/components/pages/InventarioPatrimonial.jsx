@@ -644,7 +644,7 @@ const InventarioPatrimonial = () => {
       {/* 4. Sección de Formulario (Carga Multimedia Global) */}
       <section className="multimedia-upload-section">
         <h2 className="section-card-title">
-          <UploadCloud size={18} style={{ color: '#C05640' }} />
+          <UploadCloud size={18} style={{ color: '#B4533C' }} />
           <span>Gestión de Carga Multimedia Patrimonial</span>
         </h2>
 
@@ -1084,7 +1084,7 @@ const InventarioPatrimonial = () => {
                       if (!file) return null
                       return (
                         <div key={file.id} className="doc-status-item verified">
-                          <span className="dot" style={{ backgroundColor: '#C05640' }}></span>
+                          <span className="dot" style={{ backgroundColor: '#B4533C' }}></span>
                           <span>{file.name} ({file.size})</span>
                         </div>
                       )

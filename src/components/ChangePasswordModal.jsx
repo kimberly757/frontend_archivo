@@ -1,13 +1,22 @@
 import React, { useState, useEffect } from 'react'
-import { Lock, Eye, EyeOff, X, Shield } from 'lucide-react'
-import { changePasswordRequest } from '../services/api'
+import { Lock, Eye, EyeOff, X, Shield, Mail } from 'lucide-react'
+import { changePasswordRequest, updateProfileRequest } from '../services/api'
 import './pages/UsersManagement.css'
 
-const ChangePasswordModal = ({ isOpen, onClose }) => {
+// Misma regla que el backend (ver commonSchemas.js): mínimo 8 caracteres, al menos
+// una mayúscula y al menos un carácter especial.
+function validarPasswordSegura(password) {
+  if (password.length < 8) return 'La contraseña debe tener al menos 8 caracteres.'
+  if (!/[A-ZÁÉÍÓÚÑ]/.test(password)) return 'La contraseña debe tener al menos una letra mayúscula.'
+  if (!/[^A-Za-z0-9]/.test(password)) return 'La contraseña debe tener al menos un carácter especial.'
+  return ''
+}
+
+const ChangePasswordModal = ({ isOpen, onClose, profile, onProfileUpdated }) => {
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  
+
   const [showCurrent, setShowCurrent] = useState(false)
   const [showNew, setShowNew] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
@@ -15,6 +24,12 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+
+  // Edición de correo de acceso
+  const [correo, setCorreo] = useState('')
+  const [emailLoading, setEmailLoading] = useState(false)
+  const [emailError, setEmailError] = useState('')
+  const [emailSuccess, setEmailSuccess] = useState('')
 
   // Limpiar campos al abrir/cerrar
   useEffect(() => {
@@ -24,10 +39,20 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
       setConfirmPassword('')
       setError('')
       setSuccess('')
+      setEmailError('')
+      setEmailSuccess('')
+    } else {
+      setCorreo(profile?.correo || '')
     }
-  }, [isOpen])
+  }, [isOpen, profile])
 
   if (!isOpen) return null
+
+  const nombreCompleto = profile ? `${profile.primer_nombre} ${profile.primer_apellido}` : 'Administrador'
+  const nombreRol = profile?.rolRel?.nombre_rol || 'Administrador'
+  const iniciales = profile
+    ? (profile.primer_nombre[0] + profile.primer_apellido[0]).toUpperCase()
+    : 'AD'
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -39,8 +64,9 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
       return
     }
 
-    if (newPassword.length < 8) {
-      setError('La nueva contraseña debe tener al menos 8 caracteres.')
+    const errorPassword = validarPasswordSegura(newPassword)
+    if (errorPassword) {
+      setError(errorPassword)
       return
     }
 
@@ -57,7 +83,8 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
       setCurrentPassword('')
       setNewPassword('')
       setConfirmPassword('')
-      
+      onProfileUpdated?.()
+
       // Auto cerrar el modal después de 2 segundos de éxito
       setTimeout(() => {
         onClose()
@@ -66,6 +93,29 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
       setError(err?.message || 'Error al cambiar la contraseña.')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleEmailSubmit = async (e) => {
+    e.preventDefault()
+    setEmailError('')
+    setEmailSuccess('')
+
+    const token = localStorage.getItem('auth-token')
+    if (!token) {
+      setEmailError('No hay sesión activa. Por favor inicie sesión nuevamente.')
+      return
+    }
+
+    setEmailLoading(true)
+    try {
+      await updateProfileRequest({ correo }, token)
+      setEmailSuccess('Correo actualizado con éxito.')
+      onProfileUpdated?.()
+    } catch (err) {
+      setEmailError(err?.message || 'Error al actualizar el correo.')
+    } finally {
+      setEmailLoading(false)
     }
   }
 
@@ -82,14 +132,52 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
         <div className="modal-box-body">
           {/* Información del Perfil (Solo vista) */}
           <div className="dossier-profile-header">
-            <div className="dossier-avatar">AD</div>
+            <div className="dossier-avatar">{iniciales}</div>
             <div className="dossier-profile-meta">
-              <h3>Administrador</h3>
+              <h3>{nombreCompleto}</h3>
               <span className="dossier-sub">
-                <Shield size={12} style={{ verticalAlign: 'middle', marginRight: '4px' }} /> Sede Principal
+                <Shield size={12} style={{ verticalAlign: 'middle', marginRight: '4px' }} /> {nombreRol}
               </span>
             </div>
           </div>
+
+          <h3 style={{ fontSize: '15px', fontWeight: 700, borderBottom: '1px solid var(--border-color)', paddingBottom: '8px', margin: '0 0 16px 0' }}>Correo de Acceso</h3>
+
+          {emailError && (
+            <div className="error-banner-group" style={{ marginBottom: '8px' }}>{emailError}</div>
+          )}
+          {emailSuccess && (
+            <div className="review-banner-alert success" style={{ marginBottom: '8px' }}>
+              <div className="review-banner-text">
+                <strong>Correo actualizado</strong>
+                <p>{emailSuccess}</p>
+              </div>
+            </div>
+          )}
+
+          <form onSubmit={handleEmailSubmit} style={{ marginBottom: '20px' }}>
+            <div className="input-box-field">
+              <label htmlFor="profile-email">Correo electrónico</label>
+              <div className="icon-input-container" style={{ position: 'relative' }}>
+                <Mail size={15} className="field-icon-left" />
+                <input
+                  type="email"
+                  id="profile-email"
+                  value={correo}
+                  onChange={(e) => setCorreo(e.target.value)}
+                  required
+                />
+              </div>
+              <p style={{ marginTop: '6px', fontSize: '11px', color: '#807471' }}>
+                Solo puedes cambiar el correo una vez al mes.
+              </p>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
+              <button type="submit" className="btn-terracota" disabled={emailLoading}>
+                {emailLoading ? 'Guardando...' : 'Actualizar Correo'}
+              </button>
+            </div>
+          </form>
 
           <h3 style={{ fontSize: '15px', fontWeight: 700, borderBottom: '1px solid var(--border-color)', paddingBottom: '8px', margin: '0 0 16px 0' }}>Cambiar Contraseña</h3>
 
@@ -154,6 +242,9 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
                   {showNew ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
+              <p style={{ marginTop: '6px', fontSize: '11px', color: '#807471' }}>
+                Mínimo 8 caracteres, con al menos una mayúscula y un carácter especial.
+              </p>
             </div>
 
             <div className="input-box-field">

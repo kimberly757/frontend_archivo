@@ -8,8 +8,7 @@ import {
   Trash2,
   X,
   UserCheck,
-  UserX,
-  Lock
+  UserX
 } from 'lucide-react'
 import './UsersManagement.css'
 import { getUsersRequest, createUserRequest, getRolesRequest } from '../../services/api'
@@ -33,7 +32,6 @@ const UsersManagement = () => {
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [newUserEmail, setNewUserEmail] = useState('')
-  const [newPassword, setNewPassword] = useState('')
   const [newUserRoleId, setNewUserRoleId] = useState('')
   const [newUserStatus, setNewUserStatus] = useState(true)
   const [formError, setFormError] = useState('')
@@ -48,7 +46,6 @@ const UsersManagement = () => {
     setFirstName('')
     setLastName('')
     setNewUserEmail('')
-    setNewPassword('')
     setNewUserRoleId(String(rolesSeleccionables[0]?.id_rol || ''))
     setNewUserStatus(true)
     setFormError('')
@@ -111,17 +108,13 @@ const UsersManagement = () => {
         activo: newUserStatus
       }
 
-      if (newPassword.trim()) {
-        payload.password = newPassword.trim()
-      }
-      
       const newUser = await createUserRequest(payload, token)
       setUsers([newUser, ...users])
 
-      // Si la contraseña fue auto-generada (dejada vacía en el formulario),
-      // guardamos las credenciales para mostrárselas al administrador en el modal
+      // La contraseña siempre la genera el sistema (nunca se pide en este formulario).
+      // Guardamos las credenciales para mostrárselas al administrador en el modal
       // y disparamos la plantilla de EmailJS hacia el correo del nuevo usuario.
-      if (!newPassword.trim() && newUser.password_creada) {
+      if (newUser.password_creada) {
         setCreatedUserCredentials({
           correo: newUser.correo,
           password: newUser.password_creada
@@ -415,29 +408,18 @@ const UsersManagement = () => {
                       <label htmlFor="user-email">Correo Electrónico <span className="required">*</span></label>
                       <div className="input-with-icon">
                         <Mail size={16} className="input-icon" />
-                        <input 
-                          type="email" 
-                          id="user-email" 
+                        <input
+                          type="email"
+                          id="user-email"
                           placeholder="Ej. correo@folklore.org"
                           value={newUserEmail}
                           onChange={(e) => setNewUserEmail(e.target.value)}
                           required
                         />
                       </div>
-                    </div>
-
-                    <div className="form-group">
-                      <label htmlFor="user-password">Contraseña <span style={{color: '#807471', fontWeight: 'normal'}}>(Opcional)</span></label>
-                      <div className="input-with-icon">
-                        <Lock size={16} className="input-icon" />
-                        <input 
-                          type="text" 
-                          id="user-password" 
-                          placeholder="Dejar vacío para aleatoria"
-                          value={newPassword}
-                          onChange={(e) => setNewPassword(e.target.value)}
-                        />
-                      </div>
+                      <p style={{ marginTop: '6px', fontSize: '11px', color: '#807471' }}>
+                        La contraseña la genera el sistema automáticamente; se mostrará al finalizar.
+                      </p>
                     </div>
                   </div>
 

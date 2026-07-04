@@ -28,7 +28,7 @@
 }
 
 .inventario-module-container .breadcrumbs .current {
-  color: #C05640;
+  color: #B4533C;
 }
 
 .inventario-module-container h1 {
@@ -50,16 +50,16 @@
   font-weight: 600;
   border-radius: 8px;
   cursor: pointer;
-  background-color: #C05640;
-  border: 1px solid #C05640;
+  background-color: #B4533C;
+  border: 1px solid #B4533C;
   color: #ffffff;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   transition: all 0.2s ease;
 }
 
 .inventario-module-container .btn-terracota:hover {
-  background-color: #a84a35;
-  border-color: #a84a35;
+  background-color: #96432F;
+  border-color: #96432F;
 }
 
 /* Filter Controls Bar */
@@ -155,7 +155,7 @@
 }
 
 .inventario-module-container .filter-dropdown-select:focus {
-  border-color: #C05640;
+  border-color: #B4533C;
   background-color: #ffffff;
 }
 
@@ -214,7 +214,7 @@
   height: 44px;
   border-radius: 8px;
   background-color: #f3eae8;
-  color: #C05640;
+  color: #B4533C;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -310,7 +310,7 @@
 }
 
 .inventario-module-container .qr-code-cell:hover {
-  color: #C05640;
+  color: #B4533C;
 }
 
 .inventario-module-container .qr-tooltip {
@@ -374,7 +374,7 @@
 
 .inventario-module-container .grid-action-btn:hover {
   background-color: #f5f4f0;
-  color: #C05640;
+  color: #B4533C;
   border-color: #ebeae6;
 }
 
@@ -420,7 +420,7 @@
 
 .inventario-module-container .upload-drag-drop-zone:hover,
 .inventario-module-container .upload-drag-drop-zone.dragging {
-  border-color: #C05640;
+  border-color: #B4533C;
   background-color: #fcfbfa;
 }
 
@@ -429,7 +429,7 @@
   height: 48px;
   border-radius: 50%;
   background-color: #f3eae8;
-  color: #C05640;
+  color: #B4533C;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -448,7 +448,7 @@
 }
 
 .inventario-module-container .upload-instruction-text span {
-  color: #C05640;
+  color: #B4533C;
   text-decoration: underline;
 }
 
@@ -570,9 +570,9 @@
 }
 
 .inventario-module-container .page-number-btn.active {
-  background-color: #C05640;
+  background-color: #B4533C;
   color: #ffffff;
-  box-shadow: 0 2px 4px rgba(192, 86, 64, 0.15);
+  box-shadow: 0 2px 4px rgba(180, 83, 60, 0.15);
 }
 
 /* Interactive Image Upload styles inside Form Modal */
@@ -595,9 +595,9 @@
 }
 
 .inventario-module-container .image-form-placeholder:hover {
-  border-color: #C05640;
+  border-color: #B4533C;
   background-color: #fffdfc;
-  color: #C05640;
+  color: #B4533C;
 }
 
 .inventario-module-container .image-form-placeholder span {
@@ -705,7 +705,7 @@
 }
 
 .inventario-module-container .linking-checkbox-label input[type="checkbox"] {
-  accent-color: #C05640;
+  accent-color: #B4533C;
   cursor: pointer;
   width: 15px;
   height: 15px;
@@ -782,9 +782,9 @@
 }
 
 .inventario-module-container .close-x-btn:hover {
-  background-color: #C05640 !important;
+  background-color: #B4533C !important;
   color: #ffffff !important;
-  border-color: #C05640 !important;
+  border-color: #B4533C !important;
 }
 
 .inventario-module-container .input-box-field {
@@ -803,7 +803,7 @@
 }
 
 .inventario-module-container .input-box-field label .req-star {
-  color: #C05640;
+  color: #B4533C;
 }
 
 .inventario-module-container .icon-input-container {
@@ -1164,7 +1164,7 @@
 .custom-dialog-btn.primary {
   background: var(--orange-accent);
   color: #ffffff;
-  box-shadow: 0 4px 12px rgba(192,86,64,0.25);
+  box-shadow: 0 4px 12px rgba(180, 83, 60,0.25);
 }
 
 .custom-dialog-btn.primary:hover {

@@ -23,15 +23,15 @@
   border-radius: 8px;
   cursor: pointer;
   background-color: transparent;
-  border: 1px solid #C05640;
-  color: #C05640;
+  border: 1px solid #B4533C;
+  color: #B4533C;
   transition: all 0.2s ease;
 }
 
 .difusion-module-container .btn-terracota-outline:hover {
   background-color: #fcf6f5;
-  border-color: #a84a35;
-  color: #a84a35;
+  border-color: #96432F;
+  color: #96432F;
 }
 
 .difusion-module-container .btn-terracota {
@@ -44,16 +44,16 @@
   font-weight: 600;
   border-radius: 8px;
   cursor: pointer;
-  background-color: #C05640;
-  border: 1px solid #C05640;
+  background-color: #B4533C;
+  border: 1px solid #B4533C;
   color: #ffffff;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   transition: all 0.2s ease;
 }
 
 .difusion-module-container .btn-terracota:hover {
-  background-color: #a84a35;
-  border-color: #a84a35;
+  background-color: #96432F;
+  border-color: #96432F;
 }
 
 /* Exhibitions Grid */
@@ -77,8 +77,8 @@
 
 .exhibition-card:hover {
   transform: translateY(-6px);
-  box-shadow: 0 20px 40px -10px rgba(192, 86, 64, 0.12), 0 10px 20px -5px rgba(0, 0, 0, 0.05);
-  border-color: rgba(192, 86, 64, 0.2);
+  box-shadow: 0 20px 40px -10px rgba(180, 83, 60, 0.12), 0 10px 20px -5px rgba(0, 0, 0, 0.05);
+  border-color: rgba(180, 83, 60, 0.2);
 }
 
 .exhibition-card-img {
@@ -126,7 +126,7 @@
 }
 
 .exhibition-card-body h3:hover {
-  color: #C05640;
+  color: #B4533C;
 }
 
 .exhibition-date-row {
@@ -248,11 +248,11 @@
 }
 
 .exhibition-action-btn:hover {
-  background-color: #C05640;
+  background-color: #B4533C;
   color: #ffffff;
-  border-color: #C05640;
+  border-color: #B4533C;
   transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(192, 86, 64, 0.2);
+  box-shadow: 0 4px 10px rgba(180, 83, 60, 0.2);
 }
 
 .exhibition-action-btn.delete-btn:hover {
@@ -315,7 +315,7 @@
 }
 
 .efemerides-textarea:focus {
-  border-color: #C05640;
+  border-color: #B4533C;
 }
 
 .efemerides-bg-uploader {
@@ -398,7 +398,7 @@
 }
 
 .simulator-tag {
-  background-color: #C05640;
+  background-color: #B4533C;
   color: #ffffff;
   font-size: 9px;
   font-weight: 800;
@@ -471,7 +471,7 @@
   font-weight: 800;
   color: var(--text-main);
   margin: 0 0 16px 0;
-  border-left: 4px solid #C05640;
+  border-left: 4px solid #B4533C;
   padding-left: 10px;
 }
 

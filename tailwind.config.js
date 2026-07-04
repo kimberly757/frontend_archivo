@@ -22,6 +22,12 @@ export default {
         tertiary: '#755151',
         'cafe-noir': '#443223',
         'gallery-cream': '#FFEEE0',
+        /* Modern Heritage palette */
+        cream: '#FAF7F2',
+        terracota: '#B4533C',
+        musgo: '#707C55',
+        ocre: '#A87F32',
+        marron: '#5D4037',
       },
       fontFamily: {
         serif: ['"Libre Caslon Text"', 'Georgia', 'Cambria', 'serif'],

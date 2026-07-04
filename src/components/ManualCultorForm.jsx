@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
 import TextInput from './form/TextInput'
 import SelectInput from './form/SelectInput'
@@ -7,7 +7,7 @@ import Textarea from './form/Textarea'
 import Dropzone from './form/Dropzone'
 import Checkbox from './form/Checkbox'
 import Radio from './form/Radio'
-import { ingresoManualCultorRequest, subirCedulaCultorRequest, getParroquiasByMunicipioRequest, getMunicipiosRequest, getOficiosRequest } from '../services/api'
+import { ingresoManualCultorRequest, subirCedulaCultorRequest, validarCedulaRequest, getParroquiasByMunicipioRequest, getMunicipiosRequest, getOficiosRequest } from '../services/api'
 import { enviarCredenciales } from '../services/emailNotifications'
 
 // Copia adaptada de RegisterForm.jsx (vite-project, web pública), mismos campos —
@@ -89,6 +89,7 @@ function ManualCultorForm({ isOpen, onClose, onSuccess }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
   const [documentoUploadError, setDocumentoUploadError] = useState('')
+  const [ocrErrores, setOcrErrores] = useState({})
 
   // Cédula: prefijo V-/E- + dígitos, compuestos en un solo string ("V-12345678")
   // justo antes de enviar, en el formato exacto que valida el backend.
@@ -100,10 +101,14 @@ function ManualCultorForm({ isOpen, onClose, onSuccess }) {
   const [telefonoNumero, setTelefonoNumero] = useState('')
 
   // Foto/documento de cédula: OBLIGATORIO para validar identidad (bloquea el envío si
-  // está vacío). Nota: esta exigencia hoy solo se aplica en el frontend — el backend
-  // todavía no tiene Multer/almacenamiento de archivos conectado, así que no hay forma
-  // de validar este requisito del lado del servidor por ahora.
-  const [archivoCedula, setArchivoCedula] = useState([])
+  // está vacío). Se valida por OCR contra el formulario ANTES de crear el cultor (ver
+  // handleSubmit): si la imagen no es una cédula real o los datos no coinciden, el
+  // registro no se crea.
+  const [archivoCedula, _setArchivoCedula] = useState([])
+  const setArchivoCedula = useCallback((val) => {
+    _setArchivoCedula(val)
+    setOcrErrores({})
+  }, [])
 
   // Credenciales del cultor recién creado: se muestran SIEMPRE en el modal de éxito
   // (no solo si EmailJS falla) para que el admin pueda copiarlas de inmediato.
@@ -138,6 +143,22 @@ function ManualCultorForm({ isOpen, onClose, onSuccess }) {
       setCamposVisuales((prev) => ({ ...prev, [name]: value }))
     }
 
+    if (ocrErrores[name]) {
+      setOcrErrores((prev) => {
+        const next = { ...prev }
+        delete next[name]
+        if (name === 'primer_nombre' || name === 'segundo_nombre') {
+          delete next.primer_nombre
+          delete next.segundo_nombre
+        }
+        if (name === 'primer_apellido' || name === 'segundo_apellido') {
+          delete next.primer_apellido
+          delete next.segundo_apellido
+        }
+        return next
+      })
+    }
+
     if (name === 'municipio') {
       // Resetear parroquia si cambia el municipio
       setForm((prev) => ({ ...prev, id_parroquia: '' }))
@@ -159,15 +180,72 @@ function ManualCultorForm({ isOpen, onClose, onSuccess }) {
     )
   }
 
+  function normalizarTexto(t) {
+    return t
+      .normalize('NFD').replace(/\p{Diacritic}/gu, '')
+      .replace(/[^A-Z\s]/gi, '')
+      .trim().toUpperCase()
+  }
+
+  // A diferencia de normalizarTexto (que descarta dígitos, pensada para nombres),
+  // esta conserva letras Y números para poder comparar cédulas de verdad.
+  function normalizarCedula(t) {
+    return t.replace(/[^A-Z0-9]/gi, '').toUpperCase()
+  }
+
+  function palabrasIguales(a, b) {
+    const pa = normalizarTexto(a).split(/\s+/).filter(Boolean)
+    const pb = normalizarTexto(b).split(/\s+/).filter(Boolean)
+    if (pa.length === 0 || pb.length === 0) return false
+    for (const p of pa) {
+      if (!pb.includes(p)) return false
+    }
+    for (const p of pb) {
+      if (!pa.includes(p)) return false
+    }
+    return true
+  }
+
+  function validarOcrContraFormulario(datosOcr) {
+    const errores = {}
+    const { cedulaExtraida, nombresExtraidos } = datosOcr
+
+    if (cedulaExtraida) {
+      const cedulaForm = `${cedulaPrefijo}-${cedulaNumero}`
+      if (normalizarCedula(cedulaExtraida) !== normalizarCedula(cedulaForm)) {
+        errores.cedula = 'El número de cédula en el formulario no coincide con el de la imagen.'
+      }
+    }
+
+    if (nombresExtraidos) {
+      if (nombresExtraidos.apellidos) {
+        const apellidosForm = `${form.primer_apellido} ${form.segundo_apellido || ''}`.trim()
+        if (!palabrasIguales(nombresExtraidos.apellidos, apellidosForm)) {
+          errores.primer_apellido = 'Los apellidos no coinciden con los de la cédula.'
+          errores.segundo_apellido = 'Los apellidos no coinciden con los de la cédula.'
+        }
+      }
+
+      if (nombresExtraidos.nombres) {
+        const nombresForm = `${form.primer_nombre} ${form.segundo_nombre || ''}`.trim()
+        if (!palabrasIguales(nombresExtraidos.nombres, nombresForm)) {
+          errores.primer_nombre = 'Los nombres no coinciden con los de la cédula.'
+          errores.segundo_nombre = 'Los nombres no coinciden con los de la cédula.'
+        }
+      }
+    }
+
+    return errores
+  }
+
   const handleSubmit = async (event) => {
     event.preventDefault()
     setSubmitError('')
     setDocumentoUploadError('')
+    setOcrErrores({})
 
     // Bloqueante en el frontend: sin documento de cédula no se puede validar la
-    // identidad del cultor. El archivo en sí se sube en un segundo paso, después de
-    // crear el cultor (ver más abajo), ya que el backend necesita el id_cultor real
-    // para asociar el documento.
+    // identidad del cultor.
     if (archivoCedula.length === 0) {
       setSubmitError('Debes adjuntar la foto o documento de la cédula para validar la identidad.')
       return
@@ -182,6 +260,19 @@ function ManualCultorForm({ isOpen, onClose, onSuccess }) {
     setIsSubmitting(true)
 
     try {
+      // Se valida la imagen por OCR y se cruza contra el formulario ANTES de crear el
+      // cultor: si la imagen no es una cédula real o los datos no coinciden, se bloquea
+      // aquí y el registro nunca llega a crearse (a diferencia del flujo anterior, que
+      // creaba el cultor primero y solo avisaba si el documento fallaba después).
+      const resultadoOcr = await validarCedulaRequest(archivo)
+      const erroresOcr = validarOcrContraFormulario(resultadoOcr)
+      if (Object.keys(erroresOcr).length > 0) {
+        setOcrErrores(erroresOcr)
+        setSubmitError('Los datos del formulario no coinciden con los de la cédula. Revisa los campos marcados.')
+        setIsSubmitting(false)
+        return
+      }
+
       // Solo se envían los campos que existen como columna real en `cultores`.
       // Los opcionales (ej. correo_contacto, id_parroquia) se omiten si quedaron vacíos:
       // el backend valida formato/tipo cuando el campo SÍ viene presente, aunque sea opcional.
@@ -203,10 +294,12 @@ function ManualCultorForm({ isOpen, onClose, onSuccess }) {
       const token = localStorage.getItem('auth-token')
       const respuesta = await ingresoManualCultorRequest(payload, token)
 
-      // El cultor ya quedó creado en la BD en este punto. La subida del documento es
-      // un segundo paso, encadenado con el id_cultor real que recién devolvió el
-      // backend — si esta parte falla, el registro del cultor NO se revierte, solo
-      // se le avisa al admin para que suba el documento más tarde.
+      // El cultor ya quedó creado en la BD en este punto (ya pasó la validación OCR
+      // arriba). La subida del documento es un segundo paso, encadenado con el
+      // id_cultor real que recién devolvió el backend — si esta parte falla por una
+      // razón ajena a la validez de la imagen (ej. Cloudinary caído), el registro del
+      // cultor no se revierte, solo se le avisa al admin para que suba el documento
+      // más tarde.
       try {
         await subirCedulaCultorRequest(respuesta.id_cultor, archivo, token)
       } catch {
@@ -301,6 +394,7 @@ function ManualCultorForm({ isOpen, onClose, onSuccess }) {
                 value={form.primer_nombre}
                 onChange={handleChange}
                 placeholder="Ej. María"
+                error={ocrErrores.primer_nombre}
               />
               <TextInput
                 label="Segundo nombre"
@@ -308,6 +402,7 @@ function ManualCultorForm({ isOpen, onClose, onSuccess }) {
                 value={form.segundo_nombre}
                 onChange={handleChange}
                 placeholder="Ej. Fernanda"
+                error={ocrErrores.segundo_nombre}
               />
               <TextInput
                 label="Primer Apellido"
@@ -316,6 +411,7 @@ function ManualCultorForm({ isOpen, onClose, onSuccess }) {
                 value={form.primer_apellido}
                 onChange={handleChange}
                 placeholder="Ej. Useche"
+                error={ocrErrores.primer_apellido}
               />
               <TextInput
                 label="Segundo apellido"
@@ -323,6 +419,7 @@ function ManualCultorForm({ isOpen, onClose, onSuccess }) {
                 value={form.segundo_apellido}
                 onChange={handleChange}
                 placeholder="Ej. Pérez"
+                error={ocrErrores.segundo_apellido}
               />
               <TextInput
                 label="Seudónimo"
@@ -335,10 +432,10 @@ function ManualCultorForm({ isOpen, onClose, onSuccess }) {
                 <span className="font-sans text-xs font-semibold uppercase tracking-wide text-cafe-noir">
                   Cédula de identidad <span> *</span>
                 </span>
-                <div className="flex items-center w-full bg-white/50 border border-cafe-noir/30 rounded-xl overflow-hidden focus-within:border-cafe-noir focus-within:ring-1 focus-within:ring-cafe-noir transition-colors">
+                <div className={`flex items-center w-full bg-white/50 border rounded-xl overflow-hidden transition-colors focus-within:ring-1 ${ocrErrores.cedula ? 'border-red-400 focus-within:border-red-500 focus-within:ring-red-400' : 'border-cafe-noir/30 focus-within:border-cafe-noir focus-within:ring-1 focus-within:ring-cafe-noir'}`}>
                   <select
                     value={cedulaPrefijo}
-                    onChange={(e) => setCedulaPrefijo(e.target.value)}
+                    onChange={(e) => { setCedulaPrefijo(e.target.value); setOcrErrores((prev) => { const n = { ...prev }; delete n.cedula; return n }) }}
                     className="bg-transparent border-none outline-none focus:ring-0 py-2.5 pl-3 pr-2 font-sans text-sm text-cafe-noir cursor-pointer"
                   >
                     {prefijosCedula.map((prefijo) => (
@@ -350,11 +447,14 @@ function ManualCultorForm({ isOpen, onClose, onSuccess }) {
                     required
                     inputMode="numeric"
                     value={cedulaNumero}
-                    onChange={(e) => setCedulaNumero(e.target.value.replace(/\D/g, ''))}
+                    onChange={(e) => { setCedulaNumero(e.target.value.replace(/\D/g, '')); setOcrErrores((prev) => { const n = { ...prev }; delete n.cedula; return n }) }}
                     placeholder="12345678"
                     className="flex-1 bg-transparent border-none outline-none focus:ring-0 py-2.5 pr-4 font-sans text-sm text-cafe-noir placeholder:text-cafe-noir/30"
                   />
                 </div>
+                {ocrErrores.cedula && (
+                  <p className="font-sans text-xs text-red-600">{ocrErrores.cedula}</p>
+                )}
               </div>
               <DateInput
                 label="Fecha de nacimiento"
