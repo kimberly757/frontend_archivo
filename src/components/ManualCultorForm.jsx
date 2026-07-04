@@ -300,7 +300,7 @@ function ManualCultorForm({ isOpen, onClose, onSuccess }) {
                 required
                 value={form.primer_nombre}
                 onChange={handleChange}
-                placeholder="Ej. María José"
+                placeholder="Ej. María"
               />
               <TextInput
                 label="Segundo nombre"
@@ -315,7 +315,7 @@ function ManualCultorForm({ isOpen, onClose, onSuccess }) {
                 required
                 value={form.primer_apellido}
                 onChange={handleChange}
-                placeholder="Ej. Useche Rangel"
+                placeholder="Ej. Useche"
               />
               <TextInput
                 label="Segundo apellido"

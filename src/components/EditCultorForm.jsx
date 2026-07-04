@@ -188,9 +188,9 @@ function EditCultorForm({ isOpen, onClose, cultor, onSuccess }) {
           <div className="mt-10">
             <form onSubmit={handleSubmit} className="space-y-8">
               <div className="grid grid-cols-1 gap-x-8 gap-y-7 md:grid-cols-2">
-                <TextInput label="Primer Nombre" name="primer_nombre" required value={form.primer_nombre} onChange={handleChange} placeholder="Ej. María José" />
+                <TextInput label="Primer Nombre" name="primer_nombre" required value={form.primer_nombre} onChange={handleChange} placeholder="Ej. María" />
                 <TextInput label="Segundo nombre" name="segundo_nombre" value={form.segundo_nombre} onChange={handleChange} placeholder="Ej. Fernanda" />
-                <TextInput label="Primer Apellido" name="primer_apellido" required value={form.primer_apellido} onChange={handleChange} placeholder="Ej. Useche Rangel" />
+                <TextInput label="Primer Apellido" name="primer_apellido" required value={form.primer_apellido} onChange={handleChange} placeholder="Ej. Useche" />
                 <TextInput label="Segundo apellido" name="segundo_apellido" value={form.segundo_apellido} onChange={handleChange} placeholder="Ej. Pérez" />
                 <TextInput label="Seudónimo" name="seudonimo" value={form.seudonimo} onChange={handleChange} placeholder="Ej. El Artesano de Capacho" />
 
