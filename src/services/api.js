@@ -17,6 +17,18 @@ export async function loginRequest(correo, password) {
   }
 }
 
+export async function verificarPasswordRequest(password, token) {
+  try {
+    const response = await axios.post(`${API_URL}/auth/verify-password`, { password }, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    return response.data
+  } catch (error) {
+    const errorMsg = error.response?.data?.error || error.response?.data?.message || 'Contraseña incorrecta'
+    throw new Error(errorMsg)
+  }
+}
+
 export async function getProfileRequest(token) {
   try {
     const response = await axios.get(`${API_URL}/auth/profile`, {
@@ -321,6 +333,27 @@ export async function subirCedulaCultorRequest(idCultor, archivo, token) {
   }
 }
 
+// Sube múltiples documentos de soporte a Cloudinary y los asocia al id_cultor.
+export async function subirDocumentosSoporteRequest(idCultor, archivos, token) {
+  exigirToken(token)
+  try {
+    const formData = new FormData()
+    archivos.forEach(file => formData.append('archivos', file))
+    formData.append('id_cultor', idCultor)
+
+    const response = await axios.post(`${API_URL}/documentos_cultor/subir-soporte`, formData, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    return response.data
+  } catch (error) {
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      throw crearErrorDeSesion('Tu sesión expiró o no es válida. Inicia sesión nuevamente.')
+    }
+    const errorMsg = error.response?.data?.error || error.response?.data?.message || 'Error al subir documentos de soporte'
+    throw new Error(errorMsg, { cause: error })
+  }
+}
+
 // Lista de parroquias para poblar el <select> de id_parroquia. Ruta pública (sin auth).
 export async function getParroquiasRequest() {
   try {
@@ -475,10 +508,10 @@ export async function getObrasAdminRequest(token, estatus = null) {
 }
 
 // Actualizar estatus de una obra (aprobar/rechazar) (Administrativo)
-export async function updateObraEstatusRequest(idObra, estatus, token) {
+export async function updateObraEstatusRequest(idObra, estatus, token, extraData = {}) {
   exigirToken(token)
   try {
-    const response = await axios.patch(`${API_URL}/obras/${idObra}/estatus`, { estatus }, {
+    const response = await axios.patch(`${API_URL}/obras/${idObra}/estatus`, { estatus, ...extraData }, {
       headers: { Authorization: `Bearer ${token}` }
     })
     return response.data
@@ -917,6 +950,118 @@ export async function unlinkObraExposicionRequest(id_exposicion, id_obra, token)
 }
 
 // Subir un archivo multimedia (imagen/documento) de una obra
+export async function getSalasRequest(token) {
+  exigirToken(token)
+  try {
+    const response = await axios.get(`${API_URL}/salas`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    return response.data
+  } catch (error) {
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      throw crearErrorDeSesion('Tu sesión expiró o no es válida. Inicia sesión nuevamente.')
+    }
+    const errorMsg = error.response?.data?.error || 'Error al obtener las salas'
+    throw new Error(errorMsg, { cause: error })
+  }
+}
+
+export async function getSalaByIdRequest(id, token) {
+  exigirToken(token)
+  try {
+    const response = await axios.get(`${API_URL}/salas/${id}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    return response.data
+  } catch (error) {
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      throw crearErrorDeSesion('Tu sesión expiró o no es válida. Inicia sesión nuevamente.')
+    }
+    const errorMsg = error.response?.data?.error || 'Error al obtener la sala'
+    throw new Error(errorMsg, { cause: error })
+  }
+}
+
+export async function createSalaRequest(data, token) {
+  exigirToken(token)
+  try {
+    const response = await axios.post(`${API_URL}/salas`, data, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    return response.data
+  } catch (error) {
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      throw crearErrorDeSesion('Tu sesión expiró o no es válida. Inicia sesión nuevamente.')
+    }
+    const errorMsg = error.response?.data?.error || 'Error al crear la sala'
+    throw new Error(errorMsg, { cause: error })
+  }
+}
+
+export async function updateSalaRequest(id, data, token) {
+  exigirToken(token)
+  try {
+    const response = await axios.put(`${API_URL}/salas/${id}`, data, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    return response.data
+  } catch (error) {
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      throw crearErrorDeSesion('Tu sesión expiró o no es válida. Inicia sesión nuevamente.')
+    }
+    const errorMsg = error.response?.data?.error || 'Error al actualizar la sala'
+    throw new Error(errorMsg, { cause: error })
+  }
+}
+
+export async function cambiarEstadoSalaRequest(id, data, token) {
+  exigirToken(token)
+  try {
+    const response = await axios.patch(`${API_URL}/salas/${id}/estado`, data, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    return response.data
+  } catch (error) {
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      throw crearErrorDeSesion('Tu sesión expiró o no es válida. Inicia sesión nuevamente.')
+    }
+    const errorMsg = error.response?.data?.error || 'Error al cambiar estado de la sala'
+    throw new Error(errorMsg, { cause: error })
+  }
+}
+
+export async function deleteSalaRequest(id, token) {
+  exigirToken(token)
+  try {
+    const response = await axios.delete(`${API_URL}/salas/${id}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    return response.data
+  } catch (error) {
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      throw crearErrorDeSesion('Tu sesión expiró o no es válida. Inicia sesión nuevamente.')
+    }
+    const errorMsg = error.response?.data?.error || 'Error al eliminar la sala'
+    throw new Error(errorMsg, { cause: error })
+  }
+}
+
+export async function getObrasPorSalaRequest(id, token) {
+  exigirToken(token)
+  try {
+    const response = await axios.get(`${API_URL}/salas/${id}/obras`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    return response.data
+  } catch (error) {
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      throw crearErrorDeSesion('Tu sesión expiró o no es válida. Inicia sesión nuevamente.')
+    }
+    const errorMsg = error.response?.data?.error || 'Error al obtener las obras de la sala'
+    throw new Error(errorMsg, { cause: error })
+  }
+}
+
 export async function uploadMultimediaRequest(formData, token) {
   exigirToken(token)
   try {

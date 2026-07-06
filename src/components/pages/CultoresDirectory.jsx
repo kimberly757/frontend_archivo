@@ -6,10 +6,14 @@ import {
   User,
   FolderOpen,
   Plus,
-  Image as ImageIcon
+  ChevronLeft,
+  ChevronRight,
+  Image as ImageIcon,
+  Eye,
+  EyeOff
 } from 'lucide-react'
 import './CultoresDirectory.css'
-import { getCultoresAprobadosRequest, toggleActivoCultorRequest, getMunicipiosRequest, getParroquiasByMunicipioRequest, registrarFeDeVidaRequest } from '../../services/api'
+import { getCultoresAprobadosRequest, toggleActivoCultorRequest, getMunicipiosRequest, getParroquiasByMunicipioRequest, registrarFeDeVidaRequest, verificarPasswordRequest } from '../../services/api'
 import { useToast } from '../../context/ToastContext'
 import ManualCultorForm from '../ManualCultorForm'
 import EditCultorForm from '../EditCultorForm'
@@ -19,7 +23,6 @@ import EditCultorForm from '../EditCultorForm'
 // placeholder "Sin imagen" hasta que se conecte la subida de archivos.
 const CAMPOS_IMAGEN = [
   { campo: 'foto_perfil', etiqueta: 'Foto de Perfil' },
-  { campo: 'foto_certificacion', etiqueta: 'Certificación Fe de Vida' },
 ]
 
 const CultoresDirectory = () => {
@@ -47,6 +50,17 @@ const CultoresDirectory = () => {
   // Modal de edición de expediente
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [cultorAEditar, setCultorAEditar] = useState(null)
+
+  // Modal de verificación de contraseña para cambio de estatus de vida
+  const [showPasswordModal, setShowPasswordModal] = useState(false)
+  const [passwordInput, setPasswordInput] = useState('')
+  const [pendingFeDeVida, setPendingFeDeVida] = useState(null)
+  const [showFeDeVidaPassword, setShowFeDeVidaPassword] = useState(false)
+  const [feDeVidaPasswordError, setFeDeVidaPasswordError] = useState('')
+  const [feDeVidaLoading, setFeDeVidaLoading] = useState(false)
+
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 6
 
   // Si el token venció o es inválido, limpia la sesión guardada y recarga: App.jsx
   // detecta que ya no hay 'user-authenticated' y vuelve a mostrar el Login.
@@ -121,7 +135,28 @@ const CultoresDirectory = () => {
 
   const handleCambiarFeDeVida = async (cultor, nuevoEstatus) => {
     if (!nuevoEstatus) return
+    setPendingFeDeVida({ cultor, nuevoEstatus })
+    setPasswordInput('')
+    setShowPasswordModal(true)
+  }
+
+  const confirmarCambioFeDeVida = async () => {
+    if (!pendingFeDeVida) return
+    const { cultor, nuevoEstatus } = pendingFeDeVida
     const token = localStorage.getItem('auth-token')
+    setFeDeVidaPasswordError('')
+    if (!passwordInput.trim()) {
+      setFeDeVidaPasswordError('Debe ingresar su contraseña.')
+      return
+    }
+    setFeDeVidaLoading(true)
+    try {
+      await verificarPasswordRequest(passwordInput, token)
+    } catch {
+      setFeDeVidaPasswordError('Contraseña incorrecta.')
+      setFeDeVidaLoading(false)
+      return
+    }
     try {
       const nuevoRegistro = await registrarFeDeVidaRequest(cultor.id_cultor, nuevoEstatus, token)
       setCultores((prev) =>
@@ -131,8 +166,14 @@ const CultoresDirectory = () => {
             : c
         )
       )
+      setShowPasswordModal(false)
+      setPendingFeDeVida(null)
+      setPasswordInput('')
+      setFeDeVidaPasswordError('')
     } catch (err) {
       showToast({ titulo: 'Error', mensaje: err.message, tipo: 'error' })
+    } finally {
+      setFeDeVidaLoading(false)
     }
   }
 
@@ -156,6 +197,11 @@ const CultoresDirectory = () => {
 
     return coincideTexto && coincideCertificacion && coincideMunicipio && coincideParroquia
   })
+
+  useEffect(() => { setCurrentPage(1) }, [searchQuery, filtroCertificacion, filtroMunicipio, filtroParroquia])
+
+  const totalPages = Math.ceil(cultoresFiltrados.length / itemsPerPage)
+  const paginatedCultores = cultoresFiltrados.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
 
   return (
     <div className="cultores-module-container">
@@ -270,8 +316,8 @@ const CultoresDirectory = () => {
                     </div>
                   </td>
                 </tr>
-              ) : cultoresFiltrados.length > 0 ? (
-                cultoresFiltrados.map((cultor) => (
+              ) : paginatedCultores.length > 0 ? (
+                paginatedCultores.map((cultor) => (
                   <tr key={cultor.id_cultor}>
                     <td>
                       <div
@@ -358,6 +404,26 @@ const CultoresDirectory = () => {
             </tbody>
           </table>
         </div>
+
+        {totalPages > 1 && (
+          <div className="pagination-footer">
+            <button className="page-item-btn" disabled={currentPage === 1} onClick={() => setCurrentPage(p => Math.max(1, p - 1))}>
+              <ChevronLeft size={16} />
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+              <button
+                key={p}
+                className={`page-number-btn ${currentPage === p ? 'active' : ''}`}
+                onClick={() => setCurrentPage(p)}
+              >
+                {p}
+              </button>
+            ))}
+            <button className="page-item-btn" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}>
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* 4. Ver Expediente */}
@@ -479,9 +545,7 @@ const CultoresDirectory = () => {
                 </div>
               )}
 
-              {/* Galería: foto_perfil / foto_certificacion son las únicas columnas de
-                  imagen que existen hoy en el modelo. Sin Multer conectado, casi siempre
-                  estarán vacías — por eso cada miniatura cae al placeholder "Sin imagen". */}
+              {/* Galería: foto_perfil / foto_certificacion más documentos legales */}
               <div className="dossier-field" style={{ marginTop: '16px' }}>
                 <span className="dossier-label">Documentos e Imágenes:</span>
                 <div className="dossier-image-gallery">
@@ -496,6 +560,16 @@ const CultoresDirectory = () => {
                         </div>
                       )}
                       <span className="dossier-image-label">{etiqueta}</span>
+                    </div>
+                  ))}
+                  {Array.isArray(cultorSeleccionado.documentos) && cultorSeleccionado.documentos.filter(doc => doc.url_archivo).map(doc => (
+                    <div key={doc.id_documento} className="dossier-image-thumb">
+                      <a href={doc.url_archivo} target="_blank" rel="noopener noreferrer">
+                        <img src={doc.url_archivo} alt={doc.nombre_archivo || 'Documento'} />
+                      </a>
+                      <span className="dossier-image-label">
+                        {doc.tipo_documento === 'cedula' ? 'Cédula de Identidad' : 'Documentos de Soporte'}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -543,6 +617,61 @@ const CultoresDirectory = () => {
         cultor={cultorAEditar}
         onSuccess={cargarCultores}
       />
+
+      {/* 7. Modal de verificación de contraseña para cambiar estatus de vida */}
+      {showPasswordModal && (
+        <div className="custom-dialog-overlay" onClick={() => { setShowPasswordModal(false); setPendingFeDeVida(null); setPasswordInput(''); setFeDeVidaPasswordError('') }}>
+          <div className="custom-dialog-box" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px' }}>
+            <div className="custom-dialog-icon warning">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+            </div>
+            <div className="custom-dialog-content">
+              <h3 className="custom-dialog-title">Verificar contraseña</h3>
+              <p className="custom-dialog-message" style={{ marginBottom: '16px' }}>
+                Ingresa tu contraseña de administrador para confirmar el cambio de estatus de vida del cultor.
+              </p>
+              <div className="input-box-field" style={{ marginBottom: '0' }}>
+                <label htmlFor="fedevida-admin-password">Contraseña</label>
+                <div className="icon-input-container">
+                  <input
+                    type={showFeDeVidaPassword ? 'text' : 'password'}
+                    id="fedevida-admin-password"
+                    placeholder="••••••••"
+                    value={passwordInput}
+                    onChange={(e) => { setPasswordInput(e.target.value); setFeDeVidaPasswordError('') }}
+                    autoFocus
+                    onKeyDown={(e) => { if (e.key === 'Enter' && !feDeVidaLoading) confirmarCambioFeDeVida() }}
+                    style={{ flex: 1 }}
+                  />
+                  <button
+                    type="button"
+                    className="eye-toggle-btn"
+                    onClick={() => setShowFeDeVidaPassword(prev => !prev)}
+                    aria-label={showFeDeVidaPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                    style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#8B5A2B', padding: '4px', display: 'flex', alignItems: 'center' }}
+                  >
+                    {showFeDeVidaPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+                {feDeVidaPasswordError && (
+                  <p style={{ color: '#dc2626', fontSize: '12px', marginTop: '4px' }}>{feDeVidaPasswordError}</p>
+                )}
+              </div>
+            </div>
+            <div className="custom-dialog-actions">
+              <button className="custom-dialog-btn secondary" onClick={() => { setShowPasswordModal(false); setPendingFeDeVida(null); setPasswordInput(''); setFeDeVidaPasswordError('') }}>
+                Cancelar
+              </button>
+              <button className="custom-dialog-btn primary" onClick={confirmarCambioFeDeVida} disabled={feDeVidaLoading}>
+                {feDeVidaLoading ? 'Verificando...' : 'Confirmar Cambio'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

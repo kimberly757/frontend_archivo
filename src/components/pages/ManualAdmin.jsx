@@ -124,8 +124,46 @@ const secciones = [
     ),
   },
   {
+    id: 'salas',
+    titulo: '7. Gestión de Salas y Ubicaciones',
+    contenido: (
+      <>
+        <p>
+          El módulo de Gestión de Salas permite administrar los espacios físicos y de
+          depósito donde se ubican las obras del inventario patrimonial. Puede crear,
+          editar y deshabilitar salas, así como mover obras entre ellas.
+        </p>
+        <h4>Tipos de Salas</h4>
+        <ul>
+          <li><strong>Exhibición:</strong> Espacios abiertos al público para la exposición de obras (código EXH-XXX).</li>
+          <li><strong>Almacén:</strong> Áreas de resguardo cerradas al público (código ALM-XXX).</li>
+          <li><strong>Taller:</strong> Espacios de restauración o producción (código TLL-XXX).</li>
+        </ul>
+        <h4>Crear una Sala</h4>
+        <ul>
+          <li>Haga clic en <strong>"Nueva Sala"</strong> en la cabecera del módulo.</li>
+          <li>Seleccione el <strong>tipo de espacio</strong> (Exhibición, Almacén o Taller).</li>
+          <li>Ingrese el <strong>nombre de la sala</strong> y, opcionalmente, una <strong>descripción</strong> y la <strong>capacidad máxima</strong> de obras.</li>
+          <li>El sistema generará automáticamente un código único (Ej: EXH-001, ALM-015).</li>
+          <li>Haga clic en <strong>"Guardar"</strong> para registrarla.</li>
+        </ul>
+        <h4>Vista General (KPIs)</h4>
+        <ul>
+          <li>El panel superior muestra el total de obras en exhibición, en almacén y en taller, calculadas automáticamente según la ubicación de cada obra.</li>
+        </ul>
+        <h4>Acciones por Sala</h4>
+        <ul>
+          <li><strong>Ver Ficha:</strong> Haga clic en el ojo para ver los detalles de la sala y las obras que contiene.</li>
+          <li><strong>Editar:</strong> Modifique el nombre, tipo, descripción o capacidad de una sala existente.</li>
+          <li><strong>Trasladar Obras:</strong> Seleccione una sala de destino para mover todas las obras de una sala a otra.</li>
+          <li><strong>Deshabilitar Sala:</strong> Marque una sala como deshabilitada. Si tiene obras asignadas, deberá seleccionar una sala de destino para reubicarlas antes de deshabilitar.</li>
+        </ul>
+      </>
+    ),
+  },
+  {
     id: 'configuracion',
-    titulo: '7. Configuración del Portal Web',
+    titulo: '8. Configuración del Portal Web',
     contenido: (
       <>
         <p>
@@ -144,7 +182,7 @@ const secciones = [
   },
   {
     id: 'usuarios',
-    titulo: '8. Gestión de Usuarios',
+    titulo: '9. Gestión de Usuarios',
     contenido: (
       <>
         <p>
@@ -164,7 +202,7 @@ const secciones = [
   },
   {
     id: 'reportes',
-    titulo: '9. Reportes y Catálogo',
+    titulo: '10. Reportes y Catálogo',
     contenido: (
       <>
         <p>
@@ -183,7 +221,7 @@ const secciones = [
   },
   {
     id: 'perfil',
-    titulo: '10. Perfil y Cambio de Contraseña',
+    titulo: '11. Perfil y Cambio de Contraseña',
     contenido: (
       <>
         <p>

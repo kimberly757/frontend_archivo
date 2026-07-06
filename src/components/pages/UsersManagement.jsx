@@ -9,7 +9,9 @@ import {
   Trash2,
   X,
   UserCheck,
-  UserX
+  UserX,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react'
 import './UsersManagement.css'
 import { getUsersRequest, createUserRequest, getRolesRequest, toggleActivoUserRequest } from '../../services/api'
@@ -42,6 +44,8 @@ const UsersManagement = () => {
   const [createdUserCredentials, setCreatedUserCredentials] = useState(null)
   const [copied, setCopied] = useState(false)
   const [emailSendError, setEmailSendError] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 6
 
   const rolesSeleccionables = roles.filter((rol) => rol.nombre_rol?.toLowerCase() !== 'cultor')
 
@@ -154,6 +158,11 @@ const UsersManagement = () => {
     return matchesRole && matchesSearch
   })
 
+  useEffect(() => { setCurrentPage(1) }, [searchQuery, roleFilter])
+
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage)
+  const paginatedUsers = filteredUsers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+
   // Get initials for profile badge
   const getInitials = (firstName, lastName) => {
     if (firstName && lastName) {
@@ -239,7 +248,7 @@ const UsersManagement = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredUsers.map((user) => (
+                {paginatedUsers.map((user) => (
                   <tr key={user.id_usuario}>
                     <td>
                       <div className="user-profile-cell">
@@ -298,6 +307,26 @@ const UsersManagement = () => {
             <User size={48} className="empty-icon" />
             <p className="empty-title">No se encontraron usuarios</p>
             <p className="empty-description">Intenta cambiar el término de búsqueda o selecciona otra categoría.</p>
+          </div>
+        )}
+
+        {totalPages > 1 && (
+          <div className="pagination-footer">
+            <button className="page-item-btn" disabled={currentPage === 1} onClick={() => setCurrentPage(p => Math.max(1, p - 1))}>
+              <ChevronLeft size={16} />
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+              <button
+                key={p}
+                className={`page-number-btn ${currentPage === p ? 'active' : ''}`}
+                onClick={() => setCurrentPage(p)}
+              >
+                {p}
+              </button>
+            ))}
+            <button className="page-item-btn" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}>
+              <ChevronRight size={16} />
+            </button>
           </div>
         )}
       </div>

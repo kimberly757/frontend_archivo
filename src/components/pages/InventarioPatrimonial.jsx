@@ -10,7 +10,6 @@ import {
   FolderOpen,
   ChevronLeft,
   ChevronRight,
-  QrCode,
   UploadCloud,
   FileText,
   FileAudio,
@@ -32,7 +31,8 @@ import {
   getCultoresAprobadosRequest,
   getCategoriasRequest,
   createCategoriaRequest,
-  uploadMultimediaRequest
+  uploadMultimediaRequest,
+  getSalasRequest
 } from '../../services/api'
 import { useToast } from '../../context/ToastContext'
 
@@ -43,6 +43,7 @@ const InventarioPatrimonial = () => {
   const [inventario, setInventario] = useState([])
   const [categoriesList, setCategoriesList] = useState([])
   const [cultoresList, setCultoresList] = useState([])
+  const [salasList, setSalasList] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -56,18 +57,26 @@ const InventarioPatrimonial = () => {
     cargarDatos()
   }, [])
 
+  useEffect(() => {
+    if (salasList.length > 0) {
+      setNewPieceLocation(salasList[0].nombre)
+    }
+  }, [salasList])
+
   const cargarDatos = async () => {
     setLoading(true)
     setError('')
     try {
-      const [obras, cultores, categorias] = await Promise.all([
+      const [obras, cultores, categorias, salas] = await Promise.all([
         getObrasAdminRequest(token).catch(() => []),
         getCultoresAprobadosRequest(token).catch(() => []),
-        getCategoriasRequest().catch(() => [])
+        getCategoriasRequest().catch(() => []),
+        getSalasRequest(token).catch(() => [])
       ])
       setInventario(obras)
       setCultoresList(cultores)
       setCategoriesList(categorias)
+      setSalasList(salas)
     } catch (err) {
       console.error('Error al cargar datos de inventario:', err)
       setError('Error al conectar con la base de datos')
@@ -98,6 +107,7 @@ const InventarioPatrimonial = () => {
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 6
 
   // Form Modal Configuration & Fields State
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -147,11 +157,12 @@ const InventarioPatrimonial = () => {
     { id: 102, name: 'audio_cuatro_prueba.wav', size: '12.40 MB', type: 'audio' }
   ])
 
+  useEffect(() => { setCurrentPage(1) }, [searchQuery, selectedCategory, selectedConservation, selectedLocation])
+
   // Filters logic
   const filteredPieces = (inventario || []).filter(piece => {
     const matchesSearch = 
       (piece.titulo || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (piece.codigo_qr_link || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
       (piece.cultor?.nombre || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
       (piece.cultor?.apellido || '').toLowerCase().includes(searchQuery.toLowerCase())
 
@@ -161,6 +172,9 @@ const InventarioPatrimonial = () => {
 
     return matchesSearch && matchesCategory && matchesConservation && matchesLocation
   })
+
+  const totalPages = Math.ceil(filteredPieces.length / itemsPerPage)
+  const paginatedPieces = filteredPieces.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
 
   // Open Create Modal Handler
   const handleOpenCreateModal = () => {
@@ -494,8 +508,9 @@ const InventarioPatrimonial = () => {
             className="filter-dropdown-select"
           >
             <option value="all">Ubicación</option>
-            <option value="Sala">Sala</option>
-            <option value="Depósito">Depósito</option>
+            {salasList.map(s => (
+              <option key={s.id_sala} value={s.nombre}>{s.nombre}</option>
+            ))}
           </select>
         </div>
       </section>
@@ -511,13 +526,12 @@ const InventarioPatrimonial = () => {
                 <th className="whitespace-nowrap">MATERIALES</th>
                 <th className="whitespace-nowrap">CONSERVACIÓN</th>
                 <th className="whitespace-nowrap">UBICACIÓN</th>
-                <th className="whitespace-nowrap">QR</th>
                 <th className="text-right whitespace-nowrap">ACCIONES</th>
               </tr>
             </thead>
             <tbody>
-              {filteredPieces.length > 0 ? (
-                filteredPieces.map((piece) => {
+              {paginatedPieces.length > 0 ? (
+                paginatedPieces.map((piece) => {
                   const coverImage = piece.multimedia && piece.multimedia[0] ? piece.multimedia[0].url_archivo : null;
                   return (
                     <tr key={piece.id_obra}>
@@ -571,16 +585,6 @@ const InventarioPatrimonial = () => {
                         <span className="location-text">{piece.ubicacion_actual || 'Sala 1'}</span>
                       </td>
 
-                      {/* QR Code Icon with Hover popup */}
-                      <td>
-                        <div className="qr-code-cell">
-                          <QrCode size={18} />
-                          <div className="qr-tooltip">
-                            ID Pieza: {piece.codigo_qr_link}
-                          </div>
-                        </div>
-                      </td>
-
                       {/* Acciones */}
                       <td className="text-right whitespace-nowrap">
                         <div className="grid-actions-row">
@@ -622,7 +626,7 @@ const InventarioPatrimonial = () => {
                 })
               ) : (
                 <tr>
-                  <td colSpan="7">
+                  <td colSpan="6">
                     <div className="empty-grid-state">
                       <Camera size={40} />
                       <p className="empty-grid-title">No se encontraron piezas patrimoniales</p>
@@ -634,6 +638,36 @@ const InventarioPatrimonial = () => {
             </tbody>
           </table>
         </div>
+
+        {totalPages > 1 && (
+          <footer className="pagination-footer">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+              className="page-item-btn"
+              aria-label="Anterior"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+              <button
+                key={p}
+                onClick={() => setCurrentPage(p)}
+                className={`page-number-btn ${currentPage === p ? 'active' : ''}`}
+              >
+                {p}
+              </button>
+            ))}
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+              disabled={currentPage === totalPages}
+              className="page-item-btn"
+              aria-label="Siguiente"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </footer>
+        )}
       </div>
 
       {/* 4. Sección de Formulario (Carga Multimedia Global) */}
@@ -697,49 +731,7 @@ const InventarioPatrimonial = () => {
         )}
       </section>
 
-      {/* 5. Paginación */}
-      <footer className="pagination-footer">
-        <button 
-          onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-          disabled={currentPage === 1}
-          className="page-item-btn"
-          aria-label="Anterior"
-        >
-          <ChevronLeft size={16} />
-        </button>
-        
-        <button 
-          onClick={() => setCurrentPage(1)}
-          className={`page-number-btn ${currentPage === 1 ? 'active' : ''}`}
-        >
-          1
-        </button>
-        
-        <button 
-          onClick={() => setCurrentPage(2)}
-          className={`page-number-btn ${currentPage === 2 ? 'active' : ''}`}
-        >
-          2
-        </button>
-
-        <button 
-          onClick={() => setCurrentPage(3)}
-          className={`page-number-btn ${currentPage === 3 ? 'active' : ''}`}
-        >
-          3
-        </button>
-
-        <button 
-          onClick={() => setCurrentPage(prev => Math.min(3, prev + 1))}
-          disabled={currentPage === 3}
-          className="page-item-btn"
-          aria-label="Siguiente"
-        >
-          <ChevronRight size={16} />
-        </button>
-      </footer>
-
-      {/* 6. Formulario Modal: Registrar / Editar Obra */}
+      {/* 5. Formulario Modal: Registrar / Editar Obra */}
       {isModalOpen && (
         <div className="modal-overlay-backdrop">
           <div className="modal-box-card">
@@ -854,10 +846,11 @@ const InventarioPatrimonial = () => {
                         onChange={(e) => setNewPieceLocation(e.target.value)}
                         style={{ flex: 1 }}
                       >
-                        <option value="Sala 1">Sala 1</option>
-                        <option value="Sala 2">Sala 2</option>
-                        <option value="Depósito A">Depósito A</option>
-                        <option value="Depósito B">Depósito B</option>
+                        {salasList.length > 0 ? salasList.map(s => (
+                          <option key={s.id_sala} value={s.nombre}>{s.nombre}</option>
+                        )) : (
+                          <option value="Sala 1">Sala 1</option>
+                        )}
                       </select>
                     </div>
                   </div>

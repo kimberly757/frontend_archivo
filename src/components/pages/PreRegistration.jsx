@@ -4,14 +4,22 @@ import {
   Search,
   X,
   FolderOpen,
-  Image as ImageIcon
+  ChevronLeft,
+  ChevronRight,
+  Image as ImageIcon,
+  Building2,
+  Check,
+  MapPin,
+  Warehouse,
+  Wrench
 } from 'lucide-react'
 import './PreRegistration.css'
 import { 
   getPostulacionesCultoresRequest, 
   actualizarEstatusCultorRequest, 
   getObrasAdminRequest, 
-  updateObraEstatusRequest 
+  updateObraEstatusRequest,
+  getSalasRequest
 } from '../../services/api'
 import { enviarCredenciales } from '../../services/emailNotifications'
 
@@ -20,7 +28,6 @@ import { enviarCredenciales } from '../../services/emailNotifications'
 // placeholder "Sin imagen" hasta que se conecte la subida de archivos.
 const CAMPOS_IMAGEN = [
   { campo: 'foto_perfil', etiqueta: 'Foto de Perfil' },
-  { campo: 'foto_certificacion', etiqueta: 'Certificación Fe de Vida' },
 ]
 
 const PreRegistration = () => {
@@ -51,6 +58,15 @@ const PreRegistration = () => {
   
   const [isObraModalOpen, setIsObraModalOpen] = useState(false)
   const [obraSeleccionada, setObraSeleccionada] = useState(null)
+
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 6
+
+  // Sala selection on approve
+  const [salasList, setSalasList] = useState([])
+  const [isSalaModalOpen, setIsSalaModalOpen] = useState(false)
+  const [obraAprobando, setObraAprobando] = useState(null)
+  const [salaSeleccionada, setSalaSeleccionada] = useState(null)
 
   // Si el token venció o es inválido, limpia la sesión guardada y recarga: App.jsx
   // detecta que ya no hay 'user-authenticated' y vuelve a mostrar el Login.
@@ -98,8 +114,12 @@ const PreRegistration = () => {
     }
 
     try {
-      const data = await getObrasAdminRequest(token, 'pendiente')
+      const [data, salas] = await Promise.all([
+        getObrasAdminRequest(token, 'pendiente'),
+        getSalasRequest(token).catch(() => []),
+      ])
       setObrasPendientes(data)
+      setSalasList(salas)
     } catch (error) {
       if (error.isAuthError) {
         setLoadError(error.message)
@@ -136,7 +156,7 @@ const PreRegistration = () => {
       .filter(Boolean)
       .join(' ')
 
-  const aplicarEstatusObra = async (idObra, estatus) => {
+  const aplicarEstatusObra = async (idObra, estatus, extraData = {}) => {
     setActionError('')
     const token = localStorage.getItem('auth-token')
     if (!token) {
@@ -146,7 +166,7 @@ const PreRegistration = () => {
 
     setProcesandoId(idObra)
     try {
-      await updateObraEstatusRequest(idObra, estatus, token)
+      await updateObraEstatusRequest(idObra, estatus, token, extraData)
       setObrasPendientes((prev) => prev.filter((obra) => obra.id_obra !== idObra))
 
       if (obraSeleccionada?.id_obra === idObra) {
@@ -165,7 +185,21 @@ const PreRegistration = () => {
     }
   }
 
-  const handleAprobarObra = (idObra) => aplicarEstatusObra(idObra, 'aprobado')
+  const handleAprobarObra = (idObra) => {
+    setObraAprobando(idObra)
+    setSalaSeleccionada(salasList.length > 0 ? salasList[0].id_sala : null)
+    setIsSalaModalOpen(true)
+  }
+
+  const confirmarAprobacionConSala = async () => {
+    const idObra = obraAprobando
+    if (!idObra) return
+    const sala = salasList.find(s => s.id_sala === salaSeleccionada)
+    setIsSalaModalOpen(false)
+    setObraAprobando(null)
+    await aplicarEstatusObra(idObra, 'aprobado', sala ? { ubicacion_actual: sala.nombre } : {})
+  }
+
   const handleRechazarObra = (idObra) => aplicarEstatusObra(idObra, 'rechazado')
 
   // Saca el registro de la lista en memoria al recibir 200 OK, sin recargar la página
@@ -246,6 +280,13 @@ const PreRegistration = () => {
       autorNombre.toLowerCase().includes(term)
     )
   })
+
+  useEffect(() => { setCurrentPage(1) }, [searchQuery, filtroCertificacion, activeTab])
+
+  const totalPagesCultores = Math.ceil(registrosFiltrados.length / itemsPerPage)
+  const paginatedRegistros = registrosFiltrados.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+  const totalPagesObras = Math.ceil(obrasFiltradas.length / itemsPerPage)
+  const paginatedObras = obrasFiltradas.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
 
   return (
     <div className="prereg-module-container">
@@ -372,8 +413,8 @@ const PreRegistration = () => {
                   <tr><td colSpan="5"><div className="empty-grid-state"><p className="empty-grid-title">Cargando...</p></div></td></tr>
                 ) : loadError ? (
                   <tr><td colSpan="5"><div className="empty-grid-state"><p className="empty-grid-title">Error al cargar</p><p className="empty-grid-desc">{loadError}</p></div></td></tr>
-                ) : registrosFiltrados.length > 0 ? (
-                  registrosFiltrados.map((registro) => (
+                ) : paginatedRegistros.length > 0 ? (
+                  paginatedRegistros.map((registro) => (
                     <tr key={registro.id_cultor}>
                       <td data-label="">
                         <div className="cultor-profile-cell clickable" onClick={() => { setRegistroSeleccionado(registro); setIsViewModalOpen(true) }}>
@@ -399,6 +440,15 @@ const PreRegistration = () => {
               </tbody>
             </table>
           </div>
+          {totalPagesCultores > 1 && (
+            <div className="pagination-footer">
+              <button className="page-item-btn" disabled={currentPage === 1} onClick={() => setCurrentPage(p => Math.max(1, p - 1))}><ChevronLeft size={16} /></button>
+              {Array.from({ length: totalPagesCultores }, (_, i) => i + 1).map(p => (
+                <button key={p} className={`page-number-btn ${currentPage === p ? 'active' : ''}`} onClick={() => setCurrentPage(p)}>{p}</button>
+              ))}
+              <button className="page-item-btn" disabled={currentPage === totalPagesCultores} onClick={() => setCurrentPage(p => Math.min(totalPagesCultores, p + 1))}><ChevronRight size={16} /></button>
+            </div>
+          )}
         </div>
       ) : (
         /* ===== PESTAÑA OBRAS PENDIENTES ===== */
@@ -419,8 +469,8 @@ const PreRegistration = () => {
                   <tr><td colSpan="5"><div className="empty-grid-state"><p className="empty-grid-title">Cargando obras...</p></div></td></tr>
                 ) : loadError ? (
                   <tr><td colSpan="5"><div className="empty-grid-state"><p className="empty-grid-title">Error al cargar</p><p className="empty-grid-desc">{loadError}</p></div></td></tr>
-                ) : obrasFiltradas.length > 0 ? (
-                  obrasFiltradas.map((obra) => {
+                ) : paginatedObras.length > 0 ? (
+                  paginatedObras.map((obra) => {
                     const imagenUrl = obra.multimedia && obra.multimedia[0] ? obra.multimedia[0].url_archivo : null
                     const autorNombre = obra.cultor ? `${obra.cultor.primer_nombre} ${obra.cultor.primer_apellido}` : '—'
                     return (
@@ -454,6 +504,15 @@ const PreRegistration = () => {
               </tbody>
             </table>
           </div>
+          {totalPagesObras > 1 && (
+            <div className="pagination-footer">
+              <button className="page-item-btn" disabled={currentPage === 1} onClick={() => setCurrentPage(p => Math.max(1, p - 1))}><ChevronLeft size={16} /></button>
+              {Array.from({ length: totalPagesObras }, (_, i) => i + 1).map(p => (
+                <button key={p} className={`page-number-btn ${currentPage === p ? 'active' : ''}`} onClick={() => setCurrentPage(p)}>{p}</button>
+              ))}
+              <button className="page-item-btn" disabled={currentPage === totalPagesObras} onClick={() => setCurrentPage(p => Math.min(totalPagesObras, p + 1))}><ChevronRight size={16} /></button>
+            </div>
+          )}
         </div>
       )}
 
@@ -562,9 +621,7 @@ const PreRegistration = () => {
                 </div>
               )}
 
-              {/* Galería: foto_perfil / foto_certificacion son las únicas columnas de
-                  imagen que existen hoy en el modelo. Sin Multer conectado, casi siempre
-                  estarán vacías — por eso cada miniatura cae al placeholder "Sin imagen". */}
+              {/* Galería: foto_perfil / foto_certificacion más documentos legales */}
               <div className="dossier-field" style={{ marginTop: '16px' }}>
                 <span className="dossier-label">Documentos e Imágenes:</span>
                 <div className="dossier-image-gallery">
@@ -579,6 +636,16 @@ const PreRegistration = () => {
                         </div>
                       )}
                       <span className="dossier-image-label">{etiqueta}</span>
+                    </div>
+                  ))}
+                  {Array.isArray(registroSeleccionado.documentos) && registroSeleccionado.documentos.filter(doc => doc.url_archivo).map(doc => (
+                    <div key={doc.id_documento} className="dossier-image-thumb">
+                      <a href={doc.url_archivo} target="_blank" rel="noopener noreferrer">
+                        <img src={doc.url_archivo} alt={doc.nombre_archivo || 'Documento'} />
+                      </a>
+                      <span className="dossier-image-label">
+                        {doc.tipo_documento === 'cedula' ? 'Cédula de Identidad' : 'Documentos de Soporte'}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -722,6 +789,55 @@ const PreRegistration = () => {
                 onClick={() => setCredencialesSinNotificar(null)}
               >
                 Ya la comuniqué, cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 7. Modal de selección de sala al aprobar obra */}
+      {isSalaModalOpen && (
+        <div className="modal-overlay-backdrop" onClick={() => { setIsSalaModalOpen(false); setObraAprobando(null) }}>
+          <div className="modal-box-card" style={{ maxWidth: '420px' }} onClick={e => e.stopPropagation()}>
+            <div className="modal-box-header">
+              <h2>Asignar a una Sala</h2>
+              <button onClick={() => { setIsSalaModalOpen(false); setObraAprobando(null) }} className="close-x-btn" aria-label="Cerrar"><X size={18} /></button>
+            </div>
+            <div className="modal-box-body">
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
+                Selecciona la sala o espacio donde se ubicará físicamente esta obra al ser aprobada.
+              </p>
+              {salasList.length === 0 ? (
+                <p style={{ fontSize: '14px', color: 'var(--text-secondary)', textAlign: 'center', padding: '20px 0' }}>No hay salas registradas. La obra se aprobará sin ubicación.</p>
+              ) : (
+                <div className="select-sala-grid">
+                  {salasList.map(s => {
+                    const tipoIcon = s.tipo === 'Exhibición' ? <MapPin size={16} /> : s.tipo === 'Almacén' ? <Warehouse size={16} /> : <Wrench size={16} />
+                    return (
+                      <div
+                        key={s.id_sala}
+                        className={`select-sala-item ${salaSeleccionada === s.id_sala ? 'selected' : ''}`}
+                        onClick={() => setSalaSeleccionada(s.id_sala)}
+                      >
+                        <div className="select-sala-left">
+                          <span className="select-sala-icon">{tipoIcon}</span>
+                          <div className="select-sala-info">
+                            <span className="select-sala-name">{s.nombre}</span>
+                            <span className="select-sala-meta">{s.codigo} · {s.tipo}</span>
+                          </div>
+                        </div>
+                        {salaSeleccionada === s.id_sala && <Check size={18} className="select-sala-check" />}
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+            <div className="modal-box-footer">
+              <button type="button" className="btn-secondary" onClick={() => { setIsSalaModalOpen(false); setObraAprobando(null) }}>Cancelar</button>
+              <button type="button" className="btn-approve" onClick={confirmarAprobacionConSala} disabled={salasList.length > 0 && !salaSeleccionada}>
+                <Check size={16} />
+                <span>Aprobar y Asignar</span>
               </button>
             </div>
           </div>

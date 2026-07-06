@@ -11,8 +11,8 @@ import { useToast } from '../../context/ToastContext'
 
 const Login = ({ onLoginSuccess }) => {
   const { showToast } = useToast()
-  const [email, setEmail] = useState('usuario@archivo.gob')
-  const [password, setPassword] = useState('password123')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(true)
   const [error, setError] = useState('')
@@ -87,13 +87,14 @@ const Login = ({ onLoginSuccess }) => {
 
           {error && <p className="login-error-text">{error}</p>}
 
-          <form onSubmit={handleSubmit} className="flex flex-col">
+          <form onSubmit={handleSubmit} className="flex flex-col" autoComplete="off">
             <div className="flex flex-col mb-5">
               <label className="text-[12px] font-semibold text-[#5c4c47] mb-2" htmlFor="email">Correo Institucional</label>
               <div className="flex items-center bg-white border border-[#e0ddd8] rounded-xl px-4 h-[52px] shadow-[inset_0_2px_4px_rgba(0,0,0,0.01)] focus-within:border-[#B4533C] focus-within:shadow-[inset_0_2px_4px_rgba(0,0,0,0.01),0_0_0_3px_rgba(180,83,60,0.1)]">
                 <input
                   id="email"
                   type="email"
+                  autoComplete="off"
                   placeholder="usuario@archivo.gob"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -109,6 +110,7 @@ const Login = ({ onLoginSuccess }) => {
                 <input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
+                  autoComplete="new-password"
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}

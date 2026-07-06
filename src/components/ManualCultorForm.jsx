@@ -7,7 +7,7 @@ import Textarea from './form/Textarea'
 import Dropzone from './form/Dropzone'
 import Checkbox from './form/Checkbox'
 import Radio from './form/Radio'
-import { ingresoManualCultorRequest, subirCedulaCultorRequest, validarCedulaRequest, getParroquiasByMunicipioRequest, getMunicipiosRequest, getOficiosRequest } from '../services/api'
+import { ingresoManualCultorRequest, subirCedulaCultorRequest, subirDocumentosSoporteRequest, validarCedulaRequest, getParroquiasByMunicipioRequest, getMunicipiosRequest, getOficiosRequest } from '../services/api'
 import { enviarCredenciales } from '../services/emailNotifications'
 
 // Copia adaptada de RegisterForm.jsx (vite-project, web pública), mismos campos —
@@ -26,6 +26,7 @@ const recaudosRequeridos = [
   'Fotografías del proceso productivo',
   'Fotografías de las obras terminadas',
   'Constancia de residencia',
+  'Certificado (si cuenta con el)',
 ]
 
 const prefijosCedula = ['V', 'E']
@@ -250,8 +251,8 @@ function ManualCultorForm({ isOpen, onClose, onSuccess }) {
       return
     }
 
-    if (cedulaNumero.length < 6 || cedulaNumero.length > 9) {
-      setSubmitError('La cédula debe tener entre 6 y 9 dígitos.')
+    if (cedulaNumero.length !== 8) {
+      setSubmitError('La cédula debe tener exactamente 8 dígitos.')
       return
     }
 
@@ -304,6 +305,14 @@ function ManualCultorForm({ isOpen, onClose, onSuccess }) {
         await subirCedulaCultorRequest(respuesta.id_cultor, archivo, token)
       } catch {
         setDocumentoUploadError('Registro creado con éxito, pero hubo un error al cargar el documento de identidad.')
+      }
+
+      if (archivos.length > 0) {
+        try {
+          await subirDocumentosSoporteRequest(respuesta.id_cultor, archivos, token)
+        } catch {
+          setDocumentoUploadError(prev => prev ? prev + ' Además, no se pudieron subir los documentos de soporte.' : 'Registro creado con éxito, pero hubo un error al subir los documentos de soporte.')
+        }
       }
 
       // Guardar credenciales ANTES de resetear el formulario, para mostrarlas
@@ -449,7 +458,7 @@ function ManualCultorForm({ isOpen, onClose, onSuccess }) {
                     required
                     inputMode="numeric"
                     value={cedulaNumero}
-                    onChange={(e) => { setCedulaNumero(e.target.value.replace(/\D/g, '')); setOcrErrores((prev) => { const n = { ...prev }; delete n.cedula; return n }) }}
+                    onChange={(e) => { setCedulaNumero(e.target.value.replace(/\D/g, '').slice(0, 8)); setOcrErrores((prev) => { const n = { ...prev }; delete n.cedula; return n }) }}
                     placeholder="12345678"
                     className="flex-1 bg-transparent border-none outline-none focus:ring-0 py-2.5 pr-4 font-sans text-sm text-cafe-noir placeholder:text-cafe-noir/30"
                   />

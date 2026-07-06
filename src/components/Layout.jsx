@@ -8,6 +8,7 @@ import {
   Landmark,
   Image as ImageIcon,
   FileText,
+  Building2,
   ChevronLeft,
   ChevronRight,
   LogOut,
@@ -250,6 +251,14 @@ const Layout = ({ children, currentView, onViewChange, onLogout }) => {
           >
             <FileText className="nav-icon" size={20} />
             <span>Reportes y Catálogo</span>
+          </button>
+          <button
+            onClick={() => handleViewChange('salas')}
+            className={`nav-item nav-btn ${currentView === 'salas' ? 'active' : ''}`}
+            data-label="Gestión de Salas"
+          >
+            <Building2 className="nav-icon" size={20} />
+            <span>Gestión de Salas</span>
           </button>
 
           <span className="nav-section-label">Ayuda</span>

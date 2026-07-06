@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import {
-  Edit2, Trash2, Plus, Monitor, Link as LinkIcon, Folder, FolderOpen, Eye, EyeOff, Camera, Layers, X, Lock as LockIcon, CalendarDays, ArrowLeft, Image as ImageIcon, Mail, Phone, MapPin, Upload
+  ChevronLeft, ChevronRight, Edit2, Trash2, Plus, Monitor, Link as LinkIcon, Folder, FolderOpen, Eye, EyeOff, Camera, Layers, X, Lock as LockIcon, CalendarDays, ArrowLeft, Image as ImageIcon, Mail, Phone, MapPin, Upload
 } from 'lucide-react'
 import PageHeader from '../PageHeader'
 import './ConfiguracionPortal.css'
@@ -105,6 +105,12 @@ const ConfiguracionPortal = () => {
   const [isObrasModalOpen, setIsObrasModalOpen] = useState(false)
   const [selectedExpo, setSelectedExpo] = useState(null)
   const [linkedObrasIds, setLinkedObrasIds] = useState([])
+
+  // Paginación
+  const [currentPageObras, setCurrentPageObras] = useState(1)
+  const [currentPageExpos, setCurrentPageExpos] = useState(1)
+  const [currentPageEfeme, setCurrentPageEfeme] = useState(1)
+  const itemsPerPage = 6
 
   useEffect(() => {
     fetchConfigWeb()
@@ -219,6 +225,17 @@ const ConfiguracionPortal = () => {
 
   const handleToggleObraDestacado = async (id_obra) => {
     const obra = obrasColeccion.find(o => o.id_obra === id_obra)
+    if (obra.destacado_galeria === 'no') {
+      const activas = obrasColeccion.filter(o => o.destacado_galeria === 'si').length
+      if (activas >= 6) {
+        showToast({
+          titulo: 'Límite alcanzado',
+          mensaje: 'Solo puedes tener hasta 6 obras publicadas en la web. Desmarca alguna antes de publicar otra.',
+          tipo: 'error',
+        })
+        return
+      }
+    }
     const nuevoDestacado = obra.destacado_galeria === 'si' ? 'no' : 'si'
     try {
       await updateObraDestacadoRequest(id_obra, nuevoDestacado, token)
@@ -232,6 +249,17 @@ const ConfiguracionPortal = () => {
   }
 
   const handleToggleEstatus = async (expo) => {
+    if (expo.estatus !== 'activa') {
+      const activaExistente = exposiciones.find(e => e.estatus === 'activa' && e.id_exposicion !== expo.id_exposicion)
+      if (activaExistente) {
+        showToast({
+          titulo: 'Límite alcanzado',
+          mensaje: 'Ya hay una exposición publicada en la web. Debes ocultarla antes de publicar otra.',
+          tipo: 'error',
+        })
+        return
+      }
+    }
     const newEstatus = expo.estatus === 'activa' ? 'inactiva' : 'activa'
     try {
       await updateExposicionAdminRequest(expo.id_exposicion, { ...expo, estatus: newEstatus }, token)
@@ -345,6 +373,17 @@ const ConfiguracionPortal = () => {
   }
 
   const handleToggleEfemerideActiva = async (efe) => {
+    if (!efe.activa) {
+      const activaExistente = efemerides.find(e => e.activa && e.id_efemeride !== efe.id_efemeride)
+      if (activaExistente) {
+        showToast({
+          titulo: 'Límite alcanzado',
+          mensaje: 'Ya hay una efeméride publicada en la web. Debes ocultarla antes de publicar otra.',
+          tipo: 'error',
+        })
+        return
+      }
+    }
     try {
       await updateEfemerideRequest(efe.id_efemeride, { activa: !efe.activa }, token)
       fetchEfemerides()
@@ -767,40 +806,57 @@ const ConfiguracionPortal = () => {
                 <div className="og-col-toggle whitespace-nowrap">WEB (PÚBLICA)</div>
               </div>
 
-              {obrasColeccion.map(obra => {
-                const coverImage = obra.multimedia && obra.multimedia[0] ? obra.multimedia[0].url_archivo : null;
-                return (
-                  <div key={obra.id_obra} className="obras-grid-row">
-                    <div className="og-col-img">
-                      {coverImage ? (
-                        <img src={coverImage} alt={obra.titulo} />
-                      ) : (
-                        <div className="og-thumb-placeholder">
-                          <Camera size={20} />
-                        </div>
-                      )}
+              {(() => {
+                const totalPagesObras = Math.ceil(obrasColeccion.length / itemsPerPage)
+                const paginatedObras = obrasColeccion.slice((currentPageObras - 1) * itemsPerPage, currentPageObras * itemsPerPage)
+                return paginatedObras.map(obra => {
+                  const coverImage = obra.multimedia && obra.multimedia[0] ? obra.multimedia[0].url_archivo : null;
+                  return (
+                    <div key={obra.id_obra} className="obras-grid-row">
+                      <div className="og-col-img">
+                        {coverImage ? (
+                          <img src={coverImage} alt={obra.titulo} />
+                        ) : (
+                          <div className="og-thumb-placeholder">
+                            <Camera size={20} />
+                          </div>
+                        )}
+                      </div>
+                      <div className="og-col-code whitespace-nowrap">{obra.codigo_qr_link}</div>
+                      <div className="og-col-title whitespace-nowrap">
+                        <span className="og-title-text">{obra.titulo}</span>
+                      </div>
+                      <div className="og-col-toggle whitespace-nowrap">
+                        <label className="toggle-switch-wrapper">
+                          <input
+                            type="checkbox"
+                            checked={obra.destacado_galeria === 'si'}
+                            onChange={() => handleToggleObraDestacado(obra.id_obra)}
+                          />
+                          <span className="toggle-slider"></span>
+                        </label>
+                      </div>
                     </div>
-                    <div className="og-col-code whitespace-nowrap">{obra.codigo_qr_link}</div>
-                    <div className="og-col-title whitespace-nowrap">
-                      <span className="og-title-text">{obra.titulo}</span>
-                    </div>
-                    <div className="og-col-toggle whitespace-nowrap">
-                      <label className="toggle-switch-wrapper">
-                        <input
-                          type="checkbox"
-                          checked={obra.destacado_galeria === 'si'}
-                          onChange={() => handleToggleObraDestacado(obra.id_obra)}
-                        />
-                        <span className="toggle-slider"></span>
-                      </label>
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              })()}
 
               {obrasColeccion.length === 0 && (
                 <div className="obras-grid-empty">No hay obras en el inventario.</div>
               )}
+
+              {(() => {
+                const totalPagesObras = Math.ceil(obrasColeccion.length / itemsPerPage)
+                return totalPagesObras > 1 && (
+                  <div className="pagination-footer" style={{ marginTop: '16px' }}>
+                    <button className="page-item-btn" disabled={currentPageObras === 1} onClick={() => setCurrentPageObras(p => Math.max(1, p - 1))}><ChevronLeft size={16} /></button>
+                    {Array.from({ length: totalPagesObras }, (_, i) => i + 1).map(p => (
+                      <button key={p} className={`page-number-btn ${currentPageObras === p ? 'active' : ''}`} onClick={() => setCurrentPageObras(p)}>{p}</button>
+                    ))}
+                    <button className="page-item-btn" disabled={currentPageObras === totalPagesObras} onClick={() => setCurrentPageObras(p => Math.min(totalPagesObras, p + 1))}><ChevronRight size={16} /></button>
+                  </div>
+                )
+              })()}
             </div>
           </div>
         )}
@@ -834,38 +890,42 @@ const ConfiguracionPortal = () => {
                 <div className="dg-col-center whitespace-nowrap">ACCIONES</div>
               </div>
 
-              {exposiciones.map(expo => (
-                <div key={expo.id_exposicion} className="dg-row expo-row">
-                  <div className="dg-title whitespace-nowrap">{expo.nombre_exposicion}</div>
-                  <div className="dg-secondary whitespace-nowrap">{expo.organizador || 'N/A'}</div>
-                  <div className="dg-secondary whitespace-nowrap">{expo.descripcion?.length > 40 ? expo.descripcion.substring(0,40)+'...' : expo.descripcion}</div>
-                  <div className="dg-secondary whitespace-nowrap">{expo.lugar_fisico || 'N/A'}</div>
-                  <div className="whitespace-nowrap">
-                    <span className={`status-badge ${expo.estatus === 'activa' ? 'activo' : 'inactivo'}`}>
-                      {expo.estatus === 'activa' ? 'Pública' : 'Oculta'}
-                    </span>
-                  </div>
-                  <div className="dg-secondary" style={{ fontSize: '12px', whiteSpace: 'nowrap' }}>
-                    {expo.fecha_inicio && new Date(expo.fecha_inicio).toLocaleDateString()} - {expo.fecha_fin && new Date(expo.fecha_fin).toLocaleDateString()}
-                  </div>
-                  <div className="dg-col-center whitespace-nowrap">
-                    <div className="icon-btn-group">
-                      <button className="icon-btn" title={expo.estatus === 'activa' ? 'Ocultar en Web' : 'Publicar en Web'} onClick={() => handleToggleEstatus(expo)}>
-                        {expo.estatus === 'activa' ? <EyeOff size={15} /> : <Eye size={15} />}
-                      </button>
-                      <button className="icon-btn" title="Vincular Obras" onClick={() => openObrasModal(expo)}>
-                        <Folder size={15} />
-                      </button>
-                      <button className="icon-btn" onClick={() => openEditModal(expo)}>
-                        <Edit2 size={15} />
-                      </button>
-                      <button className="icon-btn icon-btn-danger" onClick={() => handleDeleteExposicion(expo.id_exposicion)}>
-                        <Trash2 size={15} />
-                      </button>
+              {(() => {
+                const totalPagesExpos = Math.ceil(exposiciones.length / itemsPerPage)
+                const paginatedExpos = exposiciones.slice((currentPageExpos - 1) * itemsPerPage, currentPageExpos * itemsPerPage)
+                return paginatedExpos.map(expo => (
+                  <div key={expo.id_exposicion} className="dg-row expo-row">
+                    <div className="dg-title whitespace-nowrap">{expo.nombre_exposicion}</div>
+                    <div className="dg-secondary whitespace-nowrap">{expo.organizador || 'N/A'}</div>
+                    <div className="dg-secondary whitespace-nowrap">{expo.descripcion?.length > 40 ? expo.descripcion.substring(0,40)+'...' : expo.descripcion}</div>
+                    <div className="dg-secondary whitespace-nowrap">{expo.lugar_fisico || 'N/A'}</div>
+                    <div className="whitespace-nowrap">
+                      <span className={`status-badge ${expo.estatus === 'activa' ? 'activo' : 'inactivo'}`}>
+                        {expo.estatus === 'activa' ? 'Pública' : 'Oculta'}
+                      </span>
+                    </div>
+                    <div className="dg-secondary" style={{ fontSize: '12px', whiteSpace: 'nowrap' }}>
+                      {expo.fecha_inicio && new Date(expo.fecha_inicio).toLocaleDateString()} - {expo.fecha_fin && new Date(expo.fecha_fin).toLocaleDateString()}
+                    </div>
+                    <div className="dg-col-center whitespace-nowrap">
+                      <div className="icon-btn-group">
+                        <button className="icon-btn" title={expo.estatus === 'activa' ? 'Ocultar en Web' : 'Publicar en Web'} onClick={() => handleToggleEstatus(expo)}>
+                          {expo.estatus === 'activa' ? <EyeOff size={15} /> : <Eye size={15} />}
+                        </button>
+                        <button className="icon-btn" title="Vincular Obras" onClick={() => openObrasModal(expo)}>
+                          <Folder size={15} />
+                        </button>
+                        <button className="icon-btn" onClick={() => openEditModal(expo)}>
+                          <Edit2 size={15} />
+                        </button>
+                        <button className="icon-btn icon-btn-danger" onClick={() => handleDeleteExposicion(expo.id_exposicion)}>
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))
+              })()}
 
               {exposiciones.length === 0 && (
                 <div className="dg-empty">
@@ -873,6 +933,19 @@ const ConfiguracionPortal = () => {
                   <span>No hay exposiciones registradas.</span>
                 </div>
               )}
+
+              {(() => {
+                const totalPagesExpos = Math.ceil(exposiciones.length / itemsPerPage)
+                return totalPagesExpos > 1 && (
+                  <div className="pagination-footer" style={{ marginTop: '16px' }}>
+                    <button className="page-item-btn" disabled={currentPageExpos === 1} onClick={() => setCurrentPageExpos(p => Math.max(1, p - 1))}><ChevronLeft size={16} /></button>
+                    {Array.from({ length: totalPagesExpos }, (_, i) => i + 1).map(p => (
+                      <button key={p} className={`page-number-btn ${currentPageExpos === p ? 'active' : ''}`} onClick={() => setCurrentPageExpos(p)}>{p}</button>
+                    ))}
+                    <button className="page-item-btn" disabled={currentPageExpos === totalPagesExpos} onClick={() => setCurrentPageExpos(p => Math.min(totalPagesExpos, p + 1))}><ChevronRight size={16} /></button>
+                  </div>
+                )
+              })()}
             </div>
           </div>
         )}
@@ -897,33 +970,37 @@ const ConfiguracionPortal = () => {
                 <div className="dg-col-center whitespace-nowrap">ACCIONES</div>
               </div>
 
-              {efemerides.map(efe => (
-                <div key={efe.id_efemeride} className="dg-row efe-row">
-                  <div className="dg-title whitespace-nowrap">{efe.titulo}</div>
-                  <div className="dg-secondary whitespace-nowrap">
-                    {efe.dia} de {MESES[efe.mes - 1]}{efe.anio_referencia ? ` (${efe.anio_referencia})` : ''}
-                  </div>
-                  <div className="dg-secondary whitespace-nowrap">{efe.categoria || 'N/A'}</div>
-                  <div className="whitespace-nowrap">
-                    <span className={`status-badge ${efe.activa ? 'activo' : 'inactivo'}`}>
-                      {efe.activa ? 'Pública' : 'Oculta'}
-                    </span>
-                  </div>
-                  <div className="dg-col-center whitespace-nowrap">
-                    <div className="icon-btn-group">
-                      <button className="icon-btn" title={efe.activa ? 'Ocultar en Web' : 'Publicar en Web'} onClick={() => handleToggleEfemerideActiva(efe)}>
-                        {efe.activa ? <EyeOff size={15} /> : <Eye size={15} />}
-                      </button>
-                      <button className="icon-btn" onClick={() => openEditEfemerideModal(efe)}>
-                        <Edit2 size={15} />
-                      </button>
-                      <button className="icon-btn icon-btn-danger" onClick={() => handleDeleteEfemeride(efe.id_efemeride)}>
-                        <Trash2 size={15} />
-                      </button>
+              {(() => {
+                const totalPagesEfeme = Math.ceil(efemerides.length / itemsPerPage)
+                const paginatedEfeme = efemerides.slice((currentPageEfeme - 1) * itemsPerPage, currentPageEfeme * itemsPerPage)
+                return paginatedEfeme.map(efe => (
+                  <div key={efe.id_efemeride} className="dg-row efe-row">
+                    <div className="dg-title whitespace-nowrap">{efe.titulo}</div>
+                    <div className="dg-secondary whitespace-nowrap">
+                      {efe.dia} de {MESES[efe.mes - 1]}{efe.anio_referencia ? ` (${efe.anio_referencia})` : ''}
+                    </div>
+                    <div className="dg-secondary whitespace-nowrap">{efe.categoria || 'N/A'}</div>
+                    <div className="whitespace-nowrap">
+                      <span className={`status-badge ${efe.activa ? 'activo' : 'inactivo'}`}>
+                        {efe.activa ? 'Pública' : 'Oculta'}
+                      </span>
+                    </div>
+                    <div className="dg-col-center whitespace-nowrap">
+                      <div className="icon-btn-group">
+                        <button className="icon-btn" title={efe.activa ? 'Ocultar en Web' : 'Publicar en Web'} onClick={() => handleToggleEfemerideActiva(efe)}>
+                          {efe.activa ? <EyeOff size={15} /> : <Eye size={15} />}
+                        </button>
+                        <button className="icon-btn" onClick={() => openEditEfemerideModal(efe)}>
+                          <Edit2 size={15} />
+                        </button>
+                        <button className="icon-btn icon-btn-danger" onClick={() => handleDeleteEfemeride(efe.id_efemeride)}>
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))
+              })()}
 
               {efemerides.length === 0 && (
                 <div className="dg-empty">
@@ -931,6 +1008,19 @@ const ConfiguracionPortal = () => {
                   <span>No hay efemérides registradas.</span>
                 </div>
               )}
+
+              {(() => {
+                const totalPagesEfeme = Math.ceil(efemerides.length / itemsPerPage)
+                return totalPagesEfeme > 1 && (
+                  <div className="pagination-footer" style={{ marginTop: '16px' }}>
+                    <button className="page-item-btn" disabled={currentPageEfeme === 1} onClick={() => setCurrentPageEfeme(p => Math.max(1, p - 1))}><ChevronLeft size={16} /></button>
+                    {Array.from({ length: totalPagesEfeme }, (_, i) => i + 1).map(p => (
+                      <button key={p} className={`page-number-btn ${currentPageEfeme === p ? 'active' : ''}`} onClick={() => setCurrentPageEfeme(p)}>{p}</button>
+                    ))}
+                    <button className="page-item-btn" disabled={currentPageEfeme === totalPagesEfeme} onClick={() => setCurrentPageEfeme(p => Math.min(totalPagesEfeme, p + 1))}><ChevronRight size={16} /></button>
+                  </div>
+                )
+              })()}
             </div>
           </div>
         )}
