@@ -302,6 +302,7 @@ const Dashboard = ({ onNavigate }) => {
           </section>
 
           <div
+            className="dashboard-grid-2col"
             style={{
               display: 'grid',
               gridTemplateColumns: '2fr 1fr',
@@ -451,11 +452,13 @@ const Dashboard = ({ onNavigate }) => {
                   </h3>
                   <a
                     href="#catalogo"
+                    onClick={(e) => { e.preventDefault(); onNavigate?.('reportes'); }}
                     style={{
                       fontSize: '12px',
                       fontWeight: 700,
                       color: '#B4533C',
-                      textDecoration: 'none'
+                      textDecoration: 'none',
+                      cursor: 'pointer'
                     }}
                   >
                     Ver catálogo completo

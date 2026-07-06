@@ -419,8 +419,8 @@ const InventarioPatrimonial = () => {
         title="Inventario Patrimonial"
         description="Fichas técnicas, registro multimedia y gestión de exposición cultural."
         actionButton={
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <button className="ph-action-btn" onClick={() => setIsStandaloneCategoryModalOpen(true)} style={{ border: '1px solid #D2C5B4', backgroundColor: 'transparent', color: '#8B5A2B', boxShadow: 'none' }}>
+          <div className="inventario-header-actions">
+            <button className="ph-action-btn ph-action-btn-secondary" onClick={() => setIsStandaloneCategoryModalOpen(true)}>
               <FolderOpen size={16} />
               <span>Nueva Categoría</span>
             </button>
@@ -506,13 +506,13 @@ const InventarioPatrimonial = () => {
           <table className="inventario-table">
             <thead>
               <tr>
-                <th>PIEZA / OBRA</th>
-                <th>AUTOR</th>
-                <th>MATERIALES</th>
-                <th>CONSERVACIÓN</th>
-                <th>UBICACIÓN</th>
-                <th>QR</th>
-                <th className="text-right">ACCIONES</th>
+                <th className="whitespace-nowrap">PIEZA / OBRA</th>
+                <th className="whitespace-nowrap">AUTOR</th>
+                <th className="whitespace-nowrap">MATERIALES</th>
+                <th className="whitespace-nowrap">CONSERVACIÓN</th>
+                <th className="whitespace-nowrap">UBICACIÓN</th>
+                <th className="whitespace-nowrap">QR</th>
+                <th className="text-right whitespace-nowrap">ACCIONES</th>
               </tr>
             </thead>
             <tbody>
@@ -582,7 +582,7 @@ const InventarioPatrimonial = () => {
                       </td>
 
                       {/* Acciones */}
-                      <td className="text-right">
+                      <td className="text-right whitespace-nowrap">
                         <div className="grid-actions-row">
                           <button 
                             className="grid-action-btn" 

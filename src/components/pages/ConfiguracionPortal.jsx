@@ -758,48 +758,50 @@ const ConfiguracionPortal = () => {
         {loadingObras ? (
           <p style={{ textAlign: 'center', padding: '48px', color: '#807471', fontSize: '14px', fontWeight: 500 }}>Cargando obras...</p>
         ) : (
-          <div className="obras-grid-container">
-            <div className="obras-grid-header">
-              <div className="og-col-img">IMAGEN</div>
-              <div className="og-col-code">CÓDIGO</div>
-              <div className="og-col-title">OBRA / PIEZA</div>
-              <div className="og-col-toggle">WEB (PÚBLICA)</div>
+          <div className="w-full overflow-x-auto">
+            <div className="obras-grid-container" style={{ minWidth: '640px' }}>
+              <div className="obras-grid-header">
+                <div className="og-col-img whitespace-nowrap">IMAGEN</div>
+                <div className="og-col-code whitespace-nowrap">CÓDIGO</div>
+                <div className="og-col-title whitespace-nowrap">OBRA / PIEZA</div>
+                <div className="og-col-toggle whitespace-nowrap">WEB (PÚBLICA)</div>
+              </div>
+
+              {obrasColeccion.map(obra => {
+                const coverImage = obra.multimedia && obra.multimedia[0] ? obra.multimedia[0].url_archivo : null;
+                return (
+                  <div key={obra.id_obra} className="obras-grid-row">
+                    <div className="og-col-img">
+                      {coverImage ? (
+                        <img src={coverImage} alt={obra.titulo} />
+                      ) : (
+                        <div className="og-thumb-placeholder">
+                          <Camera size={20} />
+                        </div>
+                      )}
+                    </div>
+                    <div className="og-col-code whitespace-nowrap">{obra.codigo_qr_link}</div>
+                    <div className="og-col-title whitespace-nowrap">
+                      <span className="og-title-text">{obra.titulo}</span>
+                    </div>
+                    <div className="og-col-toggle whitespace-nowrap">
+                      <label className="toggle-switch-wrapper">
+                        <input
+                          type="checkbox"
+                          checked={obra.destacado_galeria === 'si'}
+                          onChange={() => handleToggleObraDestacado(obra.id_obra)}
+                        />
+                        <span className="toggle-slider"></span>
+                      </label>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {obrasColeccion.length === 0 && (
+                <div className="obras-grid-empty">No hay obras en el inventario.</div>
+              )}
             </div>
-
-            {obrasColeccion.map(obra => {
-              const coverImage = obra.multimedia && obra.multimedia[0] ? obra.multimedia[0].url_archivo : null;
-              return (
-                <div key={obra.id_obra} className="obras-grid-row">
-                  <div className="og-col-img">
-                    {coverImage ? (
-                      <img src={coverImage} alt={obra.titulo} />
-                    ) : (
-                      <div className="og-thumb-placeholder">
-                        <Camera size={20} />
-                      </div>
-                    )}
-                  </div>
-                  <div className="og-col-code">{obra.codigo_qr_link}</div>
-                  <div className="og-col-title">
-                    <span className="og-title-text">{obra.titulo}</span>
-                  </div>
-                  <div className="og-col-toggle">
-                    <label className="toggle-switch-wrapper">
-                      <input
-                        type="checkbox"
-                        checked={obra.destacado_galeria === 'si'}
-                        onChange={() => handleToggleObraDestacado(obra.id_obra)}
-                      />
-                      <span className="toggle-slider"></span>
-                    </label>
-                  </div>
-                </div>
-              );
-            })}
-
-            {obrasColeccion.length === 0 && (
-              <div className="obras-grid-empty">No hay obras en el inventario.</div>
-            )}
           </div>
         )}
       </section>
@@ -820,56 +822,58 @@ const ConfiguracionPortal = () => {
         {loadingExposiciones ? (
           <p style={{ textAlign: 'center', padding: '48px', color: '#807471', fontSize: '14px', fontWeight: 500 }}>Cargando exposiciones...</p>
         ) : (
-          <div className="data-grid">
-            <div className="dg-header expo-header">
-              <div>EXPOSICIÓN</div>
-              <div>ORGANIZADOR</div>
-              <div>DESCRIPCIÓN</div>
-              <div>LUGAR</div>
-              <div>ESTATUS (WEB)</div>
-              <div>FECHAS</div>
-              <div className="dg-col-center">ACCIONES</div>
-            </div>
+          <div className="w-full overflow-x-auto">
+            <div className="data-grid" style={{ minWidth: '900px' }}>
+              <div className="dg-header expo-header">
+                <div className="whitespace-nowrap">EXPOSICIÓN</div>
+                <div className="whitespace-nowrap">ORGANIZADOR</div>
+                <div className="whitespace-nowrap">DESCRIPCIÓN</div>
+                <div className="whitespace-nowrap">LUGAR</div>
+                <div className="whitespace-nowrap">ESTATUS (WEB)</div>
+                <div className="whitespace-nowrap">FECHAS</div>
+                <div className="dg-col-center whitespace-nowrap">ACCIONES</div>
+              </div>
 
-            {exposiciones.map(expo => (
-              <div key={expo.id_exposicion} className="dg-row expo-row">
-                <div className="dg-title">{expo.nombre_exposicion}</div>
-                <div className="dg-secondary">{expo.organizador || 'N/A'}</div>
-                <div className="dg-secondary">{expo.descripcion?.length > 40 ? expo.descripcion.substring(0,40)+'...' : expo.descripcion}</div>
-                <div className="dg-secondary">{expo.lugar_fisico || 'N/A'}</div>
-                <div>
-                  <span className={`status-badge ${expo.estatus === 'activa' ? 'activo' : 'inactivo'}`}>
-                    {expo.estatus === 'activa' ? 'Pública' : 'Oculta'}
-                  </span>
-                </div>
-                <div className="dg-secondary" style={{ fontSize: '12px', whiteSpace: 'nowrap' }}>
-                  {expo.fecha_inicio && new Date(expo.fecha_inicio).toLocaleDateString()} - {expo.fecha_fin && new Date(expo.fecha_fin).toLocaleDateString()}
-                </div>
-                <div className="dg-col-center">
-                  <div className="icon-btn-group">
-                    <button className="icon-btn" title={expo.estatus === 'activa' ? 'Ocultar en Web' : 'Publicar en Web'} onClick={() => handleToggleEstatus(expo)}>
-                      {expo.estatus === 'activa' ? <EyeOff size={15} /> : <Eye size={15} />}
-                    </button>
-                    <button className="icon-btn" title="Vincular Obras" onClick={() => openObrasModal(expo)}>
-                      <Folder size={15} />
-                    </button>
-                    <button className="icon-btn" onClick={() => openEditModal(expo)}>
-                      <Edit2 size={15} />
-                    </button>
-                    <button className="icon-btn icon-btn-danger" onClick={() => handleDeleteExposicion(expo.id_exposicion)}>
-                      <Trash2 size={15} />
-                    </button>
+              {exposiciones.map(expo => (
+                <div key={expo.id_exposicion} className="dg-row expo-row">
+                  <div className="dg-title whitespace-nowrap">{expo.nombre_exposicion}</div>
+                  <div className="dg-secondary whitespace-nowrap">{expo.organizador || 'N/A'}</div>
+                  <div className="dg-secondary whitespace-nowrap">{expo.descripcion?.length > 40 ? expo.descripcion.substring(0,40)+'...' : expo.descripcion}</div>
+                  <div className="dg-secondary whitespace-nowrap">{expo.lugar_fisico || 'N/A'}</div>
+                  <div className="whitespace-nowrap">
+                    <span className={`status-badge ${expo.estatus === 'activa' ? 'activo' : 'inactivo'}`}>
+                      {expo.estatus === 'activa' ? 'Pública' : 'Oculta'}
+                    </span>
+                  </div>
+                  <div className="dg-secondary" style={{ fontSize: '12px', whiteSpace: 'nowrap' }}>
+                    {expo.fecha_inicio && new Date(expo.fecha_inicio).toLocaleDateString()} - {expo.fecha_fin && new Date(expo.fecha_fin).toLocaleDateString()}
+                  </div>
+                  <div className="dg-col-center whitespace-nowrap">
+                    <div className="icon-btn-group">
+                      <button className="icon-btn" title={expo.estatus === 'activa' ? 'Ocultar en Web' : 'Publicar en Web'} onClick={() => handleToggleEstatus(expo)}>
+                        {expo.estatus === 'activa' ? <EyeOff size={15} /> : <Eye size={15} />}
+                      </button>
+                      <button className="icon-btn" title="Vincular Obras" onClick={() => openObrasModal(expo)}>
+                        <Folder size={15} />
+                      </button>
+                      <button className="icon-btn" onClick={() => openEditModal(expo)}>
+                        <Edit2 size={15} />
+                      </button>
+                      <button className="icon-btn icon-btn-danger" onClick={() => handleDeleteExposicion(expo.id_exposicion)}>
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
 
-            {exposiciones.length === 0 && (
-              <div className="dg-empty">
-                <Layers size={28} />
-                <span>No hay exposiciones registradas.</span>
-              </div>
-            )}
+              {exposiciones.length === 0 && (
+                <div className="dg-empty">
+                  <Layers size={28} />
+                  <span>No hay exposiciones registradas.</span>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </section>
@@ -883,49 +887,51 @@ const ConfiguracionPortal = () => {
         {loadingEfemerides ? (
           <p style={{ textAlign: 'center', padding: '48px', color: '#807471', fontSize: '14px', fontWeight: 500 }}>Cargando efemérides...</p>
         ) : (
-          <div className="data-grid">
-            <div className="dg-header efe-header">
-              <div>EFEMÉRIDE</div>
-              <div>FECHA</div>
-              <div>CATEGORÍA</div>
-              <div>ESTATUS (WEB)</div>
-              <div className="dg-col-center">ACCIONES</div>
-            </div>
+          <div className="w-full overflow-x-auto">
+            <div className="data-grid" style={{ minWidth: '700px' }}>
+              <div className="dg-header efe-header">
+                <div className="whitespace-nowrap">EFEMÉRIDE</div>
+                <div className="whitespace-nowrap">FECHA</div>
+                <div className="whitespace-nowrap">CATEGORÍA</div>
+                <div className="whitespace-nowrap">ESTATUS (WEB)</div>
+                <div className="dg-col-center whitespace-nowrap">ACCIONES</div>
+              </div>
 
-            {efemerides.map(efe => (
-              <div key={efe.id_efemeride} className="dg-row efe-row">
-                <div className="dg-title">{efe.titulo}</div>
-                <div className="dg-secondary">
-                  {efe.dia} de {MESES[efe.mes - 1]}{efe.anio_referencia ? ` (${efe.anio_referencia})` : ''}
-                </div>
-                <div className="dg-secondary">{efe.categoria || 'N/A'}</div>
-                <div>
-                  <span className={`status-badge ${efe.activa ? 'activo' : 'inactivo'}`}>
-                    {efe.activa ? 'Pública' : 'Oculta'}
-                  </span>
-                </div>
-                <div className="dg-col-center">
-                  <div className="icon-btn-group">
-                    <button className="icon-btn" title={efe.activa ? 'Ocultar en Web' : 'Publicar en Web'} onClick={() => handleToggleEfemerideActiva(efe)}>
-                      {efe.activa ? <EyeOff size={15} /> : <Eye size={15} />}
-                    </button>
-                    <button className="icon-btn" onClick={() => openEditEfemerideModal(efe)}>
-                      <Edit2 size={15} />
-                    </button>
-                    <button className="icon-btn icon-btn-danger" onClick={() => handleDeleteEfemeride(efe.id_efemeride)}>
-                      <Trash2 size={15} />
-                    </button>
+              {efemerides.map(efe => (
+                <div key={efe.id_efemeride} className="dg-row efe-row">
+                  <div className="dg-title whitespace-nowrap">{efe.titulo}</div>
+                  <div className="dg-secondary whitespace-nowrap">
+                    {efe.dia} de {MESES[efe.mes - 1]}{efe.anio_referencia ? ` (${efe.anio_referencia})` : ''}
+                  </div>
+                  <div className="dg-secondary whitespace-nowrap">{efe.categoria || 'N/A'}</div>
+                  <div className="whitespace-nowrap">
+                    <span className={`status-badge ${efe.activa ? 'activo' : 'inactivo'}`}>
+                      {efe.activa ? 'Pública' : 'Oculta'}
+                    </span>
+                  </div>
+                  <div className="dg-col-center whitespace-nowrap">
+                    <div className="icon-btn-group">
+                      <button className="icon-btn" title={efe.activa ? 'Ocultar en Web' : 'Publicar en Web'} onClick={() => handleToggleEfemerideActiva(efe)}>
+                        {efe.activa ? <EyeOff size={15} /> : <Eye size={15} />}
+                      </button>
+                      <button className="icon-btn" onClick={() => openEditEfemerideModal(efe)}>
+                        <Edit2 size={15} />
+                      </button>
+                      <button className="icon-btn icon-btn-danger" onClick={() => handleDeleteEfemeride(efe.id_efemeride)}>
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
 
-            {efemerides.length === 0 && (
-              <div className="dg-empty">
-                <CalendarDays size={28} />
-                <span>No hay efemérides registradas.</span>
-              </div>
-            )}
+              {efemerides.length === 0 && (
+                <div className="dg-empty">
+                  <CalendarDays size={28} />
+                  <span>No hay efemérides registradas.</span>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </section>
@@ -1218,14 +1224,14 @@ const ConfiguracionPortal = () => {
                   <p className="mt-2 font-sans text-sm text-cafe-noir/90">Selecciona las obras a incluir.</p>
                 </div>
                 <div className="mt-8">
-                  <div className="table-container rounded-xl border border-cafe-noir/20 bg-white/50" style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                    <table className="w-full text-left font-sans">
+                  <div className="table-container rounded-xl border border-cafe-noir/20 bg-white/50 w-full overflow-x-auto" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                    <table className="w-full text-left font-sans" style={{ minWidth: '500px' }}>
                       <thead style={{ position: 'sticky', top: 0, backgroundColor: '#EADFC8', zIndex: 1 }}>
                         <tr className="text-xs uppercase tracking-wider text-cafe-noir/80 border-b border-cafe-noir/20">
-                          <th className="py-3 px-4 w-16 text-center">Imagen</th>
-                          <th className="py-3 px-4">Código</th>
-                          <th className="py-3 px-4">Obra / Pieza</th>
-                          <th className="py-3 px-4 text-center">Incluir en Exposición</th>
+                          <th className="py-3 px-4 w-16 text-center whitespace-nowrap">Imagen</th>
+                          <th className="py-3 px-4 whitespace-nowrap">Código</th>
+                          <th className="py-3 px-4 whitespace-nowrap">Obra / Pieza</th>
+                          <th className="py-3 px-4 text-center whitespace-nowrap">Incluir en Exposición</th>
                         </tr>
                       </thead>
                       <tbody>

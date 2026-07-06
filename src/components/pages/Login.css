@@ -410,15 +410,15 @@
     flex: 1;
     width: 100%;
     padding: 24px 20px 32px;
-    align-items: stretch;
+    align-items: center;
     justify-content: center;
   }
 
   .login-card {
     width: 100%;
-    max-width: 100%;
+    max-width: 440px;
     box-sizing: border-box;
-    padding: 28px 20px;
+    padding: 28px 24px;
     box-shadow: 0px 8px 30px rgba(0, 0, 0, 0.04);
   }
 }

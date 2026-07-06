@@ -172,7 +172,7 @@
   left: 0;
   width: 4px;
   height: 100%;
-  background-color: #B4533C; /* Terracota border indicator */
+  background-color: #B4533C;
 }
 
 .kpi-card.kpi-cultores::before { background-color: #B4533C; }
@@ -255,15 +255,14 @@
   flex-direction: column;
   gap: 12px;
   overflow: hidden;
-  max-height: 320px;            /* ~5 ítems visibles */
+  max-height: 320px;
   transition: max-height 0.45s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .municipio-bars-container.expanded {
-  max-height: 2000px;           /* suficiente para cualquier número de municipios */
+  max-height: 2000px;
 }
 
-/* La tarjeta de municipios no tiene altura mínima fija: crece con su contenido */
 .municipio-chart-card {
   min-height: unset !important;
 }
@@ -337,7 +336,6 @@
   to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 
-/* Header del modal */
 .municipios-modal-header {
   display: flex;
   align-items: flex-start;
@@ -383,7 +381,6 @@
   color: #B4533C;
 }
 
-/* Barra de resumen de 4 KPIs */
 .municipios-modal-summary {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -419,7 +416,6 @@
   letter-spacing: 0.5px;
 }
 
-/* Grid de municipios en dos columnas con scroll */
 .municipios-modal-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -433,7 +429,6 @@
 .municipios-modal-grid::-webkit-scrollbar { width: 5px; }
 .municipios-modal-grid::-webkit-scrollbar-thumb { background: #e5e1de; border-radius: 9999px; }
 
-/* Cada ítem del municipio en el modal */
 .modal-mun-item {
   display: flex;
   flex-direction: column;
@@ -517,7 +512,6 @@
   gap: 5px;
 }
 
-/* Municipios sin obras: mostrar con opacidad reducida */
 .municipio-bar-item.sin-obras {
   opacity: 0.45;
 }
@@ -592,7 +586,6 @@
   fill: #B4533C;
 }
 
-/* Tooltip de la gráfica de línea */
 .line-chart-tooltip {
   position: absolute;
   transform: translateX(-50%);
@@ -634,7 +627,6 @@
   color: #fff;
 }
 
-/* Estado de carga */
 .charts-loading-state {
   display: flex;
   align-items: center;
@@ -659,7 +651,6 @@
   to { transform: rotate(360deg); }
 }
 
-/* Estado de error */
 .charts-error-state {
   display: flex;
   align-items: center;
@@ -667,7 +658,6 @@
   padding: 20px 24px;
   background: #fff5f5;
   border: 1px solid #fecaca;
-  border-radius: 12px;
   color: #991b1b;
   font-size: 13px;
   flex-wrap: wrap;
@@ -727,6 +717,8 @@
   font-size: 12.5px;
   color: var(--text-secondary);
   line-height: 1.5;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .export-buttons-stack {
@@ -736,10 +728,6 @@
   margin-top: 8px;
 }
 
-/* Format specific color themes for export buttons */
-/* Cada acción de exportación usa un tono distinto, tomado de la misma paleta tierra
-   del panel (ver MUNICIPIO_COLORS en ReportesCatalogo.jsx), para diferenciarlas sin
-   recurrir a colores saturados que no van con la identidad del archivo. */
 .btn-export-pdf,
 .btn-export-excel,
 .btn-export-cultores-excel,
@@ -768,25 +756,25 @@
 }
 
 .btn-export-pdf {
-  background-color: #B4533C; /* Terracota */
+  background-color: #B4533C;
   border: 1px solid #B4533C;
   box-shadow: 0 1px 2px rgba(180, 83, 60, 0.15);
 }
 
 .btn-export-excel {
-  background-color: #707C55; /* Verde musgo */
+  background-color: #707C55;
   border: 1px solid #707C55;
   box-shadow: 0 1px 2px rgba(112, 124, 85, 0.15);
 }
 
 .btn-export-cultores-excel {
-  background-color: #A87F32; /* Ocre */
+  background-color: #A87F32;
   border: 1px solid #A87F32;
   box-shadow: 0 1px 2px rgba(168, 127, 50, 0.15);
 }
 
 .btn-export-municipio-excel {
-  background-color: #5D4037; /* Marrón */
+  background-color: #5D4037;
   border: 1px solid #5D4037;
   box-shadow: 0 1px 2px rgba(93, 64, 55, 0.15);
 }
@@ -797,7 +785,7 @@
   gap: 10px;
   padding: 12px 16px;
   color: #ffffff;
-  background-color: #4b403d; /* Dark Brown/Stone */
+  background-color: #4b403d;
   border: 1px solid #4b403d;
   border-radius: 8px;
   font-family: inherit;
@@ -814,7 +802,6 @@
   box-shadow: 0 4px 6px rgba(75, 64, 61, 0.2);
 }
 
-/* Right Catalog export column styles */
 .catalog-column {
   display: flex;
   flex-direction: column;
@@ -909,7 +896,6 @@
   color: #96432F;
 }
 
-/* Consolidated PDF download action button */
 .consolidated-action-container {
   display: flex;
   justify-content: center;
@@ -945,20 +931,319 @@
   cursor: not-allowed;
 }
 
-/* Responsive Overrides */
+/* ============================================================
+   RESPONSIVE — todos los breakpoints cubiertos
+   ============================================================ */
+
+/* Pantallas <= 1200px (tablet landscape + Nest Hub) */
+@media (max-width: 1200px) {
+  .export-catalog-card {
+    grid-template-columns: 1fr;
+    gap: 28px;
+    padding: 24px;
+  }
+
+  .kpis-grid {
+    gap: 16px;
+  }
+
+  .charts-grid {
+    gap: 16px;
+  }
+
+  .chart-card {
+    min-height: auto;
+  }
+
+  .simple-table td {
+    font-size: 12px;
+    padding: 10px 12px;
+  }
+
+  .simple-table th {
+    font-size: 8.5px;
+    padding: 10px 12px;
+  }
+
+  .btn-export-pdf,
+  .btn-export-excel,
+  .btn-export-cultores-excel,
+  .btn-export-municipio-excel {
+    padding: 12px 18px;
+    font-size: 12.5px;
+    justify-content: center;
+    text-align: center;
+  }
+}
+
+/* Pantallas <= 900px */
 @media (max-width: 900px) {
   .kpis-grid {
     grid-template-columns: 1fr;
     gap: 16px;
   }
-  
+
   .charts-grid {
     grid-template-columns: 1fr;
     gap: 24px;
   }
-  
+
+  .kpi-card {
+    padding: 20px;
+  }
+
+  .kpi-value {
+    font-size: 28px;
+  }
+
+  .chart-card {
+    padding: 20px;
+  }
+
   .export-catalog-card {
-    grid-template-columns: 1fr;
+    padding: 20px;
     gap: 24px;
+  }
+
+  .export-buttons-stack .btn-export-pdf,
+  .export-buttons-stack .btn-export-excel,
+  .export-buttons-stack .btn-export-cultores-excel,
+  .export-buttons-stack .btn-export-municipio-excel {
+    padding: 12px 16px;
+    font-size: 12.5px;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+  }
+
+  .btn-consolidated-pdf {
+    padding: 14px 20px;
+    font-size: 13px;
+    text-align: center;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    width: 100%;
+  }
+
+  .btn-export-inline {
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+
+  .charts-section-header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .chart-total-badge {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+/* Pantallas <= 768px */
+@media (max-width: 768px) {
+  .kpi-card {
+    padding: 16px;
+    border-radius: 20px;
+  }
+
+  .kpi-value {
+    font-size: 24px;
+  }
+
+  .chart-card {
+    padding: 16px;
+    border-radius: 20px;
+  }
+
+  .chart-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .chart-total-badge {
+    align-self: flex-start;
+    white-space: normal;
+  }
+
+  .municipio-name {
+    font-size: 12px;
+  }
+
+  .export-catalog-card {
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .export-column h3, .catalog-column h3 {
+    font-size: 14px;
+  }
+
+  .export-buttons-stack .btn-export-pdf,
+  .export-buttons-stack .btn-export-excel,
+  .export-buttons-stack .btn-export-cultores-excel,
+  .export-buttons-stack .btn-export-municipio-excel {
+    padding: 10px 14px;
+    font-size: 12px;
+    gap: 8px;
+  }
+
+  .catalog-search-wrapper {
+    padding: 8px 12px;
+  }
+
+  .catalog-table-wrapper .simple-table td {
+    font-size: 11.5px;
+    padding: 10px 12px;
+  }
+
+  .catalog-table-wrapper .simple-table th {
+    font-size: 8.5px;
+    padding: 10px 12px;
+  }
+
+  .btn-consolidated-pdf {
+    font-size: 12px;
+    padding: 12px 16px;
+    gap: 8px;
+  }
+}
+
+/* Pantallas <= 600px (móvil) */
+@media (max-width: 600px) {
+  .kpi-card {
+    padding: 14px;
+  }
+
+  .kpi-value {
+    font-size: 22px;
+  }
+
+  .kpi-label {
+    font-size: 10px;
+  }
+
+  .svg-chart-container {
+    height: 150px;
+  }
+
+  .charts-section-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .btn-refresh-charts {
+    margin-left: 0;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .municipios-modal-header {
+    flex-direction: column;
+    padding: 20px 20px 0;
+  }
+
+  .municipios-modal-card {
+    border-radius: 16px;
+    max-height: 92vh;
+  }
+
+  .municipios-modal-title {
+    font-size: 17px;
+  }
+
+  /* Catalog table → cards */
+  .catalog-table-wrapper .simple-table thead {
+    display: none;
+  }
+
+  .catalog-table-wrapper .simple-table,
+  .catalog-table-wrapper .simple-table tbody,
+  .catalog-table-wrapper .simple-table tr,
+  .catalog-table-wrapper .simple-table td {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .catalog-table-wrapper .simple-table tr {
+    background: #FAF7F2;
+    border: 1px solid #f0eeeb;
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+  }
+
+  .catalog-table-wrapper .simple-table tr:hover td {
+    background-color: transparent;
+  }
+
+  .catalog-table-wrapper .simple-table td {
+    padding: 5px 0;
+    border-bottom: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    white-space: normal !important;
+    word-break: break-word;
+  }
+
+  .catalog-table-wrapper .simple-table td::before {
+    content: attr(data-label);
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    min-width: 70px;
+    flex-shrink: 0;
+  }
+
+  .catalog-table-wrapper .simple-table td:first-child {
+    padding-top: 0;
+  }
+
+  .catalog-table-wrapper .simple-table td:first-child::before {
+    display: none;
+  }
+
+  .catalog-table-wrapper .simple-table td:last-child {
+    padding-bottom: 0;
+    padding-top: 8px;
+    border-top: 1px solid #f0eeeb;
+    margin-top: 4px;
+  }
+
+  .catalog-table-wrapper .simple-table td:last-child::before {
+    display: none;
+  }
+
+  .catalog-table-wrapper .simple-table td.text-right {
+    justify-content: flex-start;
+  }
+
+  .catalog-table-wrapper .simple-table td .btn-export-inline {
+    width: 100%;
+    text-align: center;
+    background: rgba(180, 83, 60, 0.08);
+    padding: 8px;
+    border-radius: 8px;
+  }
+
+  .catalog-table-wrapper {
+    max-height: none;
+    overflow-y: visible;
+  }
+
+  .btn-export-pdf,
+  .btn-export-excel,
+  .btn-export-cultores-excel,
+  .btn-export-municipio-excel {
+    justify-content: center;
+    text-align: center;
   }
 }

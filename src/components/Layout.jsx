@@ -251,6 +251,16 @@ const Layout = ({ children, currentView, onViewChange, onLogout }) => {
             <FileText className="nav-icon" size={20} />
             <span>Reportes y Catálogo</span>
           </button>
+
+          <span className="nav-section-label">Ayuda</span>
+          <button
+            onClick={() => handleViewChange('manual')}
+            className={`nav-item nav-btn ${currentView === 'manual' ? 'active' : ''}`}
+            data-label="Manual de Uso"
+          >
+            <FileText className="nav-icon" size={20} />
+            <span>Manual de Uso</span>
+          </button>
         </nav>
 
         <div className="sidebar-footer">

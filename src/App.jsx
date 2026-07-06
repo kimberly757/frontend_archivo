@@ -7,6 +7,7 @@ import PreRegistration from './components/pages/PreRegistration'
 import InventarioPatrimonial from './components/pages/InventarioPatrimonial'
 import ConfiguracionPortal from './components/pages/ConfiguracionPortal'
 import ReportesCatalogo from './components/pages/ReportesCatalogo'
+import ManualAdmin from './components/pages/ManualAdmin'
 import Login from './components/pages/Login'
 import ForgotPassword from './components/pages/ForgotPassword'
 import ResetPassword from './components/pages/ResetPassword'
@@ -56,6 +57,7 @@ function App() {
           {currentView === 'patrimonio' && <InventarioPatrimonial />}
           {currentView === 'difusion' && <ConfiguracionPortal />}
           {currentView === 'reportes' && <ReportesCatalogo />}
+          {currentView === 'manual' && <ManualAdmin />}
         </Layout>
       )}
       <Toast />

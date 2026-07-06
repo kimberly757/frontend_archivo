@@ -48,6 +48,13 @@
   transform: translateY(-2px);
 }
 
+/* Responsive: dashboard grids apilan en móvil */
+@media (max-width: 768px) {
+  .dashboard-grid-2col {
+    grid-template-columns: 1fr !important;
+  }
+}
+
 /* ── Chart Bars ────────────────────────────── */
 .bar-track {
   background: linear-gradient(180deg, #f7f6f2, #efeee8);

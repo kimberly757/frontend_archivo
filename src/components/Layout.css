@@ -970,7 +970,6 @@ body {
   /* Contenedor: sigue siendo row, el sidebar sale de pantalla */
   .dashboard-container {
     flex-direction: row;
-    overflow-x: hidden;
     max-width: 100vw;
   }
 
@@ -1090,14 +1089,13 @@ body {
     width: 100%;
     max-width: 100vw;
     min-width: 0;
-    overflow-x: hidden;
   }
 
   .content-body {
     padding: 16px;
     box-sizing: border-box;
     max-width: 100%;
-    overflow-x: hidden;
+    overflow-x: auto;
   }
 }
 
@@ -1176,6 +1174,13 @@ body {
   .topbar { padding: 0 12px; height: 58px; }
 
   .content-body { padding: 12px; }
+}
+
+/* Tablet intermedio */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .content-body {
+    padding: 24px 28px;
+  }
 }
 
 /* ── Píldoras de filtro rápido (categorías) ───────────────── */
@@ -1296,12 +1301,12 @@ body {
 .exposiciones-table th,
 .efemerides-table th {
   background: linear-gradient(180deg, #f7f6f3 0%, #f3f1ee 100%);
-  font-size: 10px !important;
+  font-size: 10px;
   font-weight: 800 !important;
   letter-spacing: 1.2px !important;
   text-transform: uppercase;
   color: #807471 !important;
-  padding: 13px 18px !important;
+  padding: 13px 18px;
   border-bottom: 1.5px solid #ece9e4 !important;
   white-space: nowrap;
   position: sticky;
@@ -1318,7 +1323,7 @@ body {
 .exposiciones-table th:first-child,
 .efemerides-table th:first-child {
   border-radius: 12px 0 0 0;
-  padding-left: 24px !important;
+  padding-left: 24px;
 }
 
 .cultores-table th:last-child,
@@ -1339,9 +1344,9 @@ body {
 .obras-table td,
 .exposiciones-table td,
 .efemerides-table td {
-  padding: 15px 18px !important;
-  font-size: 13.5px !important;
-  border-bottom: 1px solid #f3f1ee !important;
+  padding: 15px 18px;
+  font-size: 13.5px;
+  border-bottom: 1px solid #f3f1ee;
   vertical-align: middle;
   transition: background 0.12s ease;
 }
@@ -1353,7 +1358,7 @@ body {
 .obras-table td:first-child,
 .exposiciones-table td:first-child,
 .efemerides-table td:first-child {
-  padding-left: 24px !important;
+  padding-left: 24px;
 }
 
 /* Zebra sutil en filas pares */
@@ -1394,6 +1399,8 @@ body {
 /* ── Barras de búsqueda y filtro mejoradas ── */
 .search-input-wrapper,
 .search-box-wrapper {
+  box-sizing: border-box !important;
+  max-width: 100% !important;
   background: #f5f4f0 !important;
   border: 1.5px solid transparent !important;
   border-radius: 10px !important;

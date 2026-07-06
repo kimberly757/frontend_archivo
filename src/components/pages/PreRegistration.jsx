@@ -265,7 +265,7 @@ const PreRegistration = () => {
       )}
 
       {/* 2. Tabs de navegación entre Cultores y Obras */}
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', borderBottom: '2px solid var(--border-light)', paddingBottom: '0' }}>
+      <div className="tabs-row" style={{ display: 'flex', gap: '8px', marginBottom: '16px', borderBottom: '2px solid var(--border-light)', paddingBottom: '0' }}>
         <button
           onClick={() => setActiveTab('cultores')}
           style={{
@@ -360,11 +360,11 @@ const PreRegistration = () => {
             <table className="cultores-table">
               <thead>
                 <tr>
-                  <th>CULTOR</th>
-                  <th>CÉDULA</th>
-                  <th>CORREO DE CONTACTO</th>
-                  <th>FECHA DE POSTULACIÓN</th>
-                  <th className="text-right">ACCIONES</th>
+                  <th className="whitespace-nowrap">CULTOR</th>
+                  <th className="whitespace-nowrap">CÉDULA</th>
+                  <th className="whitespace-nowrap">CORREO DE CONTACTO</th>
+                  <th className="whitespace-nowrap">FECHA DE POSTULACIÓN</th>
+                  <th className="text-right whitespace-nowrap">ACCIONES</th>
                 </tr>
               </thead>
               <tbody>
@@ -375,16 +375,16 @@ const PreRegistration = () => {
                 ) : registrosFiltrados.length > 0 ? (
                   registrosFiltrados.map((registro) => (
                     <tr key={registro.id_cultor}>
-                      <td>
+                      <td data-label="">
                         <div className="cultor-profile-cell clickable" onClick={() => { setRegistroSeleccionado(registro); setIsViewModalOpen(true) }}>
                           <div className="cultor-avatar-badge">{getInitials(registro)}</div>
                           <span className="cultor-display-name">{nombreCompleto(registro)}</span>
                         </div>
                       </td>
-                      <td><span className="cultor-subinfo">{registro.cedula || '—'}</span></td>
-                      <td><span className="cultor-subinfo">{registro.correo_contacto || '—'}</span></td>
-                      <td><span className="cultor-subinfo">{registro.fecha_registro ? new Date(registro.fecha_registro).toLocaleDateString() : '—'}</span></td>
-                      <td className="text-right">
+                      <td data-label="Cédula"><span className="cultor-subinfo">{registro.cedula || '—'}</span></td>
+                      <td data-label="Correo"><span className="cultor-subinfo">{registro.correo_contacto || '—'}</span></td>
+                      <td data-label="Postulación"><span className="cultor-subinfo">{registro.fecha_registro ? new Date(registro.fecha_registro).toLocaleDateString() : '—'}</span></td>
+                      <td data-label="" className="text-right">
                         <div className="grid-actions-row">
                           <button className="grid-action-btn" title="Revisar Expediente" onClick={() => { setRegistroSeleccionado(registro); setIsViewModalOpen(true) }}><FolderOpen size={16} /></button>
                           <button className="btn-reject" disabled={procesandoId === registro.id_cultor} onClick={() => handleRechazar(registro.id_cultor)}>{procesandoId === registro.id_cultor ? '...' : 'Rechazar'}</button>
@@ -407,11 +407,11 @@ const PreRegistration = () => {
             <table className="cultores-table">
               <thead>
                 <tr>
-                  <th>OBRA</th>
-                  <th>CÓDIGO</th>
-                  <th>AUTOR</th>
-                  <th>FECHA DE POSTULACIÓN</th>
-                  <th className="text-right">ACCIONES</th>
+                  <th className="whitespace-nowrap">OBRA</th>
+                  <th className="whitespace-nowrap">CÓDIGO</th>
+                  <th className="whitespace-nowrap">AUTOR</th>
+                  <th className="whitespace-nowrap">FECHA DE POSTULACIÓN</th>
+                  <th className="text-right whitespace-nowrap">ACCIONES</th>
                 </tr>
               </thead>
               <tbody>
@@ -425,7 +425,7 @@ const PreRegistration = () => {
                     const autorNombre = obra.cultor ? `${obra.cultor.primer_nombre} ${obra.cultor.primer_apellido}` : '—'
                     return (
                       <tr key={obra.id_obra}>
-                        <td>
+                        <td data-label="">
                           <div className="cultor-profile-cell clickable" onClick={() => { setObraSeleccionada(obra); setIsObraModalOpen(true) }}>
                             {imagenUrl ? (
                               <img src={imagenUrl} alt={obra.titulo} style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '8px', flexShrink: 0 }} />
@@ -435,10 +435,10 @@ const PreRegistration = () => {
                             <span className="cultor-display-name" style={{ textTransform: 'capitalize' }}>{obra.titulo || '—'}</span>
                           </div>
                         </td>
-                        <td><span className="cultor-subinfo">{obra.codigo_qr_link || '—'}</span></td>
-                        <td><span className="cultor-subinfo">{autorNombre}</span></td>
-                        <td><span className="cultor-subinfo">{obra.fecha_postulacion ? new Date(obra.fecha_postulacion).toLocaleDateString() : '—'}</span></td>
-                        <td className="text-right">
+                        <td data-label="Código"><span className="cultor-subinfo">{obra.codigo_qr_link || '—'}</span></td>
+                        <td data-label="Autor"><span className="cultor-subinfo">{autorNombre}</span></td>
+                        <td data-label="Postulación"><span className="cultor-subinfo">{obra.fecha_postulacion ? new Date(obra.fecha_postulacion).toLocaleDateString() : '—'}</span></td>
+                        <td data-label="" className="text-right">
                           <div className="grid-actions-row">
                             <button className="grid-action-btn" title="Ver Detalle" onClick={() => { setObraSeleccionada(obra); setIsObraModalOpen(true) }}><FolderOpen size={16} /></button>
                             <button className="btn-reject" disabled={procesandoId === obra.id_obra} onClick={() => handleRechazarObra(obra.id_obra)}>{procesandoId === obra.id_obra ? '...' : 'Rechazar'}</button>

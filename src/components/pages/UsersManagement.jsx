@@ -232,10 +232,10 @@ const UsersManagement = () => {
             <table className="users-table">
               <thead>
                 <tr>
-                  <th>USUARIO</th>
-                  <th>CORREO ELECTRÓNICO</th>
-                  <th>ROL DE ACCESO</th>
-                  <th>ESTATUS</th>
+                  <th className="whitespace-nowrap">USUARIO</th>
+                  <th className="whitespace-nowrap">CORREO ELECTRÓNICO</th>
+                  <th className="whitespace-nowrap">ROL DE ACCESO</th>
+                  <th className="whitespace-nowrap">ESTATUS</th>
                 </tr>
               </thead>
               <tbody>

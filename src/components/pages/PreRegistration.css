@@ -166,6 +166,7 @@
 
 .prereg-module-container .cultores-table {
   width: 100%;
+  min-width: 800px;
   border-collapse: collapse;
   text-align: left;
 }
@@ -178,6 +179,7 @@
   padding: 12px 16px;
   border-bottom: 1px solid var(--border-color);
   background-color: #fbfbfa;
+  white-space: nowrap;
 }
 
 .prereg-module-container .cultores-table td {
@@ -186,6 +188,35 @@
   color: var(--text-main);
   border-bottom: 1px solid var(--border-color);
   vertical-align: middle;
+  white-space: nowrap;
+}
+
+/* Sticky ACCIONES column — always visible */
+.prereg-module-container .cultores-table th:last-child {
+  position: sticky;
+  right: 0;
+  z-index: 3;
+  background: #fbfbfa;
+}
+
+.prereg-module-container .cultores-table td:last-child {
+  position: sticky;
+  right: 0;
+  z-index: 1;
+  background: #ffffff;
+  box-shadow: -4px 0 8px -6px rgba(0, 0, 0, 0.15);
+}
+
+.prereg-module-container .cultores-table tbody tr:nth-child(even) td:last-child {
+  background: #faf9f7;
+}
+
+.prereg-module-container .cultores-table tr:hover td:last-child {
+  background: #faf9f6 !important;
+}
+
+.prereg-module-container .cultores-table tbody tr:nth-child(even):hover td:last-child {
+  background: #f5f4ef !important;
 }
 
 .prereg-module-container .cultores-table tr:hover td {
@@ -229,6 +260,8 @@
 .prereg-module-container .cultor-display-name {
   font-weight: 700;
   color: var(--text-main);
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .prereg-module-container .cultor-subinfo {
@@ -328,6 +361,7 @@
   display: flex;
   justify-content: flex-end;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .prereg-module-container .grid-action-btn {
@@ -444,6 +478,25 @@
   -webkit-overflow-scrolling: touch;
 }
 
+/* Scrollbar visible for the table area */
+.prereg-module-container .table-responsive::-webkit-scrollbar {
+  height: 10px;
+}
+
+.prereg-module-container .table-responsive::-webkit-scrollbar-track {
+  background: #f0eeea;
+  border-radius: 9999px;
+}
+
+.prereg-module-container .table-responsive::-webkit-scrollbar-thumb {
+  background: #B4533C;
+  border-radius: 9999px;
+}
+
+.prereg-module-container .table-responsive::-webkit-scrollbar-thumb:hover {
+  background: #96432F;
+}
+
 /* ── Botones de acción (aprobación/rechazo) ── */
 .prereg-module-container .btn-approve,
 .prereg-module-container .btn-reject {
@@ -498,7 +551,39 @@
   color: #2d1e1b;
 }
 
-/* Responsive Overrides */
+/* ════════════════════════════════════════════════════════════
+   RESPONSIVE — todos los breakpoints
+   La tabla SIEMPRE se mantiene como <table> con scroll
+   horizontal cuando no cabe (como InventarioPatrimonial).
+   ════════════════════════════════════════════════════════════ */
+
+@media (max-width: 1200px) {
+  .prereg-module-container .cultores-table td {
+    padding: 10px;
+    font-size: 12.5px;
+  }
+
+  .prereg-module-container .cultores-table th {
+    padding: 10px;
+    font-size: 9px;
+  }
+
+  .prereg-module-container .btn-approve,
+  .prereg-module-container .btn-reject {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+
+  .prereg-module-container .grid-actions-row {
+    gap: 4px;
+  }
+
+  .prereg-module-container .grid-action-btn {
+    width: 28px;
+    height: 28px;
+  }
+}
+
 @media (max-width: 900px) {
   .prereg-module-container .filter-bar-card {
     flex-direction: column;
@@ -517,25 +602,239 @@
   .prereg-module-container .filter-dropdown-select {
     flex: 1 1 calc(33.3% - 8px);
   }
+
+  .prereg-module-container .tabs-row {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 2px;
+  }
+
+  .prereg-module-container .tabs-row button {
+    flex-shrink: 0;
+  }
+
+  .prereg-module-container .cultores-table td {
+    padding: 8px;
+    font-size: 12px;
+  }
+
+  .prereg-module-container .cultores-table th {
+    padding: 8px;
+    font-size: 8.5px;
+  }
+
+  .prereg-module-container .grid-actions-row {
+    gap: 3px;
+  }
+
+  .prereg-module-container .grid-action-btn {
+    width: 26px;
+    height: 26px;
+  }
+
+  .prereg-module-container .btn-approve,
+  .prereg-module-container .btn-reject {
+    padding: 4px 6px;
+    font-size: 10px;
+  }
 }
 
-@media (max-width: 768px) {
-  .prereg-module-container .cultores-table th:nth-child(4),
-  .prereg-module-container .cultores-table td:nth-child(4),
-  .prereg-module-container .cultores-table th:nth-child(5),
-  .prereg-module-container .cultores-table td:nth-child(5) {
+@media (max-width: 640px) {
+  .prereg-module-container .cultores-table,
+  .prereg-module-container .cultores-table thead,
+  .prereg-module-container .cultores-table tbody,
+  .prereg-module-container .cultores-table tr,
+  .prereg-module-container .cultores-table th,
+  .prereg-module-container .cultores-table td {
+    display: block;
+  }
+
+  .prereg-module-container .cultores-table {
+    width: 100%;
+    min-width: unset;
+  }
+
+  .prereg-module-container .cultores-table thead {
     display: none;
+  }
+
+  .prereg-module-container .cultores-table tr {
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 8px rgba(93, 64, 55, 0.06);
+  }
+
+  .prereg-module-container .cultores-table td {
+    padding: 8px 0;
+    font-size: 13px;
+    border-bottom: 1px solid #f3f1ee;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .prereg-module-container .cultores-table td:last-child {
+    border-bottom: none;
+    padding-top: 12px;
+  }
+
+  .prereg-module-container .cultores-table td:not([data-label=""])::before {
+    content: attr(data-label);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    letter-spacing: 0.5px;
+    min-width: 80px;
+    flex-shrink: 0;
+  }
+
+  .prereg-module-container .cultores-table td:first-child {
+    font-weight: 700;
+    font-size: 15px;
+    border-bottom: none;
+    padding-bottom: 4px;
+  }
+
+  .prereg-module-container .cultores-table td:first-child::before {
+    display: none;
+  }
+
+  .prereg-module-container .cultores-table td:last-child::before {
+    display: none;
+  }
+
+  .prereg-module-container .cultores-table td:last-child {
+    display: flex;
+    justify-content: flex-start;
+  }
+
+  .prereg-module-container .cultores-table th:last-child,
+  .prereg-module-container .cultores-table td:last-child {
+    position: static;
+    box-shadow: none;
+  }
+
+  .prereg-module-container .cultores-table tr:last-child td {
+    border-bottom: 1px solid #f3f1ee;
+  }
+
+  .prereg-module-container .cultores-table tr:last-child td:last-child {
+    border-bottom: none;
+  }
+
+  .prereg-module-container .cultor-display-name {
+    font-size: 15px;
+  }
+
+  .prereg-module-container .cultor-avatar-badge {
+    width: 32px;
+    height: 32px;
+    font-size: 12px;
+  }
+
+  .prereg-module-container .cultor-subinfo {
+    font-size: 13px;
+  }
+
+  .prereg-module-container .btn-approve,
+  .prereg-module-container .btn-reject {
+    padding: 6px 14px;
+    font-size: 12px;
+  }
+
+  .prereg-module-container .grid-action-btn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .prereg-module-container .grid-action-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .prereg-module-container .grid-actions-row {
+    gap: 8px;
+  }
+
+  .prereg-module-container .empty-grid-state {
+    padding: 32px 16px;
+  }
+
+  .prereg-module-container .cultor-profile-cell {
+    gap: 10px;
+  }
+
+  .prereg-module-container .cultores-table tr:hover td:last-child {
+    background: transparent !important;
+  }
+
+  .prereg-module-container .cultores-table tbody tr:nth-child(even) td:last-child {
+    background: transparent;
+  }
+
+  .prereg-module-container .cultores-table tbody tr:nth-child(even):hover td:last-child {
+    background: transparent !important;
   }
 }
 
 @media (max-width: 480px) {
-  .prereg-module-container .cultores-table th:nth-child(2),
-  .prereg-module-container .cultores-table td:nth-child(2) {
-    display: none;
-  }
-  
-  .prereg-module-container   .filter-dropdown-select {
+  .prereg-module-container .filter-dropdown-select {
     flex: 1 1 100%;
+  }
+
+  .prereg-module-container .filter-bar-card {
+    padding: 12px;
+  }
+
+  .prereg-module-container .tabs-row button {
+    font-size: 12px !important;
+    padding: 6px 12px !important;
+  }
+
+  .prereg-module-container .tabs-row button span {
+    font-size: 10px !important;
+  }
+
+  .prereg-module-container .cultores-table tr {
+    padding: 12px;
+  }
+
+  .prereg-module-container .cultores-table td {
+    padding: 6px 0;
+    font-size: 12px;
+  }
+
+  .prereg-module-container .cultor-avatar-badge {
+    width: 28px;
+    height: 28px;
+    font-size: 11px;
+  }
+
+  .prereg-module-container .cultor-display-name {
+    font-size: 14px;
+  }
+
+  .prereg-module-container .btn-approve,
+  .prereg-module-container .btn-reject {
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+
+  .prereg-module-container .grid-action-btn {
+    width: 28px;
+    height: 28px;
+  }
+
+  .prereg-module-container .grid-action-btn svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .prereg-module-container .grid-actions-row {
+    gap: 6px;
   }
 
   /* Modal responsive adjustments */
@@ -586,6 +885,16 @@
     grid-template-columns: 1fr;
   }
 
+  .dossier-profile-header {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .dossier-v-status {
+    margin-left: 0;
+    width: 100%;
+  }
+
   .review-actions-row {
     flex-direction: column-reverse;
     gap: 8px;
@@ -600,5 +909,13 @@
 
   .fields-split-row {
     grid-template-columns: 1fr;
+  }
+
+  .dossier-image-gallery {
+    grid-template-columns: 1fr;
+  }
+
+  .cultor-profile-cell {
+    flex-wrap: wrap;
   }
 }

@@ -462,7 +462,7 @@ const ReportesCatalogo = () => {
           </div>
 
           {/* Simple Table list */}
-          <div className="catalog-table-wrapper">
+          <div className="catalog-table-wrapper w-full overflow-x-auto">
             <table className="simple-table">
               <thead>
                 <tr>
@@ -476,15 +476,15 @@ const ReportesCatalogo = () => {
                 {filteredCatalog.length > 0 ? (
                   filteredCatalog.map(item => (
                     <tr key={item.id}>
-                      <td>
+                      <td data-label="Título">
                         <div style={{ display: 'flex', flexDirection: 'column' }}>
                           <span style={{ fontWeight: '700' }}>{item.title}</span>
                           <span style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>{item.date}</span>
                         </div>
                       </td>
-                      <td>{item.author}</td>
-                      <td>{item.technique}</td>
-                      <td className="text-right">
+                      <td data-label="Cultor">{item.author}</td>
+                      <td data-label="Técnica">{item.technique}</td>
+                      <td data-label="" className="text-right">
                         <button
                           className="btn-export-inline"
                           disabled={!item.cultorId || isDownloading[`ficha-${item.id}`]}
