@@ -60,7 +60,7 @@ const CultoresDirectory = () => {
   const [feDeVidaLoading, setFeDeVidaLoading] = useState(false)
 
   const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 6
+  const itemsPerPage = 10
 
   // Si el token venció o es inválido, limpia la sesión guardada y recarga: App.jsx
   // detecta que ya no hay 'user-authenticated' y vuelve a mostrar el Login.

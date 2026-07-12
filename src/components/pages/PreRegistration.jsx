@@ -60,7 +60,7 @@ const PreRegistration = () => {
   const [obraSeleccionada, setObraSeleccionada] = useState(null)
 
   const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 6
+  const itemsPerPage = 10
 
   // Sala selection on approve
   const [salasList, setSalasList] = useState([])

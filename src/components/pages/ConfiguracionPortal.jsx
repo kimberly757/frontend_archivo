@@ -110,7 +110,7 @@ const ConfiguracionPortal = () => {
   const [currentPageObras, setCurrentPageObras] = useState(1)
   const [currentPageExpos, setCurrentPageExpos] = useState(1)
   const [currentPageEfeme, setCurrentPageEfeme] = useState(1)
-  const itemsPerPage = 6
+  const itemsPerPage = 10
 
   useEffect(() => {
     fetchConfigWeb()

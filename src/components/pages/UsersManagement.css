@@ -114,10 +114,21 @@
 /* User Management Table Styles */
 .users-list-card {
   margin-bottom: 0;
+  /* La clase compartida .card no trae padding propio ni overflow — sin esto el
+     contenido (título, tabla) queda pegado a los bordes redondeados de la tarjeta,
+     dando la sensación de que se desborda. */
+  padding: 28px 32px;
+  overflow: hidden;
 }
 
 .users-card-header {
   margin-bottom: 20px;
+}
+
+.users-list-card .table-responsive {
+  overflow-x: auto;
+  margin: 0 -32px;
+  padding: 0 32px;
 }
 
 .users-card-header h3 {
@@ -320,6 +331,15 @@
   overflow-y: auto;
   flex-shrink: 1;
   min-height: 0;
+}
+
+/* El <form> queda entre .modal-card y .modal-body, rompiendo la cadena flex (el form
+   no es flex y no tiene min-height:0) — sin esto el modal crecía sin scroll interno. */
+.modal-card > form {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
 }
 
 .modal-header {

@@ -42,7 +42,7 @@ const ManagementRooms = () => {
   const [editingRoom, setEditingRoom] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 6
+  const itemsPerPage = 10
 
   const [obrasEnSala, setObrasEnSala] = useState([])
   const [loadingObras, setLoadingObras] = useState(false)
@@ -430,7 +430,7 @@ const ManagementRooms = () => {
         actionButton={
           <button className="btn-terracota" onClick={handleOpenCreate}>
             <Plus size={18} />
-            <span>+ Registrar Nueva Sala</span>
+            <span>Registrar Nueva Sala</span>
           </button>
         }
       />

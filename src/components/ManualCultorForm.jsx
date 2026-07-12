@@ -21,7 +21,6 @@ const generos = ['Femenino', 'Masculino', 'Otro']
 const funcionalidades = ['Utilitaria', 'Decorativa', 'Ceremonial']
 
 const recaudosRequeridos = [
-  'Copia de la cédula de identidad',
   'Resumen curricular del oficio',
   'Fotografías del proceso productivo',
   'Fotografías de las obras terminadas',
@@ -264,8 +263,8 @@ function ManualCultorForm({ isOpen, onClose, onSuccess }) {
       return
     }
 
-    if (cedulaNumero.length !== 8) {
-      setSubmitError('La cédula debe tener exactamente 8 dígitos.')
+    if (cedulaNumero.length < 6) {
+      setSubmitError('La cédula debe tener al menos 6 dígitos.')
       return
     }
 
@@ -460,7 +459,10 @@ function ManualCultorForm({ isOpen, onClose, onSuccess }) {
                   />
                 </div>
                 {ocrErrores.cedula && (
-                  <p className="font-sans text-xs text-red-600">{ocrErrores.cedula}</p>
+                  <p className="font-sans text-xs text-red-600">
+                    {ocrErrores.cedula}
+                    {datosOcr?.cedulaExtraida && ` (el sistema leyó: ${datosOcr.cedulaExtraida})`}
+                  </p>
                 )}
               </div>
               <DateInput

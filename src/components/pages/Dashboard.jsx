@@ -90,16 +90,48 @@ const Dashboard = ({ onNavigate }) => {
     fetchPendientes()
   }, [fetchData, fetchPendientes])
 
+  // Exporta el resumen estadístico ya cargado en pantalla a un archivo CSV descargable.
+  const handleExportarReporte = () => {
+    if (!resumen) return
+
+    const filas = [
+      ['Reporte del Archivo Regional de Folklore'],
+      ['Fecha de generación', new Date().toLocaleDateString('es-VE')],
+      [],
+      ['Estadística', 'Valor'],
+      ['Cultores registrados', resumen.cultores.total],
+      ['Obras catalogadas', resumen.obras.total],
+      ['Municipios con cobertura', `${resumen.territorio.municipiosCubiertos}/${resumen.territorio.totalMunicipios}`],
+      [],
+      ['Distribución por Disciplina Artística'],
+      ['Categoría', 'Cantidad', 'Porcentaje'],
+      ...resumen.distribucionCategorias.map((c) => [c.nombre, c.cantidad, `${c.porcentaje}%`]),
+    ]
+
+    const csv = filas
+      .map((fila) => fila.map((celda) => `"${String(celda ?? '').replace(/"/g, '""')}"`).join(','))
+      .join('\n')
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const enlace = document.createElement('a')
+    enlace.href = url
+    enlace.download = `reporte-archivo-folklore-${new Date().toISOString().split('T')[0]}.csv`
+    document.body.appendChild(enlace)
+    enlace.click()
+    document.body.removeChild(enlace)
+    URL.revokeObjectURL(url)
+  }
+
   return (
     <div className="dashboard-module-container">
       <PageHeader
         breadcrumbs={[
           { label: 'ARCHIVO' },
-          { label: 'DASHBOARD', active: true },
+          { label: 'PANEL DE CONTROL', active: true },
         ]}
         title="Resumen Estadístico Consolidado"
         actionButton={
-          <button className="ph-action-btn">
+          <button className="ph-action-btn" onClick={handleExportarReporte} disabled={!resumen}>
             <Download size={16} />
             <span>Exportar Reporte</span>
           </button>

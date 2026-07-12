@@ -108,7 +108,7 @@ const InventarioPatrimonial = () => {
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 6
+  const itemsPerPage = 10
 
   // Form Modal Configuration & Fields State
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -120,6 +120,7 @@ const InventarioPatrimonial = () => {
   const [newPieceAuthor, setNewPieceAuthor] = useState('')
   const [newPieceCategory, setNewPieceCategory] = useState('')
   const [newPieceMaterials, setNewPieceMaterials] = useState('')
+  const [newPieceYear, setNewPieceYear] = useState('')
   const [newPieceConservation, setNewPieceConservation] = useState('Excelente')
   const [newPieceLocation, setNewPieceLocation] = useState('Sala 1')
   const [newPieceImage, setNewPieceImage] = useState(null)
@@ -186,12 +187,25 @@ const InventarioPatrimonial = () => {
     setNewPieceAuthor(cultoresList[0]?.id_cultor || '')
     setNewPieceCategory(categoriesList[0]?.id_categoria || '')
     setNewPieceMaterials('')
+    setNewPieceYear('')
     setNewPieceConservation('Excelente')
     setNewPieceLocation('Sala 1')
     setNewPieceImage(null)
     setNewPieceImageFile(null)
     setFormError('')
     setIsModalOpen(true)
+  }
+
+  // Cambia el estado de conservación directamente desde la ficha técnica (sin tener
+  // que cerrarla y abrir el modal de edición completo).
+  const handleCambiarConservacion = async (idObra, nuevoValor) => {
+    try {
+      await updateObraRequest(idObra, { estado_conservacion: nuevoValor }, token)
+      setSelectedPieceForView(prev => prev ? { ...prev, estado_conservacion: nuevoValor } : prev)
+      setInventario(prev => prev.map(p => p.id_obra === idObra ? { ...p, estado_conservacion: nuevoValor } : p))
+    } catch (err) {
+      showAlert('No se pudo actualizar el estado de conservación: ' + err.message)
+    }
   }
 
   // Open Edit Modal Handler
@@ -203,6 +217,7 @@ const InventarioPatrimonial = () => {
     setNewPieceAuthor(piece.id_cultor || '')
     setNewPieceCategory(piece.id_categoria || '')
     setNewPieceMaterials(piece.materiales_utilizados === 'No especificados' ? '' : (piece.materiales_utilizados || ''))
+    setNewPieceYear(piece.anio_creacion || '')
     setNewPieceConservation(piece.estado_conservacion || 'Excelente')
     setNewPieceLocation(piece.ubicacion_actual || 'Sala 1')
     setNewPieceImage(piece.multimedia && piece.multimedia[0] ? piece.multimedia[0].url_archivo : null)
@@ -228,12 +243,16 @@ const InventarioPatrimonial = () => {
   const handleRegisterPiece = async (e) => {
     e.preventDefault()
 
-    if (!newPieceName.trim() || !newPieceAuthor) {
-      setFormError('Por favor completa los campos obligatorios: Obra y Autor.')
+    if (!newPieceName.trim() || !newPieceAuthor || !newPieceCategory) {
+      setFormError('Por favor completa los campos obligatorios: Obra, Autor y Categoría.')
       return
     }
 
     const selectedCultor = cultoresList.find(c => String(c.id_cultor) === String(newPieceAuthor))
+    if (!selectedCultor?.id_parroquia) {
+      setFormError('El cultor seleccionado no tiene parroquia asignada en su perfil. Complétala antes de registrar la obra.')
+      return
+    }
     // La web pública (Gallery.jsx, Eventos.jsx, etc.) muestra tipo_patrimonio como si
     // fuera la categoría de la obra — así que aquí se sincroniza con el nombre real de
     // la categoría elegida, en vez de mandar un valor fijo que no tenía relación con ella.
@@ -246,6 +265,7 @@ const InventarioPatrimonial = () => {
       id_parroquia: selectedCultor ? selectedCultor.id_parroquia : null,
       tipo_patrimonio: categoriaSeleccionada?.nombre || null,
       materiales_utilizados: newPieceMaterials.trim() || 'No especificados',
+      anio_creacion: newPieceYear ? parseInt(newPieceYear, 10) : null,
       estado_conservacion: newPieceConservation,
       ubicacion_actual: newPieceLocation
     }
@@ -282,6 +302,7 @@ const InventarioPatrimonial = () => {
       setNewPieceAuthor(cultoresList[0]?.id_cultor || '')
       setNewPieceCategory(categoriesList[0]?.id_categoria || '')
       setNewPieceMaterials('')
+      setNewPieceYear('')
       setNewPieceConservation('Excelente')
       setNewPieceLocation('Sala 1')
       setNewPieceImage(null)
@@ -579,10 +600,15 @@ const InventarioPatrimonial = () => {
 
                       {/* Conservación */}
                       <td>
-                        <span className={`cons-badge ${(piece.estado_conservacion || '').toLowerCase()}`}>
-                          <span className="cons-badge-dot"></span>
-                          {piece.estado_conservacion || 'Excelente'}
-                        </span>
+                        {(() => {
+                          const conservacion = piece.estado_conservacion || 'Excelente'
+                          return (
+                            <span className={`cons-badge ${conservacion.toLowerCase()}`}>
+                              <span className="cons-badge-dot"></span>
+                              {conservacion}
+                            </span>
+                          )
+                        })()}
                       </td>
 
                       {/* Ubicación */}
@@ -828,7 +854,7 @@ const InventarioPatrimonial = () => {
                 {/* Category and Location Row */}
                 <div className="fields-split-row">
                   <div className="input-box-field">
-                    <label htmlFor="modal-piece-category">Categoría</label>
+                    <label htmlFor="modal-piece-category">Categoría <span className="req-star">*</span></label>
                     <div className="icon-input-container">
                       <select 
                         id="modal-piece-category"
@@ -858,6 +884,22 @@ const InventarioPatrimonial = () => {
                         )}
                       </select>
                     </div>
+                  </div>
+                </div>
+
+                {/* Año de creación */}
+                <div className="input-box-field">
+                  <label htmlFor="modal-piece-year">Año de Creación</label>
+                  <div className="icon-input-container">
+                    <input
+                      type="number"
+                      id="modal-piece-year"
+                      placeholder={String(new Date().getFullYear())}
+                      value={newPieceYear}
+                      onChange={(e) => setNewPieceYear(e.target.value)}
+                      min="1900"
+                      max={new Date().getFullYear()}
+                    />
                   </div>
                 </div>
 
@@ -1049,10 +1091,23 @@ const InventarioPatrimonial = () => {
                   <span className="dossier-sub">Código Inventario: <strong>{selectedPieceForView.codigo_qr_link}</strong></span>
                 </div>
                 <div>
-                  <span className={`cons-badge ${(selectedPieceForView.estado_conservacion || '').toLowerCase()}`}>
-                    <span className="cons-badge-dot"></span>
-                    {selectedPieceForView.estado_conservacion || 'Excelente'}
-                  </span>
+                  {(() => {
+                    const conservacion = selectedPieceForView.estado_conservacion || 'Excelente'
+                    return (
+                      <span className={`cons-badge ${conservacion.toLowerCase()}`}>
+                        <span className="cons-badge-dot"></span>
+                        <select
+                          value={conservacion}
+                          onChange={(e) => handleCambiarConservacion(selectedPieceForView.id_obra, e.target.value)}
+                          style={{ background: 'transparent', border: 'none', color: 'inherit', font: 'inherit', cursor: 'pointer' }}
+                        >
+                          <option value="Excelente">Excelente</option>
+                          <option value="Deteriorado">Deteriorado</option>
+                          <option value="Restauración">Restauración</option>
+                        </select>
+                      </span>
+                    )
+                  })()}
                 </div>
               </div>
 

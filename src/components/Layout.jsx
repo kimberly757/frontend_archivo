@@ -195,10 +195,10 @@ const Layout = ({ children, currentView, onViewChange, onLogout }) => {
           <button
             onClick={() => handleViewChange('dashboard')}
             className={`nav-item nav-btn ${currentView === 'dashboard' ? 'active' : ''}`}
-            data-label="Dashboard"
+            data-label="Panel de Control"
           >
             <LayoutDashboard className="nav-icon" size={20} />
-            <span>Dashboard</span>
+            <span>Panel de Control</span>
           </button>
 
           <span className="nav-section-label">Manejo Web</span>

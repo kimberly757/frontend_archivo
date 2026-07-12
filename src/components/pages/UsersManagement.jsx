@@ -35,8 +35,11 @@ const UsersManagement = () => {
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [firstName, setFirstName] = useState('')
+  const [secondName, setSecondName] = useState('')
   const [lastName, setLastName] = useState('')
+  const [secondLastName, setSecondLastName] = useState('')
   const [newUserEmail, setNewUserEmail] = useState('')
+  const [newUserPhone, setNewUserPhone] = useState('')
   const [newUserRoleId, setNewUserRoleId] = useState('')
   const [newUserStatus, setNewUserStatus] = useState(true)
   const [formError, setFormError] = useState('')
@@ -45,14 +48,17 @@ const UsersManagement = () => {
   const [copied, setCopied] = useState(false)
   const [emailSendError, setEmailSendError] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 6
+  const itemsPerPage = 10
 
   const rolesSeleccionables = roles.filter((rol) => rol.nombre_rol?.toLowerCase() !== 'cultor')
 
   const resetForm = () => {
     setFirstName('')
+    setSecondName('')
     setLastName('')
+    setSecondLastName('')
     setNewUserEmail('')
+    setNewUserPhone('')
     setNewUserRoleId(String(rolesSeleccionables[0]?.id_rol || ''))
     setNewUserStatus(true)
     setFormError('')
@@ -109,8 +115,11 @@ const UsersManagement = () => {
       const token = localStorage.getItem('auth-token')
       const payload = {
         primer_nombre: firstName,
+        segundo_nombre: secondName.trim() || null,
         primer_apellido: lastName,
+        segundo_apellido: secondLastName.trim() || null,
         correo: newUserEmail,
+        telefono: newUserPhone.trim() || null,
         id_rol: parseInt(newUserRoleId),
         activo: newUserStatus
       }
@@ -441,16 +450,45 @@ const UsersManagement = () => {
                       </div>
                     </div>
                     <div className="form-group">
+                      <label htmlFor="second-name">Segundo Nombre</label>
+                      <div className="input-with-icon">
+                        <User size={16} className="input-icon" />
+                        <input
+                          type="text"
+                          id="second-name"
+                          placeholder="Ej. Andrés"
+                          value={secondName}
+                          onChange={(e) => setSecondName(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="form-row-grid">
+                    <div className="form-group">
                       <label htmlFor="last-name">Primer Apellido <span className="required">*</span></label>
                       <div className="input-with-icon">
                         <User size={16} className="input-icon" />
-                        <input 
-                          type="text" 
-                          id="last-name" 
+                        <input
+                          type="text"
+                          id="last-name"
                           placeholder="Ej. Castañeda"
                           value={lastName}
                           onChange={(e) => setLastName(e.target.value)}
                           required
+                        />
+                      </div>
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="second-last-name">Segundo Apellido</label>
+                      <div className="input-with-icon">
+                        <User size={16} className="input-icon" />
+                        <input
+                          type="text"
+                          id="second-last-name"
+                          placeholder="Ej. Rojas"
+                          value={secondLastName}
+                          onChange={(e) => setSecondLastName(e.target.value)}
                         />
                       </div>
                     </div>
@@ -473,6 +511,19 @@ const UsersManagement = () => {
                       <p style={{ marginTop: '6px', fontSize: '11px', color: '#807471' }}>
                         La contraseña la genera el sistema automáticamente; se mostrará al finalizar.
                       </p>
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="user-phone">Teléfono</label>
+                      <div className="input-with-icon">
+                        <User size={16} className="input-icon" />
+                        <input
+                          type="text"
+                          id="user-phone"
+                          placeholder="Ej. 0414-1234567"
+                          value={newUserPhone}
+                          onChange={(e) => setNewUserPhone(e.target.value)}
+                        />
+                      </div>
                     </div>
                   </div>
 
