@@ -490,7 +490,7 @@ const ConfiguracionPortal = () => {
         <div className="card" style={{ padding: '4px', height: '500px', overflow: 'hidden' }}>
           <iframe
             key={iframeKey}
-            src={`http://localhost:5174/?t=${iframeKey}`}
+            src={`${import.meta.env.VITE_PORTAL_URL}/?t=${iframeKey}`}
             title="Previsualización de la Web Pública"
             style={{ width: '100%', height: '100%', border: 'none', borderRadius: '8px' }}
           />
