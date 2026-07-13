@@ -201,7 +201,7 @@ const ConfiguracionPortal = () => {
       formData.append('login_subtitulo', configWeb.login_subtitulo)
       formData.append('login_top_label', configWeb.login_top_label)
       formData.append('login_bottom_label', configWeb.login_bottom_label)
-      
+
       if (heroFile) {
         formData.append('hero_imagen', heroFile)
       }
@@ -242,7 +242,7 @@ const ConfiguracionPortal = () => {
     const nuevoDestacado = obra.destacado_galeria === 'si' ? 'no' : 'si'
     try {
       await updateObraDestacadoRequest(id_obra, nuevoDestacado, token)
-      setObrasColeccion(prev => prev.map(o => 
+      setObrasColeccion(prev => prev.map(o =>
         o.id_obra === id_obra ? { ...o, destacado_galeria: nuevoDestacado } : o
       ))
       setIframeKey(Date.now())
@@ -478,7 +478,7 @@ const ConfiguracionPortal = () => {
         title="Configuración del Portal"
         description="Gestiona el contenido, textos e imágenes de la página de inicio, de nosotros, del login y de las exposiciones virtuales."
         actionButton={
-          <a href={`http://localhost:5174/?t=${iframeKey}`} target="_blank" rel="noopener noreferrer" className="ph-action-btn">
+          <a href={`${import.meta.env.VITE_PORTAL_URL}/?t=${iframeKey}`} target="_blank" rel="noopener noreferrer" className="ph-action-btn">
             <Monitor size={18} />
             Vista Previa del Portal Web
           </a>
@@ -488,9 +488,9 @@ const ConfiguracionPortal = () => {
       {/* 0. Previsualización en la Web */}
       <section>
         <div className="card" style={{ padding: '4px', height: '500px', overflow: 'hidden' }}>
-          <iframe 
+          <iframe
             key={iframeKey}
-            src={`http://localhost:5174/?t=${iframeKey}`} 
+            src={`http://localhost:5174/?t=${iframeKey}`}
             title="Previsualización de la Web Pública"
             style={{ width: '100%', height: '100%', border: 'none', borderRadius: '8px' }}
           />
@@ -510,181 +510,181 @@ const ConfiguracionPortal = () => {
             <div className="content-editor-grid">
 
               {/* ─── LEFT: Textos, Contenido y Contacto ─── */}
-                <div className="editor-panel">
-                  <div className="editor-card editor-card-left">
+              <div className="editor-panel">
+                <div className="editor-card editor-card-left">
 
-                    <div className="editor-field">
-                      <label htmlFor="hero_titulo">TÍTULO PRINCIPAL (HERO)</label>
+                  <div className="editor-field">
+                    <label htmlFor="hero_titulo">TÍTULO PRINCIPAL (HERO)</label>
+                    <input
+                      id="hero_titulo"
+                      name="hero_titulo"
+                      type="text"
+                      value={configWeb.hero_titulo}
+                      onChange={(e) => setConfigWeb({ ...configWeb, hero_titulo: e.target.value })}
+                      placeholder="Ej. Preservando la Memoria Cultural del Táchira"
+                      maxLength={80}
+                    />
+                    <span className="char-counter">{configWeb.hero_titulo.length}/80</span>
+                  </div>
+
+                  <div className="editor-field">
+                    <label htmlFor="hero_subtitulo">SUBTÍTULO (HERO)</label>
+                    <input
+                      id="hero_subtitulo"
+                      name="hero_subtitulo"
+                      type="text"
+                      value={configWeb.hero_subtitulo}
+                      onChange={(e) => setConfigWeb({ ...configWeb, hero_subtitulo: e.target.value })}
+                      placeholder="Ej. Un archivo digital colaborativo que rescata el oficio, la mano y la historia de nuestra gente."
+                      maxLength={120}
+                    />
+                    <span className="char-counter">{configWeb.hero_subtitulo.length}/120</span>
+                  </div>
+
+                  <div className="editor-section">
+                    <div className="editor-section-header">
+                      <Edit2 size={14} />
+                      <span>Acerca del Archivo</span>
+                    </div>
+                    <div className="editor-field" style={{ marginBottom: 0 }}>
+                      <textarea
+                        id="about_texto"
+                        name="about_texto"
+                        value={configWeb.about_texto}
+                        onChange={(e) => setConfigWeb({ ...configWeb, about_texto: e.target.value })}
+                        maxLength={500}
+                        rows={8}
+                      />
+                      <span className="char-counter">{configWeb.about_texto.length}/500</span>
+                    </div>
+                  </div>
+
+                  <div className="editor-section">
+                    <div className="editor-section-header">
+                      <Mail size={14} />
+                      <span>Información de Contacto</span>
+                    </div>
+
+                    <div className="contact-field">
+                      <Mail size={16} className="contact-field-icon" />
                       <input
-                        id="hero_titulo"
-                        name="hero_titulo"
-                        type="text"
-                        value={configWeb.hero_titulo}
-                        onChange={(e) => setConfigWeb({...configWeb, hero_titulo: e.target.value})}
-                        placeholder="Ej. Preservando la Memoria Cultural del Táchira"
+                        type="email"
+                        name="contacto_email"
+                        value={configWeb.contacto_email}
+                        onChange={(e) => setConfigWeb({ ...configWeb, contacto_email: e.target.value })}
+                        placeholder="correo@ejemplo.com"
                         maxLength={80}
                       />
-                      <span className="char-counter">{configWeb.hero_titulo.length}/80</span>
                     </div>
 
-                    <div className="editor-field">
-                      <label htmlFor="hero_subtitulo">SUBTÍTULO (HERO)</label>
+                    <div className="contact-field">
+                      <Phone size={16} className="contact-field-icon" />
                       <input
-                        id="hero_subtitulo"
-                        name="hero_subtitulo"
                         type="text"
-                        value={configWeb.hero_subtitulo}
-                        onChange={(e) => setConfigWeb({...configWeb, hero_subtitulo: e.target.value})}
-                        placeholder="Ej. Un archivo digital colaborativo que rescata el oficio, la mano y la historia de nuestra gente."
+                        name="contacto_telefono"
+                        value={configWeb.contacto_telefono}
+                        onChange={(e) => setConfigWeb({ ...configWeb, contacto_telefono: e.target.value })}
+                        placeholder="+58 000 000 0000"
+                        maxLength={20}
+                      />
+                    </div>
+
+                    <div className="contact-field">
+                      <MapPin size={16} className="contact-field-icon" />
+                      <input
+                        type="text"
+                        name="contacto_direccion"
+                        value={configWeb.contacto_direccion}
+                        onChange={(e) => setConfigWeb({ ...configWeb, contacto_direccion: e.target.value })}
+                        placeholder="Dirección física"
                         maxLength={120}
                       />
-                      <span className="char-counter">{configWeb.hero_subtitulo.length}/120</span>
                     </div>
 
-                    <div className="editor-section">
-                      <div className="editor-section-header">
-                        <Edit2 size={14} />
-                        <span>Acerca del Archivo</span>
-                      </div>
-                      <div className="editor-field" style={{ marginBottom: 0 }}>
-                        <textarea
-                          id="about_texto"
-                          name="about_texto"
-                          value={configWeb.about_texto}
-                          onChange={(e) => setConfigWeb({...configWeb, about_texto: e.target.value})}
-                          maxLength={500}
-                          rows={8}
-                        />
-                        <span className="char-counter">{configWeb.about_texto.length}/500</span>
-                      </div>
-                    </div>
-
-                    <div className="editor-section">
-                      <div className="editor-section-header">
-                        <Mail size={14} />
-                        <span>Información de Contacto</span>
-                      </div>
-
-                      <div className="contact-field">
-                        <Mail size={16} className="contact-field-icon" />
-                        <input
-                          type="email"
-                          name="contacto_email"
-                          value={configWeb.contacto_email}
-                          onChange={(e) => setConfigWeb({...configWeb, contacto_email: e.target.value})}
-                          placeholder="correo@ejemplo.com"
-                          maxLength={80}
-                        />
-                      </div>
-
-                      <div className="contact-field">
-                        <Phone size={16} className="contact-field-icon" />
-                        <input
-                          type="text"
-                          name="contacto_telefono"
-                          value={configWeb.contacto_telefono}
-                          onChange={(e) => setConfigWeb({...configWeb, contacto_telefono: e.target.value})}
-                          placeholder="+58 000 000 0000"
-                          maxLength={20}
-                        />
-                      </div>
-
-                      <div className="contact-field">
-                        <MapPin size={16} className="contact-field-icon" />
-                        <input
-                          type="text"
-                          name="contacto_direccion"
-                          value={configWeb.contacto_direccion}
-                          onChange={(e) => setConfigWeb({...configWeb, contacto_direccion: e.target.value})}
-                          placeholder="Dirección física"
-                          maxLength={120}
-                        />
-                      </div>
-
-                      <div className="contact-field">
-                        <CalendarDays size={16} className="contact-field-icon" />
-                        <input
-                          type="text"
-                          name="contacto_horario"
-                          value={configWeb.contacto_horario}
-                          onChange={(e) => setConfigWeb({...configWeb, contacto_horario: e.target.value})}
-                          placeholder="Horarios de atención"
-                          maxLength={120}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="editor-actions-row">
-                      <button type="submit" className="btn-primary" disabled={isSavingConfig}>
-                        {isSavingConfig ? 'Guardando Cambios...' : 'Guardar Cambios Web'}
-                      </button>
+                    <div className="contact-field">
+                      <CalendarDays size={16} className="contact-field-icon" />
+                      <input
+                        type="text"
+                        name="contacto_horario"
+                        value={configWeb.contacto_horario}
+                        onChange={(e) => setConfigWeb({ ...configWeb, contacto_horario: e.target.value })}
+                        placeholder="Horarios de atención"
+                        maxLength={120}
+                      />
                     </div>
                   </div>
-                </div>
 
-                {/* ─── RIGHT: Galería de Imágenes ─── */}
-                <div className="editor-panel">
-                  <div className="editor-card editor-card-right">
-                    <div className="editor-card-header">
-                      <ImageIcon size={16} />
-                      <h3>Galería de Imágenes</h3>
-                    </div>
-
-                    <div className="image-card-item">
-                      <div className="image-preview-wrapper">
-                        {configWeb.hero_imagen ? (
-                          <img src={configWeb.hero_imagen} alt="Hero" />
-                        ) : (
-                          <div className="image-preview-placeholder">
-                            <ImageIcon size={32} />
-                            <span>Sin imagen de Hero</span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="image-card-footer">
-                        <label className="image-upload-btn">
-                          <Upload size={14} />
-                          <span>Cambiar Imagen Hero</span>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => setHeroFile(e.target.files[0])}
-                          />
-                        </label>
-                        {heroFile && <span className="image-file-name">{heroFile.name}</span>}
-                      </div>
-                    </div>
-
-                    <div className="image-card-item">
-                      <div className="image-preview-wrapper">
-                        {configWeb.about_imagen ? (
-                          <img src={configWeb.about_imagen} alt="Nosotros" />
-                        ) : (
-                          <div className="image-preview-placeholder">
-                            <ImageIcon size={32} />
-                            <span>Sin imagen de Nosotros</span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="image-card-footer">
-                        <label className="image-upload-btn">
-                          <Upload size={14} />
-                          <span>Cambiar Imagen Nosotros</span>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => setAboutFile(e.target.files[0])}
-                          />
-                        </label>
-                        {aboutFile && <span className="image-file-name">{aboutFile.name}</span>}
-                      </div>
-                    </div>
+                  <div className="editor-actions-row">
+                    <button type="submit" className="btn-primary" disabled={isSavingConfig}>
+                      {isSavingConfig ? 'Guardando Cambios...' : 'Guardar Cambios Web'}
+                    </button>
                   </div>
                 </div>
-
               </div>
-            </form>
-          )}
+
+              {/* ─── RIGHT: Galería de Imágenes ─── */}
+              <div className="editor-panel">
+                <div className="editor-card editor-card-right">
+                  <div className="editor-card-header">
+                    <ImageIcon size={16} />
+                    <h3>Galería de Imágenes</h3>
+                  </div>
+
+                  <div className="image-card-item">
+                    <div className="image-preview-wrapper">
+                      {configWeb.hero_imagen ? (
+                        <img src={configWeb.hero_imagen} alt="Hero" />
+                      ) : (
+                        <div className="image-preview-placeholder">
+                          <ImageIcon size={32} />
+                          <span>Sin imagen de Hero</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="image-card-footer">
+                      <label className="image-upload-btn">
+                        <Upload size={14} />
+                        <span>Cambiar Imagen Hero</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => setHeroFile(e.target.files[0])}
+                        />
+                      </label>
+                      {heroFile && <span className="image-file-name">{heroFile.name}</span>}
+                    </div>
+                  </div>
+
+                  <div className="image-card-item">
+                    <div className="image-preview-wrapper">
+                      {configWeb.about_imagen ? (
+                        <img src={configWeb.about_imagen} alt="Nosotros" />
+                      ) : (
+                        <div className="image-preview-placeholder">
+                          <ImageIcon size={32} />
+                          <span>Sin imagen de Nosotros</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="image-card-footer">
+                      <label className="image-upload-btn">
+                        <Upload size={14} />
+                        <span>Cambiar Imagen Nosotros</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => setAboutFile(e.target.files[0])}
+                        />
+                      </label>
+                      {aboutFile && <span className="image-file-name">{aboutFile.name}</span>}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </form>
+        )}
       </section>
 
       {/* 2. Personalización del Login */}
@@ -710,7 +710,7 @@ const ConfiguracionPortal = () => {
                       name="login_top_label"
                       type="text"
                       value={configWeb.login_top_label}
-                      onChange={(e) => setConfigWeb({...configWeb, login_top_label: e.target.value})}
+                      onChange={(e) => setConfigWeb({ ...configWeb, login_top_label: e.target.value })}
                       placeholder="Ej. Ministerio de Cultura"
                       maxLength={100}
                     />
@@ -723,7 +723,7 @@ const ConfiguracionPortal = () => {
                       name="login_titulo"
                       type="text"
                       value={configWeb.login_titulo}
-                      onChange={(e) => setConfigWeb({...configWeb, login_titulo: e.target.value})}
+                      onChange={(e) => setConfigWeb({ ...configWeb, login_titulo: e.target.value })}
                       placeholder="Ej. Inicio de Sesión"
                       maxLength={100}
                     />
@@ -736,7 +736,7 @@ const ConfiguracionPortal = () => {
                       name="login_subtitulo"
                       type="text"
                       value={configWeb.login_subtitulo}
-                      onChange={(e) => setConfigWeb({...configWeb, login_subtitulo: e.target.value})}
+                      onChange={(e) => setConfigWeb({ ...configWeb, login_subtitulo: e.target.value })}
                       placeholder="Ej. Patrimonio Cultural Luis Felipe Ramón y Rivera"
                       maxLength={200}
                     />
@@ -749,7 +749,7 @@ const ConfiguracionPortal = () => {
                       name="login_bottom_label"
                       type="text"
                       value={configWeb.login_bottom_label}
-                      onChange={(e) => setConfigWeb({...configWeb, login_bottom_label: e.target.value})}
+                      onChange={(e) => setConfigWeb({ ...configWeb, login_bottom_label: e.target.value })}
                       placeholder="Ej. Sistema de Gestión y Control Patrimonial"
                       maxLength={100}
                     />
@@ -912,7 +912,7 @@ const ConfiguracionPortal = () => {
                   <div key={expo.id_exposicion} className="dg-row expo-row">
                     <div className="dg-title whitespace-nowrap">{expo.nombre_exposicion}</div>
                     <div className="dg-secondary whitespace-nowrap">{expo.organizador || 'N/A'}</div>
-                    <div className="dg-secondary whitespace-nowrap">{expo.descripcion?.length > 40 ? expo.descripcion.substring(0,40)+'...' : expo.descripcion}</div>
+                    <div className="dg-secondary whitespace-nowrap">{expo.descripcion?.length > 40 ? expo.descripcion.substring(0, 40) + '...' : expo.descripcion}</div>
                     <div className="dg-secondary whitespace-nowrap">{expo.lugar_fisico || 'N/A'}</div>
                     <div className="whitespace-nowrap">
                       <span className={`status-badge ${expo.estatus === 'activa' ? 'activo' : 'inactivo'}`}>
