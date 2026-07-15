@@ -6,7 +6,6 @@ import {
   User,
   Mail,
   Shield,
-  Trash2,
   X,
   UserCheck,
   UserX,

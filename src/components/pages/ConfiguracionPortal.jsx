@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import {
-  ChevronLeft, ChevronRight, Edit2, Trash2, Plus, Monitor, Link as LinkIcon, Folder, FolderOpen, Eye, EyeOff, Camera, Layers, X, Lock as LockIcon, CalendarDays, ArrowLeft, Image as ImageIcon, Mail, Phone, MapPin, Upload
+  ChevronLeft, ChevronRight, Edit2, Trash2, Plus, Monitor, Link as LinkIcon, Folder, FolderOpen, Eye, EyeOff, Camera, Layers, X, CalendarDays, ArrowLeft, Image as ImageIcon, Mail, Phone, MapPin, Upload
 } from 'lucide-react'
 import PageHeader from '../PageHeader'
 import './ConfiguracionPortal.css'
@@ -45,12 +45,7 @@ const ConfiguracionPortal = () => {
     contacto_direccion: '',
     contacto_horario: '',
     hero_imagen: '',
-    about_imagen: '',
-    login_titulo: '',
-    login_subtitulo: '',
-    login_top_label: '',
-    login_bottom_label: '',
-    login_imagen: ''
+    about_imagen: ''
   })
   const [heroFile, setHeroFile] = useState(null)
   const [aboutFile, setAboutFile] = useState(null)
@@ -147,10 +142,6 @@ const ConfiguracionPortal = () => {
           contacto_horario: data.contacto_horario || '',
           hero_imagen: data.hero_imagen || '',
           about_imagen: data.about_imagen || '',
-          login_titulo: data.login_titulo || 'Inicio de Sesión',
-          login_subtitulo: data.login_subtitulo || 'Patrimonio Cultural Luis Felipe Ramón y Rivera',
-          login_top_label: data.login_top_label || 'Ministerio de Cultura',
-          login_bottom_label: data.login_bottom_label || 'Sistema de Gestión y Control Patrimonial',
           login_imagen: data.login_imagen || ''
         })
       }
@@ -197,10 +188,6 @@ const ConfiguracionPortal = () => {
       formData.append('contacto_telefono', configWeb.contacto_telefono)
       formData.append('contacto_direccion', configWeb.contacto_direccion)
       formData.append('contacto_horario', configWeb.contacto_horario)
-      formData.append('login_titulo', configWeb.login_titulo)
-      formData.append('login_subtitulo', configWeb.login_subtitulo)
-      formData.append('login_top_label', configWeb.login_top_label)
-      formData.append('login_bottom_label', configWeb.login_bottom_label)
 
       if (heroFile) {
         formData.append('hero_imagen', heroFile)
@@ -687,117 +674,46 @@ const ConfiguracionPortal = () => {
         )}
       </section>
 
-      {/* 2. Personalización del Login */}
+      {/* 2. Imagen de fondo del inicio de sesión */}
       <section>
         <h2 className="section-card-title">
-          <LockIcon size={18} />
-          Personalización del Login
+          <Camera size={18} />
+          Imagen de fondo del inicio de sesión
         </h2>
         {loadingConfig ? (
           <p style={{ textAlign: 'center', padding: '48px', color: '#807471', fontSize: '14px', fontWeight: 500 }}>Cargando configuración...</p>
         ) : (
           <form onSubmit={handleSaveConfigWeb}>
-            <div className="content-editor-grid">
-
-              {/* ─── LEFT: Campos de Texto ─── */}
-              <div className="editor-panel">
-                <div className="editor-card">
-
-                  <div className="editor-field">
-                    <label htmlFor="login_top_label">ETIQUETA SUPERIOR (EJ. MINISTERIO DE CULTURA)</label>
+            <div className="editor-card">
+              <div className="image-card-item" style={{ marginBottom: 0 }}>
+                <div className="image-preview-wrapper login-image-preview">
+                  {configWeb.login_imagen ? (
+                    <img src={configWeb.login_imagen} alt="Fondo del inicio de sesión" />
+                  ) : (
+                    <div className="image-preview-placeholder">
+                      <ImageIcon size={32} />
+                      <span>Sin imagen de fondo</span>
+                    </div>
+                  )}
+                </div>
+                <div className="image-card-footer">
+                  <label className="image-upload-btn">
+                    <Camera size={14} />
+                    <span>Cambiar imagen</span>
                     <input
-                      id="login_top_label"
-                      name="login_top_label"
-                      type="text"
-                      value={configWeb.login_top_label}
-                      onChange={(e) => setConfigWeb({ ...configWeb, login_top_label: e.target.value })}
-                      placeholder="Ej. Ministerio de Cultura"
-                      maxLength={100}
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => setLoginFile(e.target.files[0])}
                     />
-                  </div>
-
-                  <div className="editor-field">
-                    <label htmlFor="login_titulo">TÍTULO DE INICIO DE SESIÓN</label>
-                    <input
-                      id="login_titulo"
-                      name="login_titulo"
-                      type="text"
-                      value={configWeb.login_titulo}
-                      onChange={(e) => setConfigWeb({ ...configWeb, login_titulo: e.target.value })}
-                      placeholder="Ej. Inicio de Sesión"
-                      maxLength={100}
-                    />
-                  </div>
-
-                  <div className="editor-field">
-                    <label htmlFor="login_subtitulo">SUBTÍTULO DEL LOGIN</label>
-                    <input
-                      id="login_subtitulo"
-                      name="login_subtitulo"
-                      type="text"
-                      value={configWeb.login_subtitulo}
-                      onChange={(e) => setConfigWeb({ ...configWeb, login_subtitulo: e.target.value })}
-                      placeholder="Ej. Patrimonio Cultural Luis Felipe Ramón y Rivera"
-                      maxLength={200}
-                    />
-                  </div>
-
-                  <div className="editor-field">
-                    <label htmlFor="login_bottom_label">ETIQUETA INFERIOR (EJ. SISTEMA DE GESTIÓN...)</label>
-                    <input
-                      id="login_bottom_label"
-                      name="login_bottom_label"
-                      type="text"
-                      value={configWeb.login_bottom_label}
-                      onChange={(e) => setConfigWeb({ ...configWeb, login_bottom_label: e.target.value })}
-                      placeholder="Ej. Sistema de Gestión y Control Patrimonial"
-                      maxLength={100}
-                    />
-                  </div>
-
-                  <div className="editor-actions-row">
+                  </label>
+                  {loginFile && <span className="image-file-name">{loginFile.name}</span>}
+                  <div style={{ marginLeft: 'auto' }}>
                     <button type="submit" className="btn-primary" disabled={isSavingConfig}>
-                      {isSavingConfig ? 'Guardando Cambios...' : 'Guardar Cambios de Login'}
+                      {isSavingConfig ? 'Guardando...' : 'Guardar'}
                     </button>
                   </div>
                 </div>
               </div>
-
-              {/* ─── RIGHT: Imagen de Fondo ─── */}
-              <div className="editor-panel">
-                <div className="editor-card">
-                  <div className="editor-card-header">
-                    <ImageIcon size={16} />
-                    <h3>Imagen de Fondo de Login</h3>
-                  </div>
-
-                  <div className="image-card-item" style={{ marginBottom: 0 }}>
-                    <div className="image-preview-wrapper" style={{ minHeight: '280px' }}>
-                      {configWeb.login_imagen ? (
-                        <img src={configWeb.login_imagen} alt="Fondo Login" />
-                      ) : (
-                        <div className="image-preview-placeholder">
-                          <ImageIcon size={32} />
-                          <span>Sin imagen de fondo</span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="image-card-footer">
-                      <label className="image-upload-btn">
-                        <Camera size={14} />
-                        <span>Cambiar Imagen de Fondo</span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => setLoginFile(e.target.files[0])}
-                        />
-                      </label>
-                      {loginFile && <span className="image-file-name">{loginFile.name}</span>}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
             </div>
           </form>
         )}

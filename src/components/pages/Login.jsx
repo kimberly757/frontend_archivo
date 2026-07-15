@@ -60,7 +60,7 @@ const Login = ({ onLoginSuccess }) => {
           background: 'radial-gradient(circle at 100% 0%, rgba(180, 83, 60, 0.25) 0%, rgba(27, 16, 14, 0.3) 70%), radial-gradient(circle at 80% 50%, rgba(245, 158, 11, 0.15) 0%, rgba(27, 16, 14, 0.35) 60%), linear-gradient(rgba(27, 16, 14, 0.1), rgba(27, 16, 14, 0.2))'
         }} />
         <span className="relative z-10 text-[11px] font-bold tracking-[1.5px] text-white/45 uppercase">
-          {configWeb?.login_top_label || 'Ministerio de Cultura'}
+          Ministerio de Cultura
         </span>
 
         <div className="relative z-10 flex flex-col items-start max-w-[520px]">
@@ -68,16 +68,16 @@ const Login = ({ onLoginSuccess }) => {
             <img src={logoM} alt="Logo" className="w-full h-full object-contain" />
           </div>
           <h1 className="text-[32px] sm:text-[38px] font-bold leading-[1.15] tracking-[-0.8px] text-white mb-3">
-            {configWeb?.login_titulo || 'Archivo Regional de Folklore'}
+            Inicio de Sesión
           </h1>
           <p className="text-xl text-white/85 font-normal m-0 leading-[1.4]">
-            {configWeb?.login_subtitulo || 'Patrimonio Cultural Luis Felipe Ramón y Rivera'}
+            Panel Administrativo del Archivo Regional de Cultura y Folklore "Luis Felipe Ramón y Rivera"
           </p>
           <div className="w-16 h-1 bg-[#bf360c] rounded mt-6" />
         </div>
 
         <p className="relative z-10 text-[10px] font-bold tracking-[2.5px] text-white/50 uppercase m-0">
-          {configWeb?.login_bottom_label || 'Sistema de Gestión y Control Patrimonial'}
+          Sistema de Gestión y Control Patrimonial
         </p>
 
         <div className="relative z-10 mt-4">

@@ -325,6 +325,7 @@
   border: 1px solid var(--border-color);
   animation: slideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
+  margin: auto;
 }
 
 .modal-body {
@@ -507,17 +508,16 @@
 /* Modal responsive fixes for Users Management modals */
 @media (max-width: 768px) {
   .modal-overlay {
-    padding: 16px;
-    align-items: flex-start;
-    padding-top: 24px;
-    overflow-y: auto;
+    padding: 12px;
+    align-items: center;
+    justify-content: center;
   }
 
   .modal-card {
-    width: 100%;
-    max-width: 100%;
-    max-height: none;
-    margin: 0;
+    width: 95%;
+    max-width: 95%;
+    max-height: 85vh;
+    margin: auto;
     border-radius: 16px;
   }
 
@@ -527,22 +527,20 @@
 
   .modal-body {
     padding: 20px;
+    overflow-y: auto;
   }
 
   .modal-footer {
     padding: 16px 20px;
-    flex-direction: column-reverse;
-    gap: 8px;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
   }
 
   .modal-footer .btn-secondary,
   .modal-footer .btn-primary {
-    width: 100%;
+    flex: 1;
     justify-content: center;
-  }
-
-  .form-row-grid {
-    grid-template-columns: 1fr;
   }
 }
 

@@ -95,7 +95,8 @@
   border: 1px solid transparent;
   border-radius: 8px;
   padding: 6px 12px;
-  width: 320px;
+  width: 100%;
+  max-width: 320px;
   position: relative;
   transition: all 0.2s ease;
 }
@@ -698,15 +699,12 @@
   margin-left: auto;
 }
 
-/* Responsive Overrides */
-@media (max-width: 768px) {
-  .inventario-module-container .inventario-header-actions {
-    flex-direction: column;
-    width: 100%;
-  }
-}
+/* ══════════════════════════════════════════════════════════
+   RESPONSIVE — Mobile-first
+   Base = móvil. Breakpoints suben a tablet y desktop.
+   ══════════════════════════════════════════════════════════ */
 
-/* Responsive Overrides */
+/* ── Large screens: smaller action buttons ──── */
 @media (max-width: 1200px) {
   .inventario-module-container .grid-action-btn {
     width: 28px;
@@ -728,21 +726,22 @@
   }
 }
 
+/* ── Tablet: filter bar stacks, smaller table ──── */
 @media (max-width: 900px) {
   .inventario-module-container .filter-bar-card {
     flex-direction: column;
     align-items: stretch;
     padding: 16px;
   }
-  
+
   .inventario-module-container .search-input-wrapper {
     width: 100%;
   }
-  
+
   .inventario-module-container .selectors-wrapper {
     width: 100%;
   }
-  
+
   .inventario-module-container .filter-dropdown-select {
     flex: 1 1 calc(33.3% - 8px);
   }
@@ -767,16 +766,71 @@
   }
 }
 
+/* ── Mobile: header actions stack, table scrolls ──── */
 @media (max-width: 768px) {
-  .inventario-module-container .inventario-table th:nth-child(3),
-  .inventario-module-container .inventario-table td:nth-child(3),
-  .inventario-module-container .inventario-table th:nth-child(5),
-  .inventario-module-container .inventario-table td:nth-child(5) {
-    display: none;
+  .inventario-module-container {
+    gap: 16px;
+  }
+
+  .inventario-module-container .inventario-header-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .inventario-module-container .ph-action-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Search input: full width, fluid */
+  .inventario-module-container .search-input-wrapper {
+    width: 100%;
+    min-width: 0;
+  }
+
+  /* Dropdowns: stack vertically */
+  .inventario-module-container .selectors-wrapper {
+    flex-direction: column;
+  }
+
+  .inventario-module-container .filter-dropdown-select {
+    width: 100%;
+    min-width: 0;
+    flex: 1 1 100%;
+  }
+
+  /* Table: NEVER hide columns — use horizontal scroll instead */
+  .inventario-module-container .inventario-table th,
+  .inventario-module-container .inventario-table td {
+    white-space: nowrap;
+  }
+
+  /* Compact action buttons */
+  .inventario-module-container .grid-action-btn {
+    width: 26px;
+    height: 26px;
+  }
+
+  .inventario-module-container .grid-actions-row {
+    gap: 3px;
+  }
+
+  /* Pagination compact */
+  .inventario-module-container .pagination-footer {
+    gap: 4px;
+    padding: 8px 4px;
+  }
+
+  .inventario-module-container .page-item-btn,
+  .inventario-module-container .page-number-btn {
+    width: 30px;
+    height: 30px;
+    font-size: 12px;
   }
 }
 
-@media (max-width: 640px) {
+/* ── Small mobile ──── */
+@media (max-width: 480px) {
   .inventario-module-container .inventario-table td {
     padding: 6px;
     font-size: 11px;
@@ -799,39 +853,6 @@
 
   .inventario-module-container .grid-actions-row {
     gap: 2px;
-  }
-}
-
-@media (max-width: 480px) {
-  .inventario-module-container .inventario-table th:nth-child(2),
-  .inventario-module-container .inventario-table td:nth-child(2),
-  .inventario-module-container .inventario-table th:nth-child(6),
-  .inventario-module-container .inventario-table td:nth-child(6) {
-    display: none;
-  }
-  
-  .inventario-module-container .filter-dropdown-select {
-    flex: 1 1 100%;
-  }
-
-  .inventario-module-container .inventario-table td {
-    padding: 5px;
-    font-size: 10.5px;
-  }
-
-  .inventario-module-container .inventario-table th {
-    padding: 5px;
-    font-size: 7px;
-  }
-
-  .inventario-module-container .grid-action-btn {
-    width: 22px;
-    height: 22px;
-  }
-
-  .inventario-module-container .grid-action-btn svg {
-    width: 12px;
-    height: 12px;
   }
 }
 

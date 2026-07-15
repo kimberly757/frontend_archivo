@@ -1343,6 +1343,12 @@
   font-weight: 600;
 }
 
+.login-image-preview {
+  aspect-ratio: 16 / 9;
+  max-height: 180px;
+  max-width: 360px;
+}
+
 .image-card-footer {
   display: flex;
   align-items: center;

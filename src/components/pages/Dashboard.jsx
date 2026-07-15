@@ -144,12 +144,7 @@ const Dashboard = ({ onNavigate }) => {
       {!isLoading && !error && resumen && (
         <>
           <section
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-              gap: '1.5rem',
-              marginBottom: '1.5rem'
-            }}
+            className="dash-stats-grid"
             aria-label="Estadísticas rápidas"
           >
             <div
@@ -333,14 +328,7 @@ const Dashboard = ({ onNavigate }) => {
             </div>
           </section>
 
-          <div
-            className="dashboard-grid-2col"
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '2fr 1fr',
-              gap: '1.5rem'
-            }}
-          >
+          <div className="dashboard-grid-2col">
             <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
               <div
                 className="card-panel"
@@ -389,15 +377,7 @@ const Dashboard = ({ onNavigate }) => {
                 </div>
                 <div>
                     <div
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'flex-end',
-                        gap: 'clamp(12px, 3vw, 36px)',
-                        height: 180,
-                        padding: '8px 0',
-                        flexWrap: 'wrap'
-                      }}
+                      className="dash-chart-bars"
                     >
                     {resumen.distribucionCategorias.length === 0 && (
                       <p>Aún no hay obras catalogadas.</p>
@@ -406,14 +386,7 @@ const Dashboard = ({ onNavigate }) => {
                       const color = CHART_COLORS[index % CHART_COLORS.length]
                       return (
                         <div
-                          style={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            flex: '0 1 90px',
-                            maxWidth: '110px',
-                            height: '100%'
-                          }}
+                          className="dash-chart-item"
                           key={categoria.nombre}
                         >
                           <span
@@ -496,7 +469,7 @@ const Dashboard = ({ onNavigate }) => {
                     Ver catálogo completo
                   </a>
                 </div>
-                <div>
+                <div className="dash-table-scroll">
                   <table
                     style={{
                       width: '100%',

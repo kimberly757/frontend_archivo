@@ -736,6 +736,8 @@
 }
 
 /* ── Responsive ──────────────────────────────── */
+
+/* Filter bar: stack vertically on tablets */
 @media (max-width: 900px) {
   .filter-bar-glass {
     flex-direction: column;
@@ -760,19 +762,50 @@
   }
 }
 
+/* Mobile: force table horizontal scroll, NEVER hide columns */
 @media (max-width: 768px) {
-  .cultores-table th:nth-child(4),
-  .cultores-table td:nth-child(4),
-  .cultores-table th:nth-child(5),
-  .cultores-table td:nth-child(5) {
-    display: none;
+  .cultores-module-container {
+    gap: 16px;
+  }
+
+  /* Filter pills wrap */
+  .category-pills-glass {
+    flex-wrap: wrap;
+  }
+
+  /* Table: min-width forces scroll instead of crushing columns */
+  .cultores-list-card .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .cultores-table {
+    min-width: 580px;
+  }
+
+  .cultores-table th,
+  .cultores-table td {
+    white-space: nowrap;
+  }
+
+  /* Pagination: compact */
+  .pagination-footer {
+    gap: 4px;
+    padding: 8px 4px;
+  }
+
+  .page-item-btn,
+  .page-number-btn {
+    width: 30px;
+    height: 30px;
+    font-size: 12px;
   }
 }
 
+/* Small mobile */
 @media (max-width: 480px) {
-  .cultores-table th:nth-child(2),
-  .cultores-table td:nth-child(2) {
-    display: none;
+  .cultores-table {
+    min-width: 520px;
   }
 
   .modal-overlay-backdrop {
