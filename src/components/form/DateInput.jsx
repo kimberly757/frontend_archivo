@@ -1,11 +1,11 @@
-function DateInput({ label, name, required = false, value, onChange, min, max }) {
+function DateInput({ label, name, required = false, value, onChange, min, max, disabled = false }) {
   return (
     <label className="flex flex-col gap-2">
       <span className="font-sans text-xs font-semibold uppercase tracking-wide text-cafe-noir">
         {label}
         {required && <span> *</span>}
       </span>
-      <div className="relative">
+      <div className={`relative ${disabled ? 'opacity-60 cursor-not-allowed' : ''}`}>
         <input
           type="date"
           name={name}
@@ -14,6 +14,7 @@ function DateInput({ label, name, required = false, value, onChange, min, max })
           onChange={onChange}
           min={min}
           max={max}
+          disabled={disabled}
           className="date-input-full-click"
         />
         <svg

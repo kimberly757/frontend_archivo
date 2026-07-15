@@ -188,26 +188,26 @@ function EditCultorForm({ isOpen, onClose, cultor, onSuccess }) {
           <div className="mt-10">
             <form onSubmit={handleSubmit} className="space-y-8">
               <div className="grid grid-cols-1 gap-x-8 gap-y-7 md:grid-cols-2">
-                <TextInput label="Primer Nombre" name="primer_nombre" required value={form.primer_nombre} onChange={handleChange} placeholder="Ej. María" />
-                <TextInput label="Segundo nombre" name="segundo_nombre" value={form.segundo_nombre} onChange={handleChange} placeholder="Ej. Fernanda" />
-                <TextInput label="Primer Apellido" name="primer_apellido" required value={form.primer_apellido} onChange={handleChange} placeholder="Ej. Useche" />
-                <TextInput label="Segundo apellido" name="segundo_apellido" value={form.segundo_apellido} onChange={handleChange} placeholder="Ej. Pérez" />
+                <TextInput label="Primer Nombre" name="primer_nombre" required value={form.primer_nombre} onChange={handleChange} placeholder="Ej. María" disabled />
+                <TextInput label="Segundo nombre" name="segundo_nombre" value={form.segundo_nombre} onChange={handleChange} placeholder="Ej. Fernanda" disabled />
+                <TextInput label="Primer Apellido" name="primer_apellido" required value={form.primer_apellido} onChange={handleChange} placeholder="Ej. Useche" disabled />
+                <TextInput label="Segundo apellido" name="segundo_apellido" value={form.segundo_apellido} onChange={handleChange} placeholder="Ej. Pérez" disabled />
                 <TextInput label="Seudónimo" name="seudonimo" value={form.seudonimo} onChange={handleChange} placeholder="Ej. El Artesano de Capacho" />
 
                 <div className="flex flex-col gap-2">
                   <span className="font-sans text-xs font-semibold uppercase tracking-wide text-cafe-noir">
                     Cédula de identidad <span> *</span>
                   </span>
-                  <div className="flex items-center w-full bg-white/50 border border-cafe-noir/30 rounded-xl overflow-hidden focus-within:border-cafe-noir focus-within:ring-1 focus-within:ring-cafe-noir transition-colors">
-                    <select value={cedulaPrefijo} onChange={(e) => setCedulaPrefijo(e.target.value)} className="bg-transparent border-none outline-none focus:ring-0 py-2.5 pl-3 pr-2 font-sans text-sm text-cafe-noir cursor-pointer">
+                  <div className="flex items-center w-full bg-white/50 border border-cafe-noir/10 rounded-xl overflow-hidden opacity-60 cursor-not-allowed">
+                    <select value={cedulaPrefijo} disabled className="bg-transparent border-none outline-none focus:ring-0 py-2.5 pl-3 pr-2 font-sans text-sm text-cafe-noir/60 cursor-not-allowed">
                       {prefijosCedula.map((p) => (<option key={p} value={p}>{p}</option>))}
                     </select>
-                    <input type="text" required inputMode="numeric" value={cedulaNumero} onChange={(e) => setCedulaNumero(e.target.value.replace(/\D/g, ''))} placeholder="12345678" className="flex-1 bg-transparent border-none outline-none focus:ring-0 py-2.5 pr-4 font-sans text-sm text-cafe-noir placeholder:text-cafe-noir/30" />
+                    <input type="text" required inputMode="numeric" value={cedulaNumero} disabled placeholder="12345678" className="flex-1 bg-transparent border-none outline-none focus:ring-0 py-2.5 pr-4 font-sans text-sm text-cafe-noir/60 placeholder:text-cafe-noir/30 cursor-not-allowed" />
                   </div>
                 </div>
 
-                <DateInput label="Fecha de nacimiento" name="fecha_nacimiento" value={form.fecha_nacimiento} onChange={handleChange} min="1900-01-01" max={new Date().toISOString().split('T')[0]} />
-                <SelectInput label="Género" name="genero" value={form.genero} onChange={handleChange} options={generos} />
+                <DateInput label="Fecha de nacimiento" name="fecha_nacimiento" value={form.fecha_nacimiento} onChange={handleChange} min="1900-01-01" max={new Date().toISOString().split('T')[0]} disabled />
+                <SelectInput label="Género" name="genero" value={form.genero} onChange={handleChange} options={generos} disabled />
                 <SelectInput label="Municipio de residencia" name="municipio" value={municipioSeleccionado} onChange={handleChange} options={municipiosList.map((m) => ({ value: String(m.id_municipio), label: m.nombre }))} />
                 <SelectInput label="Parroquia de residencia" name="id_parroquia" value={form.id_parroquia} onChange={handleChange} options={parroquias.map((p) => ({ value: String(p.id_parroquia), label: p.nombre }))} disabled={!municipioSeleccionado || parroquias.length === 0} />
                 <TextInput label="Dirección de residencia" name="direccion_residencia" value={form.direccion_residencia} onChange={handleChange} placeholder="Ej. Calle 5, casa N°12" />
