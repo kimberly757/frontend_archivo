@@ -2,6 +2,24 @@ import axios from 'axios'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
 
+let redirigiendoAlogin = false
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const status = error.response?.status
+    if (status === 401 || status === 403) {
+      const tokenEnRequest = error.config?.headers?.Authorization
+      if (tokenEnRequest && !redirigiendoAlogin) {
+        redirigiendoAlogin = true
+        localStorage.removeItem('user-authenticated')
+        localStorage.removeItem('auth-token')
+        window.location.href = '/'
+      }
+    }
+    return Promise.reject(error)
+  }
+)
+
 export async function loginRequest(correo, password) {
   try {
     const response = await axios.post(`${API_URL}/auth/login`, {

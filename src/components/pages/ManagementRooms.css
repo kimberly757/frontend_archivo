@@ -96,6 +96,7 @@
 .stat-icon--exhibicion { background-color: #A87F32; }
 .stat-icon--almacen { background-color: #5D4037; }
 .stat-icon--taller { background-color: #2D6A4F; }
+.stat-icon--digital { background-color: #4F46E5; }
 
 .rooms-kpi-row .stat-card-label {
   font-size: 11px;
@@ -234,6 +235,7 @@
 .rooms-tag--exhibición { background-color: #fef3c7; color: #92400e; }
 .rooms-tag--almacén { background-color: #e0e7ff; color: #3730a3; }
 .rooms-tag--taller { background-color: #d1fae5; color: #065f46; }
+.rooms-tag--digital { background-color: #e0e7ff; color: #3730a3; }
 .rooms-tag--habilitada { background-color: #d1fae5; color: #065f46; }
 .rooms-tag--mantenimiento { background-color: #fee2e2; color: #b91c1c; }
 .rooms-tag--code { background-color: #f5f4f0; color: #5D4037; font-family: monospace; }

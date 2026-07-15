@@ -10,13 +10,6 @@ import {
   FolderOpen,
   ChevronLeft,
   ChevronRight,
-  UploadCloud,
-  FileText,
-  FileAudio,
-  FileImage,
-  File,
-  User,
-  Paperclip,
   Eye,
   EyeOff
 } from 'lucide-react'
@@ -122,7 +115,7 @@ const InventarioPatrimonial = () => {
   const [newPieceMaterials, setNewPieceMaterials] = useState('')
   const [newPieceYear, setNewPieceYear] = useState('')
   const [newPieceConservation, setNewPieceConservation] = useState('Excelente')
-  const [newPieceLocation, setNewPieceLocation] = useState('Sala 1')
+  const [newPieceLocation, setNewPieceLocation] = useState('')
   const [newPieceImage, setNewPieceImage] = useState(null)
   const [newPieceImageFile, setNewPieceImageFile] = useState(null)
   const [formError, setFormError] = useState('')
@@ -147,17 +140,6 @@ const InventarioPatrimonial = () => {
   // View Dossier (Expediente Técnico) Modal State
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
   const [selectedPieceForView, setSelectedPieceForView] = useState(null)
-
-  // Link Media Modal State
-  const [isLinkModalOpen, setIsLinkModalOpen] = useState(false)
-  const [selectedPieceForLinking, setSelectedPieceForLinking] = useState(null)
-
-  // Drag-and-Drop / Global Uploader State
-  const [dragging, setDragging] = useState(false)
-  const [uploadedFiles, setUploadedFiles] = useState([
-    { id: 101, name: 'registro_partitura_scan.pdf', size: '4.82 MB', type: 'pdf' },
-    { id: 102, name: 'audio_cuatro_prueba.wav', size: '12.40 MB', type: 'audio' }
-  ])
 
   useEffect(() => { setCurrentPage(1) }, [searchQuery, selectedCategory, selectedConservation, selectedLocation])
 
@@ -189,7 +171,7 @@ const InventarioPatrimonial = () => {
     setNewPieceMaterials('')
     setNewPieceYear('')
     setNewPieceConservation('Excelente')
-    setNewPieceLocation('Sala 1')
+    setNewPieceLocation(salasList[0]?.nombre || '')
     setNewPieceImage(null)
     setNewPieceImageFile(null)
     setFormError('')
@@ -219,7 +201,7 @@ const InventarioPatrimonial = () => {
     setNewPieceMaterials(piece.materiales_utilizados === 'No especificados' ? '' : (piece.materiales_utilizados || ''))
     setNewPieceYear(piece.anio_creacion || '')
     setNewPieceConservation(piece.estado_conservacion || 'Excelente')
-    setNewPieceLocation(piece.ubicacion_actual || 'Sala 1')
+    setNewPieceLocation(piece.ubicacion_actual || '')
     setNewPieceImage(piece.multimedia && piece.multimedia[0] ? piece.multimedia[0].url_archivo : null)
     setNewPieceImageFile(null)
     setFormError('')
@@ -304,7 +286,7 @@ const InventarioPatrimonial = () => {
       setNewPieceMaterials('')
       setNewPieceYear('')
       setNewPieceConservation('Excelente')
-      setNewPieceLocation('Sala 1')
+      setNewPieceLocation(salasList[0]?.nombre || '')
       setNewPieceImage(null)
       setNewPieceImageFile(null)
       setEditingPieceId(null)
@@ -344,108 +326,6 @@ const InventarioPatrimonial = () => {
       setDeletePasswordError(err.message || 'Contraseña incorrecta.')
     } finally {
       setDeleteLoading(false)
-    }
-  }
-
-  // Open Link Media modal
-  const handleOpenLinkModal = (piece) => {
-    setSelectedPieceForLinking(piece)
-    setIsLinkModalOpen(true)
-  }
-
-  // Toggle file link connection
-  const handleToggleFileLink = (fileId) => {
-    if (!selectedPieceForLinking) return
-    const isLinked = selectedPieceForLinking.linkedFiles && selectedPieceForLinking.linkedFiles.includes(fileId)
-    
-    let updatedLinkedFiles = []
-    if (isLinked) {
-      updatedLinkedFiles = selectedPieceForLinking.linkedFiles.filter(id => id !== fileId)
-    } else {
-      updatedLinkedFiles = [...(selectedPieceForLinking.linkedFiles || []), fileId]
-    }
-
-    // Save to local selection state
-    setSelectedPieceForLinking({
-      ...selectedPieceForLinking,
-      linkedFiles: updatedLinkedFiles
-    })
-
-    // Update in inventory state list
-    setInventario(prev => prev.map(p => 
-      p.id === selectedPieceForLinking.id ? { ...p, linkedFiles: updatedLinkedFiles } : p
-    ))
-  }
-
-  // Drag-and-Drop Uploader functions
-  const handleDragOver = (e) => {
-    e.preventDefault()
-    setDragging(true)
-  }
-
-  const handleDragLeave = () => {
-    setDragging(false)
-  }
-
-  const handleDrop = (e) => {
-    e.preventDefault()
-    setDragging(false)
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      const files = Array.from(e.dataTransfer.files).map(file => {
-        let type = 'file'
-        if (file.type.includes('pdf')) type = 'pdf'
-        else if (file.type.includes('audio') || file.name.endsWith('.mp3') || file.name.endsWith('.wav')) type = 'audio'
-        else if (file.type.includes('image')) type = 'image'
-
-        return {
-          id: Date.now() + Math.random(),
-          name: file.name,
-          size: (file.size / (1024 * 1024)).toFixed(2) + ' MB',
-          type
-        }
-      })
-      setUploadedFiles([...uploadedFiles, ...files])
-    }
-  }
-
-  const handleFileSelect = (e) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const files = Array.from(e.target.files).map(file => {
-        let type = 'file'
-        if (file.type.includes('pdf')) type = 'pdf'
-        else if (file.type.includes('audio') || file.name.endsWith('.mp3') || file.name.endsWith('.wav')) type = 'audio'
-        else if (file.type.includes('image')) type = 'image'
-
-        return {
-          id: Date.now() + Math.random(),
-          name: file.name,
-          size: (file.size / (1024 * 1024)).toFixed(2) + ' MB',
-          type
-        }
-      })
-      setUploadedFiles([...uploadedFiles, ...files])
-    }
-  }
-
-  const handleRemoveFile = (id) => {
-    setUploadedFiles(uploadedFiles.filter(f => f.id !== id))
-    // Clean links references in inventario pieces
-    setInventario(prev => prev.map(p => ({
-      ...p,
-      linkedFiles: p.linkedFiles ? p.linkedFiles.filter(fid => fid !== id) : []
-    })))
-  }
-
-  const getFileIcon = (type) => {
-    switch (type) {
-      case 'pdf':
-        return <FileText size={18} />
-      case 'audio':
-        return <FileAudio size={18} />
-      case 'image':
-        return <FileImage size={18} />
-      default:
-        return <File size={18} />
     }
   }
 
@@ -613,7 +493,7 @@ const InventarioPatrimonial = () => {
 
                       {/* Ubicación */}
                       <td>
-                        <span className="location-text">{piece.ubicacion_actual || 'Sala 1'}</span>
+                        <span className="location-text">{piece.ubicacion_actual || 'Sin ubicación'}</span>
                       </td>
 
                       {/* Acciones */}
@@ -635,13 +515,6 @@ const InventarioPatrimonial = () => {
                             onClick={() => handleOpenEditModal(piece)}
                           >
                             <Edit2 size={15} />
-                          </button>
-                          <button 
-                            className="grid-action-btn" 
-                            title="Vincular Multimedia"
-                            onClick={() => handleOpenLinkModal(piece)}
-                          >
-                            <Paperclip size={15} />
                           </button>
                           <button 
                             className="grid-action-btn delete-btn" 
@@ -700,67 +573,6 @@ const InventarioPatrimonial = () => {
           </footer>
         )}
       </div>
-
-      {/* 4. Sección de Formulario (Carga Multimedia Global) */}
-      <section className="multimedia-upload-section">
-        <h2 className="section-card-title">
-          <UploadCloud size={18} style={{ color: '#B4533C' }} />
-          <span>Gestión de Carga Multimedia Patrimonial</span>
-        </h2>
-
-        {/* Drag and Drop Zone */}
-        <div 
-          className={`upload-drag-drop-zone ${dragging ? 'dragging' : ''}`}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-          onClick={() => document.getElementById('multimedia-file-picker').click()}
-        >
-          <input 
-            type="file" 
-            id="multimedia-file-picker" 
-            style={{ display: 'none' }} 
-            multiple 
-            onChange={handleFileSelect}
-          />
-          <div className="upload-icon-circle">
-            <UploadCloud size={24} />
-          </div>
-          <p className="upload-instruction-text">
-            Arrastra archivos multimedia aquí o <span>haz clic para buscar</span>
-          </p>
-          <p className="upload-subtext">
-            Formatos admitidos: Fotos (JPG/PNG), Audios (MP3/WAV), Documentos (PDF) hasta 20MB.
-          </p>
-        </div>
-
-        {/* Uploaded Files Grid */}
-        {uploadedFiles.length > 0 && (
-          <div className="uploaded-files-list">
-            {uploadedFiles.map(file => (
-              <div className="file-preview-card" key={file.id}>
-                <div className="upload-icon-circle" style={{ width: '30px', height: '30px', backgroundColor: '#f1f0ee', color: '#807471', flexShrink: 0 }}>
-                  {getFileIcon(file.type)}
-                </div>
-                <div className="file-info">
-                  <span className="file-name-txt" title={file.name}>{file.name}</span>
-                  <span className="file-size-txt">{file.size}</span>
-                </div>
-                <button 
-                  className="file-remove-btn" 
-                  title="Quitar archivo"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleRemoveFile(file.id);
-                  }}
-                >
-                  <X size={14} />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
 
       {/* 5. Formulario Modal: Registrar / Editar Obra */}
       {isModalOpen && (
@@ -880,7 +692,7 @@ const InventarioPatrimonial = () => {
                         {salasList.length > 0 ? salasList.map(s => (
                           <option key={s.id_sala} value={s.nombre}>{s.nombre}</option>
                         )) : (
-                          <option value="Sala 1">Sala 1</option>
+                          <option value="">Sin salas disponibles</option>
                         )}
                       </select>
                     </div>
@@ -1131,30 +943,7 @@ const InventarioPatrimonial = () => {
                 </div>
                 <div className="dossier-field">
                   <span className="dossier-label">Ubicación Física:</span>
-                  <span className="dossier-value">{selectedPieceForView.ubicacion_actual || 'Sala 1'}</span>
-                </div>
-              </div>
-
-              {/* Connected Multimedia */}
-              <div className="checkboxes-box-panel">
-                <span className="checkboxes-box-title">Documentación & Soportes Multimedia Vinculados</span>
-                <div className="dossier-document-row">
-                  {selectedPieceForView.linkedFiles && selectedPieceForView.linkedFiles.length > 0 ? (
-                    selectedPieceForView.linkedFiles.map(fileId => {
-                      const file = uploadedFiles.find(f => f.id === fileId)
-                      if (!file) return null
-                      return (
-                        <div key={file.id} className="doc-status-item verified">
-                          <span className="dot" style={{ backgroundColor: '#B4533C' }}></span>
-                          <span>{file.name} ({file.size})</span>
-                        </div>
-                      )
-                    })
-                  ) : (
-                    <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
-                      No hay archivos multimedia vinculados a esta pieza. Utiliza el ícono de vinculación en la tabla para asociar soportes.
-                    </p>
-                  )}
+                  <span className="dossier-value">{selectedPieceForView.ubicacion_actual || 'Sin ubicación'}</span>
                 </div>
               </div>
             </div>
@@ -1170,78 +959,6 @@ const InventarioPatrimonial = () => {
                 }}
               >
                 Cerrar Expediente
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 8. Modal de Vinculación de Multimedia */}
-      {isLinkModalOpen && selectedPieceForLinking && (
-        <div className="modal-overlay-backdrop">
-          <div className="modal-box-card">
-            {/* Header */}
-            <div className="modal-box-header">
-              <h2>Vincular Soportes Multimedia</h2>
-              <button 
-                onClick={() => {
-                  setIsLinkModalOpen(false)
-                  setSelectedPieceForLinking(null)
-                }}
-                className="close-x-btn"
-                aria-label="Cerrar modal"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            {/* Link Body */}
-            <div className="modal-box-body">
-              <p style={{ margin: '0 0 12px 0', fontSize: '13px', color: 'var(--text-secondary)' }}>
-                Selecciona los archivos de la biblioteca multimedia global que deseas vincular al expediente técnico de: <strong>{selectedPieceForLinking.name}</strong>.
-              </p>
-
-              {/* Scrollable list */}
-              <div className="linking-scroll-panel">
-                {uploadedFiles.length > 0 ? (
-                  uploadedFiles.map(file => {
-                    const isLinked = selectedPieceForLinking.linkedFiles && selectedPieceForLinking.linkedFiles.includes(file.id)
-                    return (
-                      <label key={file.id} className="linking-checkbox-label">
-                        <input 
-                          type="checkbox" 
-                          checked={isLinked}
-                          onChange={() => handleToggleFileLink(file.id)}
-                        />
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          {getFileIcon(file.type)}
-                          <span>{file.name}</span>
-                        </span>
-                        <span className="file-size">{file.size}</span>
-                      </label>
-                    )
-                  })
-                ) : (
-                  <div className="empty-grid-state" style={{ padding: '24px 0' }}>
-                    <UploadCloud size={32} />
-                    <p className="empty-grid-title" style={{ fontSize: '13px' }}>No hay archivos multimedia cargados</p>
-                    <p className="empty-grid-desc" style={{ fontSize: '11px' }}>Sube archivos primero en el panel multimedia general.</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="modal-box-footer">
-              <button 
-                type="button" 
-                className="btn-terracota" 
-                onClick={() => {
-                  setIsLinkModalOpen(false)
-                  setSelectedPieceForLinking(null)
-                }}
-              >
-                Listo / Guardar
               </button>
             </div>
           </div>

@@ -975,6 +975,27 @@
   color: #065f46;
 }
 
+.select-sala-item.digital {
+  border-style: dashed;
+  border-color: #c7d2fe;
+}
+
+.select-sala-item.digital .select-sala-icon {
+  background-color: #e0e7ff;
+  color: #4f46e5;
+}
+
+.select-sala-item.digital.selected {
+  background-color: #eef2ff;
+  border-color: #818cf8;
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.15);
+}
+
+.select-sala-item.digital.selected .select-sala-icon {
+  background-color: #c7d2fe;
+  color: #3730a3;
+}
+
 .select-sala-info {
   display: flex;
   flex-direction: column;

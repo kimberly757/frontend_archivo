@@ -16,7 +16,8 @@ import {
   ArrowLeft,
   Check,
   XCircle,
-  Loader
+  Loader,
+  Monitor
 } from 'lucide-react'
 import './ManagementRooms.css'
 import {
@@ -245,11 +246,13 @@ const ManagementRooms = () => {
   const obrasExhibicion = rooms.filter(r => r.tipo === 'Exhibición').reduce((sum, r) => sum + (r.cantidad_obras || 0), 0)
   const obrasAlmacen = rooms.filter(r => r.tipo === 'Almacén').reduce((sum, r) => sum + (r.cantidad_obras || 0), 0)
   const obrasTaller = rooms.filter(r => r.tipo === 'Taller').reduce((sum, r) => sum + (r.cantidad_obras || 0), 0)
+  const obrasDigital = rooms.filter(r => r.tipo === 'Digital').reduce((sum, r) => sum + (r.cantidad_obras || 0), 0)
 
   const tipoIconMap = {
     'Exhibición': <MapPin size={16} />,
     'Almacén': <Warehouse size={16} />,
     'Taller': <Wrench size={16} />,
+    'Digital': <Monitor size={16} />,
   }
 
   if (subView === 'detail' && selectedRoom) {
@@ -472,6 +475,15 @@ const ManagementRooms = () => {
           </div>
           <span className="stat-card-value">{obrasTaller}</span>
         </div>
+        <div className="stat-card">
+          <div className="stat-card-header">
+            <div className="stat-icon stat-icon--digital">
+              <Monitor size={18} />
+            </div>
+            <span className="stat-card-label">OBRAS SIN UBICACIÓN FÍSICA</span>
+          </div>
+          <span className="stat-card-value">{obrasDigital}</span>
+        </div>
       </section>
 
       {loading ? (
@@ -631,7 +643,9 @@ const ManagementRooms = () => {
             </div>
             <div className="rooms-form">
               <p style={{ margin: 0, fontSize: 14, color: 'var(--text-primary)', lineHeight: 1.6 }}>
-                {salaADeshabilitar.cantidad_obras > 0 ? (
+                {salaADeshabilitar.tipo === 'Digital' ? (
+                  <>¿Estás seguro de deshabilitar la sala <strong>"{salaADeshabilitar.nombre}"</strong>? Las obras permanecerán registradas con esa ubicación.</>
+                ) : salaADeshabilitar.cantidad_obras > 0 ? (
                   <>
                     La sala <strong>"{salaADeshabilitar.nombre}"</strong> tiene <strong>{salaADeshabilitar.cantidad_obras} obra(s)</strong>.
                     Debes seleccionar una sala de destino para trasladarlas antes de deshabilitarla.
@@ -641,7 +655,7 @@ const ManagementRooms = () => {
                 )}
               </p>
 
-              {salaADeshabilitar.cantidad_obras > 0 && (
+              {salaADeshabilitar.tipo !== 'Digital' && salaADeshabilitar.cantidad_obras > 0 && (
                 <div>
                   <label className="form-label">Sala de destino para las obras</label>
                   <select
@@ -650,7 +664,7 @@ const ManagementRooms = () => {
                     onChange={e => setSalaDestinoTraslado(Number(e.target.value))}
                   >
                     <option value="">Seleccionar sala...</option>
-                    {rooms.filter(s => s.id_sala !== salaADeshabilitar.id_sala).map(s => (
+                    {rooms.filter(s => s.id_sala !== salaADeshabilitar.id_sala && s.tipo !== 'Digital').map(s => (
                       <option key={s.id_sala} value={s.id_sala}>{s.codigo} — {s.nombre}</option>
                     ))}
                   </select>
@@ -664,7 +678,7 @@ const ManagementRooms = () => {
                 <button
                   className="btn-terracota"
                   onClick={handleConfirmarDeshabilitar}
-                  disabled={deshabilitando || (salaADeshabilitar.cantidad_obras > 0 && !salaDestinoTraslado)}
+                  disabled={deshabilitando || (salaADeshabilitar.tipo !== 'Digital' && salaADeshabilitar.cantidad_obras > 0 && !salaDestinoTraslado)}
                 >
                   {deshabilitando ? 'Deshabilitando...' : 'Deshabilitar Sala'}
                 </button>

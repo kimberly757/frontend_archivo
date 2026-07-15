@@ -11,7 +11,8 @@ import {
   Check,
   MapPin,
   Warehouse,
-  Wrench
+  Wrench,
+  Monitor
 } from 'lucide-react'
 import './PreRegistration.css'
 import { 
@@ -68,14 +69,6 @@ const PreRegistration = () => {
   const [obraAprobando, setObraAprobando] = useState(null)
   const [salaSeleccionada, setSalaSeleccionada] = useState(null)
 
-  // Si el token venció o es inválido, limpia la sesión guardada y recarga: App.jsx
-  // detecta que ya no hay 'user-authenticated' y vuelve a mostrar el Login.
-  const forzarRelogin = () => {
-    localStorage.removeItem('user-authenticated')
-    localStorage.removeItem('auth-token')
-    window.location.reload()
-  }
-
   const cargarPostulaciones = async () => {
     setIsLoading(true)
     setLoadError('')
@@ -92,8 +85,6 @@ const PreRegistration = () => {
       setRegistros(data)
     } catch (error) {
       if (error.isAuthError) {
-        setLoadError(error.message)
-        forzarRelogin()
         return
       }
       setLoadError(error.message)
@@ -122,8 +113,6 @@ const PreRegistration = () => {
       setSalasList(salas)
     } catch (error) {
       if (error.isAuthError) {
-        setLoadError(error.message)
-        forzarRelogin()
         return
       }
       setLoadError(error.message)
@@ -175,8 +164,6 @@ const PreRegistration = () => {
       }
     } catch (error) {
       if (error.isAuthError) {
-        setActionError(error.message)
-        forzarRelogin()
         return
       }
       setActionError(error.message)
@@ -236,8 +223,6 @@ const PreRegistration = () => {
       }
     } catch (error) {
       if (error.isAuthError) {
-        setActionError(error.message)
-        forzarRelogin()
         return
       }
       setActionError(error.message)
@@ -812,11 +797,12 @@ const PreRegistration = () => {
               ) : (
                 <div className="select-sala-grid">
                   {salasList.map(s => {
-                    const tipoIcon = s.tipo === 'Exhibición' ? <MapPin size={16} /> : s.tipo === 'Almacén' ? <Warehouse size={16} /> : <Wrench size={16} />
+                    const isDigital = s.tipo === 'Digital'
+                    const tipoIcon = isDigital ? <Monitor size={16} /> : s.tipo === 'Exhibición' ? <MapPin size={16} /> : s.tipo === 'Almacén' ? <Warehouse size={16} /> : <Wrench size={16} />
                     return (
                       <div
                         key={s.id_sala}
-                        className={`select-sala-item ${salaSeleccionada === s.id_sala ? 'selected' : ''}`}
+                        className={`select-sala-item ${isDigital ? 'digital' : ''} ${salaSeleccionada === s.id_sala ? 'selected' : ''}`}
                         onClick={() => setSalaSeleccionada(s.id_sala)}
                       >
                         <div className="select-sala-left">
@@ -831,6 +817,11 @@ const PreRegistration = () => {
                     )
                   })}
                 </div>
+              )}
+              {salasList.some(s => s.tipo === 'Digital') && (
+                <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '10px', fontStyle: 'italic', lineHeight: '1.5' }}>
+                  La opción "Sin ubicación física" registra la obra en el sistema sin asignarla a un espacio físico del archivo.
+                </p>
               )}
             </div>
             <div className="modal-box-footer">

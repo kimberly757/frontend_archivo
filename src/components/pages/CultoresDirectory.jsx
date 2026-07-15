@@ -62,14 +62,6 @@ const CultoresDirectory = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
 
-  // Si el token venció o es inválido, limpia la sesión guardada y recarga: App.jsx
-  // detecta que ya no hay 'user-authenticated' y vuelve a mostrar el Login.
-  const forzarRelogin = () => {
-    localStorage.removeItem('user-authenticated')
-    localStorage.removeItem('auth-token')
-    window.location.reload()
-  }
-
   const cargarCultores = async () => {
     setIsLoading(true)
     setLoadError('')
@@ -86,8 +78,6 @@ const CultoresDirectory = () => {
       setCultores(data)
     } catch (error) {
       if (error.isAuthError) {
-        setLoadError(error.message)
-        forzarRelogin()
         return
       }
       setLoadError(error.message)
