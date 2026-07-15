@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Layout from './components/Layout'
 import Dashboard from './components/pages/Dashboard'
 import UsersManagement from './components/pages/UsersManagement'
@@ -37,9 +37,15 @@ function App() {
   }
 
   // Sin router: "rutas" resueltas manualmente por hash (#/olvide-password, etc.).
-  // Cada navegación entre estas vistas es una recarga completa (<a href>,
-  // window.location.href), no SPA.
-  const hash = window.location.hash.slice(1) || '/'
+  // Se usa estado + listener hashchange para que el componente se re-renderice
+  // cuando el hash cambia sin recargar la página.
+  const [hash, setHash] = useState(() => window.location.hash.slice(1) || '/')
+
+  useEffect(() => {
+    const onHashChange = () => setHash(window.location.hash.slice(1) || '/')
+    window.addEventListener('hashchange', onHashChange)
+    return () => window.removeEventListener('hashchange', onHashChange)
+  }, [])
 
   return (
     <ToastProvider>

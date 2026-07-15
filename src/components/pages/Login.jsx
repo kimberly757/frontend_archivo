@@ -164,6 +164,7 @@ const Login = ({ onLoginSuccess }) => {
               </div>
               <a
                 href="/#/olvide-password"
+                onClick={(e) => { e.preventDefault(); window.location.hash = '/olvide-password' }}
                 className="text-[#B4533C] font-bold no-underline hover:text-[#a02d0a]"
               >
                 ¿Olvidó su contraseña?
