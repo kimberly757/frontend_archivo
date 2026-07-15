@@ -975,6 +975,47 @@ export async function unlinkObraExposicionRequest(id_exposicion, id_obra, token)
   }
 }
 
+export async function getFotosExposicionRequest(id_exposicion, token) {
+  exigirToken(token)
+  try {
+    const response = await axios.get(`${API_URL}/exposicion_fotos/${id_exposicion}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    return response.data
+  } catch (error) {
+    const errorMsg = error.response?.data?.error || error.response?.data?.message || 'Error al obtener fotos'
+    throw new Error(errorMsg, { cause: error })
+  }
+}
+
+export async function subirFotosExposicionRequest(id_exposicion, archivos, token) {
+  exigirToken(token)
+  try {
+    const formData = new FormData()
+    formData.append('id_exposicion', id_exposicion)
+    archivos.forEach(file => formData.append('archivos', file))
+    const response = await axios.post(`${API_URL}/exposicion_fotos`, formData, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    return response.data
+  } catch (error) {
+    const errorMsg = error.response?.data?.error || error.response?.data?.message || 'Error al subir fotos'
+    throw new Error(errorMsg, { cause: error })
+  }
+}
+
+export async function eliminarFotoExposicionRequest(id_foto, token) {
+  exigirToken(token)
+  try {
+    await axios.delete(`${API_URL}/exposicion_fotos/${id_foto}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+  } catch (error) {
+    const errorMsg = error.response?.data?.error || error.response?.data?.message || 'Error al eliminar foto'
+    throw new Error(errorMsg, { cause: error })
+  }
+}
+
 // Subir un archivo multimedia (imagen/documento) de una obra
 export async function getSalasRequest(token) {
   exigirToken(token)

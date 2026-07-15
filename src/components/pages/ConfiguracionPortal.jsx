@@ -19,7 +19,10 @@ import {
   getEfemeridesAdminRequest,
   createEfemerideRequest,
   updateEfemerideRequest,
-  deleteEfemerideRequest
+  deleteEfemerideRequest,
+  getFotosExposicionRequest,
+  subirFotosExposicionRequest,
+  eliminarFotoExposicionRequest
 } from '../../services/api'
 import { useToast } from '../../context/ToastContext'
 const MESES = [
@@ -101,6 +104,13 @@ const ConfiguracionPortal = () => {
   const [isObrasModalOpen, setIsObrasModalOpen] = useState(false)
   const [selectedExpo, setSelectedExpo] = useState(null)
   const [linkedObrasIds, setLinkedObrasIds] = useState([])
+
+  // Estados para fotos directas de exposición
+  const [isFotosModalOpen, setIsFotosModalOpen] = useState(false)
+  const [fotosExpo, setFotosExpo] = useState([])
+  const [fotosExpoLoading, setFotosExpoLoading] = useState(false)
+  const [fotosArchivos, setFotosArchivos] = useState([])
+  const [fotosUploading, setFotosUploading] = useState(false)
 
   // Paginación
   const [currentPageObras, setCurrentPageObras] = useState(1)
@@ -452,6 +462,45 @@ const ConfiguracionPortal = () => {
       }
     } catch (error) {
       showToast({ titulo: 'Error', mensaje: 'No se pudo cambiar el vínculo de la obra.', tipo: 'error' })
+    }
+  }
+
+  const openFotosModal = async (expo) => {
+    setSelectedExpo(expo)
+    setIsFotosModalOpen(true)
+    setFotosExpoLoading(true)
+    try {
+      const fotos = await getFotosExposicionRequest(expo.id_exposicion, token)
+      setFotosExpo(Array.isArray(fotos) ? fotos : [])
+    } catch (error) {
+      setFotosExpo([])
+    } finally {
+      setFotosExpoLoading(false)
+    }
+  }
+
+  const handleSubirFotosExpo = async () => {
+    if (!selectedExpo || fotosArchivos.length === 0) return
+    setFotosUploading(true)
+    try {
+      const nuevas = await subirFotosExposicionRequest(selectedExpo.id_exposicion, fotosArchivos, token)
+      setFotosExpo(prev => [...nuevas, ...prev])
+      setFotosArchivos([])
+      showToast({ titulo: 'Éxito', mensaje: `${nuevas.length} foto(s) subida(s) correctamente.`, tipo: 'exito' })
+    } catch (error) {
+      showToast({ titulo: 'Error', mensaje: error.message || 'Error al subir fotos.', tipo: 'error' })
+    } finally {
+      setFotosUploading(false)
+    }
+  }
+
+  const handleEliminarFotoExpo = async (id_foto) => {
+    try {
+      await eliminarFotoExposicionRequest(id_foto, token)
+      setFotosExpo(prev => prev.filter(f => f.id_foto !== id_foto))
+      showToast({ titulo: 'Éxito', mensaje: 'Foto eliminada.', tipo: 'exito' })
+    } catch (error) {
+      showToast({ titulo: 'Error', mensaje: error.message || 'Error al eliminar foto.', tipo: 'error' })
     }
   }
 
@@ -845,6 +894,9 @@ const ConfiguracionPortal = () => {
                         </button>
                         <button className="icon-btn" title="Vincular Obras" onClick={() => openObrasModal(expo)}>
                           <Folder size={15} />
+                        </button>
+                        <button className="icon-btn" title="Fotos Directas" onClick={() => openFotosModal(expo)}>
+                          <ImageIcon size={15} />
                         </button>
                         <button className="icon-btn" onClick={() => openEditModal(expo)}>
                           <Edit2 size={15} />
@@ -1281,6 +1333,91 @@ const ConfiguracionPortal = () => {
                         })}
                       </tbody>
                     </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isFotosModalOpen && selectedExpo && (
+        <div className="tw-scope">
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 bg-[#3a200d]/50 backdrop-blur-md">
+            <div className="relative w-full max-w-3xl h-auto max-h-[90vh] rounded-[2rem] bg-[#F4F0E6] shadow-2xl shadow-black/50 flex flex-col">
+              <button
+                type="button"
+                onClick={() => { setIsFotosModalOpen(false); setFotosArchivos([]) }}
+                className="absolute top-6 right-6 z-20 flex h-10 w-10 items-center justify-center rounded-full text-cafe-noir hover:opacity-70"
+              >
+                <X className="h-6 w-6" />
+              </button>
+              <div className="relative z-10 w-full overflow-y-auto px-6 py-10 sm:px-12 sm:py-14">
+                <div className="text-center text-cafe-noir">
+                  <span className="font-sans text-xs uppercase tracking-[0.1em] text-cafe-noir/80">Fotos Directas</span>
+                  <h2 className="mt-1 font-sans font-semibold tracking-tight text-3xl sm:text-4xl text-cafe-noir">
+                    {selectedExpo.nombre_exposicion}
+                  </h2>
+                  <p className="mt-2 font-sans text-sm text-cafe-noir/90">Sube fotos directamente para esta exposición.</p>
+                </div>
+
+                <div className="mt-8 space-y-4">
+                  <div className="rounded-xl border border-cafe-noir/20 bg-white/50 p-4">
+                    <label className="block font-sans text-xs font-semibold uppercase tracking-wide text-cafe-noir mb-2">
+                      Seleccionar fotos
+                    </label>
+                    <p className="font-sans text-[11px] text-cafe-noir/40 mb-3">JPG, PNG o WEBP. Máximo 5MB por archivo.</p>
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={(e) => setFotosArchivos(Array.from(e.target.files))}
+                      className="block w-full text-sm text-cafe-noir/70 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:uppercase file:tracking-wide file:bg-[#6B4F2A] file:text-white file:cursor-pointer file:transition-opacity hover:file:opacity-80"
+                    />
+                    {fotosArchivos.length > 0 && (
+                      <div className="mt-3 flex items-center gap-3">
+                        <span className="font-sans text-xs text-cafe-noir/60">{fotosArchivos.length} archivo(s) seleccionado(s)</span>
+                        <button
+                          type="button"
+                          disabled={fotosUploading}
+                          onClick={handleSubirFotosExpo}
+                          className="rounded-full bg-[#6B4F2A] px-5 py-1.5 font-sans text-xs font-semibold uppercase tracking-wide text-white transition-opacity hover:opacity-80 disabled:opacity-50"
+                        >
+                          {fotosUploading ? 'Subiendo...' : 'Subir Fotos'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="rounded-xl border border-cafe-noir/20 bg-white/50 p-4">
+                    <span className="font-sans text-xs font-semibold uppercase tracking-wide text-cafe-noir">
+                      Fotos subidas ({fotosExpo.length})
+                    </span>
+                    {fotosExpoLoading ? (
+                      <p className="mt-3 font-sans text-sm text-cafe-noir/50">Cargando...</p>
+                    ) : fotosExpo.length > 0 ? (
+                      <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        {fotosExpo.map((foto) => (
+                          <div key={foto.id_foto} className="relative group rounded-lg overflow-hidden border border-cafe-noir/10">
+                            <img src={foto.url_archivo} alt={foto.nombre_archivo} className="w-full h-32 object-cover" />
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                              <button
+                                type="button"
+                                onClick={() => handleEliminarFotoExpo(foto.id_foto)}
+                                className="opacity-0 group-hover:opacity-100 transition-opacity rounded-full bg-red-600 p-2 text-white hover:bg-red-700"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+                            <div className="px-2 py-1.5">
+                              <p className="font-sans text-[10px] text-cafe-noir/60 truncate">{foto.nombre_archivo}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="mt-3 font-sans text-sm text-cafe-noir/40">No hay fotos directas para esta exposición.</p>
+                    )}
                   </div>
                 </div>
               </div>
