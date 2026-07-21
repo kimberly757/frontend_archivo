@@ -63,7 +63,7 @@ const ResetPassword = () => {
             <Landmark size={28} />
           </div>
           <h1 className="brand-title">Archivo Regional del Folklore</h1>
-          <p className="brand-subtitle">y Patrimonio Cultural «Luis Felipe Ramón y Rivera»</p>
+          <p className="brand-subtitle">y Patrimonio Cultural "Luis Felipe Ramón y Rivera"</p>
           <div className="brand-underline"></div>
         </div>
 

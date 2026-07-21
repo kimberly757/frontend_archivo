@@ -71,7 +71,7 @@ const Login = ({ onLoginSuccess }) => {
             Inicio de Sesión
           </h1>
           <p className="text-xl text-white/85 font-normal m-0 leading-[1.4]">
-            Panel Administrativo del Archivo Regional del Folklore y Patrimonio Cultural «Luis Felipe Ramón y Rivera»
+            Panel Administrativo del Archivo Regional del Folklore y Patrimonio Cultural "Luis Felipe Ramón y Rivera"
           </p>
           <div className="w-16 h-1 bg-[#bf360c] rounded mt-6" />
         </div>

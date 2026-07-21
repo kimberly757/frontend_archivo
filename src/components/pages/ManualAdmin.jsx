@@ -9,7 +9,7 @@ const secciones = [
     titulo: '1. Introducción',
     contenido: (
       <p>
-        El <strong>Panel Administrativo del Archivo Regional del Folklore y Patrimonio Cultural «Luis Felipe Ramón y Rivera»</strong> es la herramienta
+        El <strong>Panel Administrativo del Archivo Regional del Folklore y Patrimonio Cultural "Luis Felipe Ramón y Rivera"</strong> es la herramienta
         central para gestionar la información de los cultores, el inventario patrimonial y
         la configuración del portal web público. Este manual le guiará a través de cada
         sección del panel para que pueda aprovechar todas sus funcionalidades.
@@ -281,7 +281,7 @@ export default function ManualAdmin() {
         <div className="manual-portada">
           <img src={logoM} alt="Museo del Táchira" className="h-24 w-auto mx-auto mb-4" />
           <h2>Archivo Regional del Folklore y Patrimonio Cultural</h2>
-          <h3>«LUIS FELIPE RAMÓN Y RIVERA»</h3>
+          <h3>"LUIS FELIPE RAMÓN Y RIVERA"</h3>
           <p className="manual-portada-sub">Manual de Uso — Panel Administrativo</p>
           <p className="manual-portada-version">Versión 1.0</p>
         </div>
@@ -303,7 +303,7 @@ export default function ManualAdmin() {
         ))}
 
         <div className="manual-footer-page">
-          <p>Archivo Regional del Folklore y Patrimonio Cultural «Luis Felipe Ramón y Rivera» — Documento generado electrónicamente</p>
+          <p>Archivo Regional del Folklore y Patrimonio Cultural "Luis Felipe Ramón y Rivera" — Documento generado electrónicamente</p>
         </div>
       </div>
 
